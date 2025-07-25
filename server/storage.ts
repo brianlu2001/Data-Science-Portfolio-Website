@@ -289,12 +289,13 @@ export class DatabaseStorage implements IStorage {
     const dailyStatsMap = new Map<string, { pageViews: number; projectClicks: number }>();
     
     dailyPageViews.forEach(({ date, count }) => {
-      dailyStatsMap.set(date, { pageViews: Number(count), projectClicks: 0 });
+      dailyStatsMap.set(String(date), { pageViews: Number(count), projectClicks: 0 });
     });
     
     dailyProjectClicks.forEach(({ date, count }) => {
-      const existing = dailyStatsMap.get(date) || { pageViews: 0, projectClicks: 0 };
-      dailyStatsMap.set(date, { ...existing, projectClicks: Number(count) });
+      const dateStr = String(date);
+      const existing = dailyStatsMap.get(dateStr) || { pageViews: 0, projectClicks: 0 };
+      dailyStatsMap.set(dateStr, { ...existing, projectClicks: Number(count) });
     });
 
     const dailyStats = Array.from(dailyStatsMap.entries()).map(([date, stats]) => ({

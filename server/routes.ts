@@ -77,9 +77,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Protected admin routes
+  app.post('/api/projects', isAuthenticated, upload.single('image'), async (req, res) => {
+    try {
+      const validatedData = insertProjectSchema.parse(req.body);
+      
+      // Handle file upload
+      if (req.file) {
+        const fileExtension = path.extname(req.file.originalname);
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExtension}`;
+        const filePath = path.join('public', 'projects', fileName);
+        
+        fs.renameSync(req.file.path, filePath);
+        validatedData.imageUrl = `/projects/${fileName}`;
+      }
+
+      const project = await storage.createProject(validatedData);
+      res.status(201).json(project);
+    } catch (error) {
+      console.error("Error creating project:", error);
+      res.status(400).json({ message: "Failed to create project", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.patch('/api/projects/:id', isAuthenticated, upload.single('image'), async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const validatedData = updateProjectSchema.parse(req.body);
+      
+      // Handle file upload
+      if (req.file) {
+        const fileExtension = path.extname(req.file.originalname);
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExtension}`;
+        const filePath = path.join('public', 'projects', fileName);
+        
+        fs.renameSync(req.file.path, filePath);
+        validatedData.imageUrl = `/projects/${fileName}`;
+      }
+
+      const project = await storage.updateProject(projectId, validatedData);
+      res.json(project);
+    } catch (error) {
+      console.error("Error updating project:", error);
+      res.status(400).json({ message: "Failed to update project", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete('/api/projects/:id', isAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      await storage.deleteProject(projectId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      res.status(500).json({ message: "Failed to delete project" });
+    }
+  });
+
+  // Site settings routes
+  app.post('/api/site-settings', isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertSiteSettingsSchema.parse(req.body);
+      const settings = await storage.upsertSiteSettings(validatedData);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating site settings:", error);
+      res.status(400).json({ message: "Failed to update site settings", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // Project files routes
   app.get('/api/projects/:id/files', async (req, res) => {
     try {
-      const files = await storage.getProjectFiles(parseInt(req.params.id));
+      const projectId = parseInt(req.params.id);
+      const files = await storage.getProjectFiles(projectId);
       res.json(files);
     } catch (error) {
       console.error("Error fetching project files:", error);
@@ -87,148 +158,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Protected admin routes
-  app.post('/api/projects', isAuthenticated, upload.fields([
-    { name: 'image', maxCount: 1 }, 
-    { name: 'report', maxCount: 1 }
-  ]), async (req, res) => {
+  app.post('/api/projects/:id/files', isAuthenticated, upload.single('file'), async (req, res) => {
     try {
-      // Parse technologies if it's a JSON string
-      if (req.body.technologies && typeof req.body.technologies === 'string') {
-        try {
-          req.body.technologies = JSON.parse(req.body.technologies);
-        } catch (e) {
-          req.body.technologies = [];
-        }
-      }
+      const projectId = parseInt(req.params.id);
       
-      const validatedData = insertProjectSchema.parse(req.body);
-      
-      let imageUrl = null;
-      let projectUrl = null;
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      
-      // Handle image upload
-      if (files && files.image && files.image[0]) {
-        const file = files.image[0];
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const filePath = path.join('public/projects', fileName);
-        fs.renameSync(file.path, filePath);
-        imageUrl = `/projects/${fileName}`;
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // Handle report upload
-      if (files && files.report && files.report[0]) {
-        const file = files.report[0];
-        const fileName = `${Date.now()}-${file.originalname}`;
+      const fileExtension = path.extname(req.file.originalname);
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}${fileExtension}`;
+      
+      let filePath: string;
+      let fileUrl: string;
+      
+      // Determine storage location based on file type
+      if (fileExtension === '.pdf') {
+        filePath = path.join('public', 'reports', fileName);
+        fileUrl = `/reports/${fileName}`;
         
         // Ensure reports directory exists
-        const reportsDir = path.join('public/reports');
-        if (!fs.existsSync(reportsDir)) {
-          fs.mkdirSync(reportsDir, { recursive: true });
+        if (!fs.existsSync('public/reports')) {
+          fs.mkdirSync('public/reports', { recursive: true });
         }
-        
-        const filePath = path.join(reportsDir, fileName);
-        fs.renameSync(file.path, filePath);
-        projectUrl = `/reports/${fileName}`;
+      } else {
+        filePath = path.join('uploads', fileName);
+        fileUrl = `/uploads/${fileName}`;
       }
+      
+      fs.renameSync(req.file.path, filePath);
 
-      const project = await storage.createProject({
-        ...validatedData,
-        imageUrl,
-        projectUrl,
-      });
+      const fileData = {
+        projectId,
+        fileName: req.file.originalname,
+        fileUrl,
+        fileType: req.file.mimetype,
+      };
 
-      res.json(project);
+      const file = await storage.createProjectFile(fileData);
+      res.status(201).json(file);
     } catch (error) {
-      console.error("Error creating project:", error);
-      res.status(500).json({ message: "Failed to create project" });
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
     }
   });
 
-  app.put('/api/projects/:id', isAuthenticated, upload.fields([
-    { name: 'image', maxCount: 1 }, 
-    { name: 'report', maxCount: 1 }
-  ]), async (req, res) => {
+  app.delete('/api/project-files/:id', isAuthenticated, async (req, res) => {
     try {
-      // Parse technologies if it's a JSON string
-      if (req.body.technologies && typeof req.body.technologies === 'string') {
-        try {
-          req.body.technologies = JSON.parse(req.body.technologies);
-        } catch (e) {
-          req.body.technologies = [];
-        }
-      }
-      
-      // Convert sortOrder to number if it exists
-      if (req.body.sortOrder && typeof req.body.sortOrder === 'string') {
-        req.body.sortOrder = parseInt(req.body.sortOrder);
-      }
-      
-      const validatedData = updateProjectSchema.parse(req.body);
-      
-      let imageUrl = validatedData.imageUrl;
-      let projectUrl = validatedData.projectUrl;
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      
-      // Handle image upload
-      if (files && files.image && files.image[0]) {
-        const file = files.image[0];
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const filePath = path.join('public/projects', fileName);
-        fs.renameSync(file.path, filePath);
-        imageUrl = `/projects/${fileName}`;
-      }
-
-      // Handle report upload
-      if (files && files.report && files.report[0]) {
-        const file = files.report[0];
-        const fileName = `${Date.now()}-${file.originalname}`;
-        
-        // Ensure reports directory exists
-        const reportsDir = path.join('public/reports');
-        if (!fs.existsSync(reportsDir)) {
-          fs.mkdirSync(reportsDir, { recursive: true });
-        }
-        
-        const filePath = path.join(reportsDir, fileName);
-        fs.renameSync(file.path, filePath);
-        projectUrl = `/reports/${fileName}`;
-      }
-
-      const project = await storage.updateProject(parseInt(req.params.id), {
-        ...validatedData,
-        imageUrl,
-        projectUrl,
-      });
-
-      res.json(project);
+      const fileId = parseInt(req.params.id);
+      await storage.deleteProjectFile(fileId);
+      res.status(204).send();
     } catch (error) {
-      console.error("Error updating project:", error);
-      res.status(500).json({ message: "Failed to update project" });
-    }
-  });
-
-  app.delete('/api/projects/:id', isAuthenticated, async (req, res) => {
-    try {
-      await storage.deleteProject(parseInt(req.params.id));
-      res.json({ message: "Project deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting project:", error);
-      res.status(500).json({ message: "Failed to delete project" });
-    }
-  });
-
-  app.post('/api/site-settings', isAuthenticated, async (req, res) => {
-    try {
-      const validatedData = insertSiteSettingsSchema.parse(req.body);
-      
-      const settings = await storage.upsertSiteSettings(validatedData);
-
-      res.json(settings);
-    } catch (error) {
-      console.error("Error updating site settings:", error);
-      res.status(500).json({ message: "Failed to update site settings" });
+      console.error("Error deleting project file:", error);
+      res.status(500).json({ message: "Failed to delete project file" });
     }
   });
 
@@ -236,87 +218,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/analytics/pageview', async (req, res) => {
     try {
       const { page } = req.body;
-      const userAgent = req.headers['user-agent'] || '';
-      const ipAddress = req.ip || req.connection.remoteAddress || '';
-      
       await storage.recordPageView({
         page,
-        userAgent,
-        ipAddress,
+        userAgent: req.get('User-Agent'),
+        ipAddress: req.ip,
       });
-      
       res.status(201).json({ success: true });
     } catch (error) {
-      console.error('Error recording page view:', error);
-      res.status(500).json({ error: 'Failed to record page view' });
+      console.error("Error recording page view:", error);
+      res.status(500).json({ message: "Failed to record page view" });
     }
   });
 
   app.post('/api/analytics/project-click', async (req, res) => {
     try {
       const { projectId, clickType } = req.body;
-      const userAgent = req.headers['user-agent'] || '';
-      const ipAddress = req.ip || req.connection.remoteAddress || '';
-      
       await storage.recordProjectClick({
         projectId: parseInt(projectId),
         clickType,
-        userAgent,
-        ipAddress,
+        userAgent: req.get('User-Agent'),
+        ipAddress: req.ip,
       });
-      
       res.status(201).json({ success: true });
     } catch (error) {
-      console.error('Error recording project click:', error);
-      res.status(500).json({ error: 'Failed to record project click' });
+      console.error("Error recording project click:", error);
+      res.status(500).json({ message: "Failed to record project click" });
     }
   });
 
   app.get('/api/analytics/summary', isAuthenticated, async (req, res) => {
     try {
       const { startDate, endDate } = req.query;
-      const start = new Date(startDate as string);
-      const end = new Date(endDate as string);
+      const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const end = endDate ? new Date(endDate as string) : new Date();
       
       const summary = await storage.getAnalyticsSummary(start, end);
       res.json(summary);
     } catch (error) {
-      console.error('Error fetching analytics summary:', error);
-      res.status(500).json({ error: 'Failed to fetch analytics summary' });
+      console.error("Error fetching analytics summary:", error);
+      res.status(500).json({ message: "Failed to fetch analytics summary" });
     }
   });
 
-  app.get('/api/analytics/page-views', isAuthenticated, async (req, res) => {
-    try {
-      const { startDate, endDate } = req.query;
-      const start = new Date(startDate as string);
-      const end = new Date(endDate as string);
-      
-      const pageViews = await storage.getPageViews(start, end);
-      res.json(pageViews);
-    } catch (error) {
-      console.error('Error fetching page views:', error);
-      res.status(500).json({ error: 'Failed to fetch page views' });
-    }
-  });
-
-  app.get('/api/analytics/project-clicks', isAuthenticated, async (req, res) => {
-    try {
-      const { startDate, endDate } = req.query;
-      const start = new Date(startDate as string);
-      const end = new Date(endDate as string);
-      
-      const projectClicks = await storage.getProjectClicks(start, end);
-      res.json(projectClicks);
-    } catch (error) {
-      console.error('Error fetching project clicks:', error);
-      res.status(500).json({ error: 'Failed to fetch project clicks' });
-    }
-  });
-
-  // Static file serving for projects
-  app.use('/projects', express.static(path.join(process.cwd(), 'public/projects')));
-
-  const httpServer = createServer(app);
-  return httpServer;
+  const server = createServer(app);
+  return server;
 }

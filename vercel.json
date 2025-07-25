@@ -1,5 +1,6 @@
 {
-  "buildCommand": "npm run build",
+  "framework": null,
+  "buildCommand": "./node_modules/.bin/vite build",
   "outputDirectory": "dist/public",
   "devCommand": "npm run dev",
   "installCommand": "npm install"

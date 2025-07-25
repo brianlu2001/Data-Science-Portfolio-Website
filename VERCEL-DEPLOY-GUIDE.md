@@ -35,7 +35,7 @@ Once deployed, test these URLs (replace `your-app` with your actual Vercel domai
 
 ## Step 4: What to Expect
 
-**Build Process**: Vercel will run `./node_modules/.bin/vite build` and create your frontend
+**Build Process**: Vercel will run `npx vite build` to create your frontend (most reliable method)
 **API Functions**: Each API endpoint will be deployed as a separate serverless function
 **Static Files**: Your portfolio will be served from the built static files
 

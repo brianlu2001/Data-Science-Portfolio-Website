@@ -40,12 +40,6 @@
       "dest": "/index.html"
     }
   ],
-  "functions": {
-    "api/index.ts": {
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  },
   "env": {
     "NODE_ENV": "production"
   }

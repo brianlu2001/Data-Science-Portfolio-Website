@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage } from '../server/storage';
-import { insertProjectSchema } from '../shared/schema';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { projects } from '../shared/schema';
+import { desc } from 'drizzle-orm';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
@@ -13,20 +15,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    if (req.method === 'GET') {
-      const projects = await storage.getProjects();
-      return res.json(projects);
+    // Initialize database connection for Vercel
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      return res.status(500).json({ message: "Database URL not configured" });
     }
-    
-    if (req.method === 'POST') {
-      const authHeader = req.headers.authorization;
-      if (authHeader !== 'Bearer admin') {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const validatedData = insertProjectSchema.parse(req.body);
-      const project = await storage.createProject(validatedData);
-      return res.status(201).json(project);
+
+    const sql = neon(databaseUrl);
+    const db = drizzle(sql);
+
+    if (req.method === 'GET') {
+      const projectList = await db.select().from(projects).orderBy(desc(projects.sortOrder));
+      return res.json(projectList);
     }
     
     return res.status(405).json({ message: "Method not allowed" });
@@ -34,7 +34,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('API Error:', error);
     return res.status(500).json({ 
       message: "Internal server error", 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
   }
 }

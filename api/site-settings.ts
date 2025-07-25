@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage } from '../server/storage';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { siteSettings } from '../shared/schema';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
@@ -16,13 +18,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const settings = await storage.getSiteSettings();
+    // Initialize database connection for Vercel
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      return res.status(500).json({ message: "Database URL not configured" });
+    }
+
+    const sql = neon(databaseUrl);
+    const db = drizzle(sql);
+
+    const [settings] = await db.select().from(siteSettings).limit(1);
     return res.json(settings || {});
   } catch (error) {
     console.error('API Error:', error);
     return res.status(500).json({ 
       message: "Internal server error", 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
   }
 }

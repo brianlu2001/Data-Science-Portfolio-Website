@@ -3,5 +3,10 @@
   "buildCommand": "npx vite build",
   "outputDirectory": "dist/public",
   "devCommand": "npm run dev",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "build": {
+    "env": {
+      "NODE_ENV": "development"
+    }
+  }
 }

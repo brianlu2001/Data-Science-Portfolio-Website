@@ -1,11 +1,19 @@
 # Vercel Deployment Troubleshooting
 
-## Understanding the 404 Error (ID: iadl::nvfm8-1753417298597-91a986164ece)
+## Understanding the 404 Error (ID: iad1::4rzt5-1753418251671-94b42b4d77a8)
 
-This error typically occurs when:
-1. The build output isn't in the expected location
-2. The routing configuration doesn't match the build structure
-3. Static files aren't being served correctly
+This 404 NOT_FOUND error typically occurs when:
+1. The API function isn't properly configured or deployed
+2. The serverless function has runtime errors during initialization
+3. Database connection fails during function cold start
+4. Express app routing conflicts with Vercel's routing system
+
+## Root Cause Analysis
+
+The error ID pattern suggests this is a Vercel function deployment issue. Common causes:
+- **Cold Start Failures**: Database connection timeouts during function initialization
+- **Import Errors**: Missing dependencies or incorrect import paths
+- **Routing Conflicts**: Express routing conflicting with Vercel's route matching
 
 ## Current Setup
 

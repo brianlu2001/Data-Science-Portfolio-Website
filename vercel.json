@@ -16,22 +16,6 @@
       "dest": "/api/index.ts"
     },
     {
-      "src": "/uploads/(.*)",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "/public/(.*)",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "/projects/(.*)",
-      "dest": "/api/index.ts"
-    },
-    {
-      "src": "/reports/(.*)",
-      "dest": "/api/index.ts"
-    },
-    {
       "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
       "dest": "/$1"
     },

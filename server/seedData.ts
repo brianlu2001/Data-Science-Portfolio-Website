@@ -1,17 +1,12 @@
 import { storage } from './storage';
-import { SiteSettings } from '@shared/schema';
+import { SiteSettings } from '../shared/schema';
 
 const siteSettings: SiteSettings = {
   id: 1,
-  name: 'Kuan-I (Brian) Lu',
-  title: 'Data Science Project Portfolio',
-  email: 'brian901231@gmail.com',
-  phone: '8056897961',
+  contactEmail: 'brian901231@gmail.com',
+  contactPhone: '8056897961',
   bio: "Welcome to Kuan-I (Brian) Lu's Data Science Portfolio! Here, you'll find a collection of projects that highlight my journey through the diverse world of data science. From machine learning and time series analysis to signal processing, linear regression, and hands-on data cleaning, these projects span a wide range of disciplines and challenges. Take a look around—hope you enjoy exploring as much as I enjoyed building them!",
   linkedinUrl: 'https://www.linkedin.com/in/kuan-i-lu/',
-  githubUrl: '',
-  resumeUrl: '',
-  createdAt: new Date(),
   updatedAt: new Date()
 };
 

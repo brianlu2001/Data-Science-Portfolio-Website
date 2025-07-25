@@ -1,0 +1,11 @@
+@import url(https://db.onlinewebfonts.com/c/fe9c236a1c142788cb16ec5238c7833e?family=Minion+Pro);
+
+@font-face {
+  font-family: "Minion Pro";
+  src: url("https://db.onlinewebfonts.com/t/fe9c236a1c142788cb16ec5238c7833e.eot");
+  src: url("https://db.onlinewebfonts.com/t/fe9c236a1c142788cb16ec5238c7833e.eot?#iefix") format("embedded-opentype"),
+       url("https://db.onlinewebfonts.com/t/fe9c236a1c142788cb16ec5238c7833e.woff2") format("woff2"),
+       url("https://db.onlinewebfonts.com/t/fe9c236a1c142788cb16ec5238c7833e.woff") format("woff"),
+       url("https://db.onlinewebfonts.com/t/fe9c236a1c142788cb16ec5238c7833e.ttf") format("truetype"),
+       url("https://db.onlinewebfonts.com/t/fe9c236a1c142788cb16ec5238c7833e.svg#Minion Pro") format("svg");
+}

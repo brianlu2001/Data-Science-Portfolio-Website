@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    @font-face {
+      font-family: 'Suika';
+      src: url('/fonts/Suika.woff') format('woff'),
+           url('/fonts/Suika.ttf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+    
+    body {
+      background: #2d3239;
+      color: white;
+      padding: 50px;
+    }
+    
+    .test-font {
+      font-family: 'Suika', serif;
+      font-size: 48px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+    
+    .fallback {
+      font-family: serif;
+      font-size: 48px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-font">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+  <div class="test-font">Kuan-I (Brian) Lu</div>
+  <div class="test-font">Data Science Project Portfolio</div>
+  <hr>
+  <div class="fallback">ABCDEFGHIJKLMNOPQRSTUVWXYZ (Fallback)</div>
+  <div class="fallback">Kuan-I (Brian) Lu (Fallback)</div>
+</body>
+</html>

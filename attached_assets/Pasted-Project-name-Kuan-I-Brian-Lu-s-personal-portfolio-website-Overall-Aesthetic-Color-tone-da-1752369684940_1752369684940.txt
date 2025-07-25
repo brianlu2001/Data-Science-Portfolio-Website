@@ -1,0 +1,38 @@
+Project name: Kuan-I (Brian) Lu’s personal portfolio website
+
+Overall Aesthetic:
+
+Color tone: dark, with light grey words and hints of royal blue
+Fonts: title font choose something bulky and artistic. inline text font choose something easily readable.
+Background: Find (or generate) a picture of a dam wall, with details of the concrete texture and water stains. make the color dark so that we can see the contrast of the background color and words in the website. Be WCAG AA compliant
+
+For the rest aesthetics, go crazy as long as the color scheme is within my rules, be artsy and simplistic.
+
+
+User Experience:
+
+All of your material (images used and text) can be found in the attached html file (Data-Science-Project-Portfolio.html). However I do want to change the layout.
+
+On the main page of the website, the top is the title (Welcome to Kuan-I (Brian) Lu’s Data Science Portfolio!) with a large font and great visibility.
+
+Then the introductory paragraph should be shortly under the tile.
+
+Moving to the context, I only want the image of the projects and the title of the project to be visible, sorted in two columns. The first project should be in row 1 column 1, second in row 1 column 2, third in row 2 column 1, so on and so forth. 
+
+All the images should be the same size and ratio
+
+When a user clicks on an image, a text box containing the description of the project (the paragraphs in the html files) should pop up in the same view, under the row of the image, and pushing other bottom rows down. 
+
+notice I have links to the project presentations in the html file, some being other html files, some being pdf files. I want you to change this into a box called “view project” in the same dropdown box containing the project descriptions. When users click on the “view project” box, they get taken to a new page with the project. Scrape/download these destinations and host it under the domain of this website. so that these links don't redirect to the github hosted pages
+
+The only project without an external link is the Soundethics project, which I will give you the pdf file (Team Sound Ethics) to lead to. 
+
+Keep the actual project pages (htmls and pdfs) as it is now.
+
+Drop down menu:
+Since we trimmed down the length of the website by making the description showing up only after clicks, feel free to get rid of the drop down menu feature.
+
+
+Other features:
+
+For other features that you think will be useful/cool on a personal portfolio website feel free to add them as you wish. Feel free to ask for any additional information if you’d like to include them (my personal email, phone number, etc.)

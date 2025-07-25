@@ -1,0 +1,15 @@
+@import url(https://db.onlinewebfonts.com/c/1f05b8fc4960eb3e3ad4973f8b9e81eb?family=Suika+DEMO);
+
+@font-face {
+  font-family: "Suika DEMO";
+  src: url("https://db.onlinewebfonts.com/t/1f05b8fc4960eb3e3ad4973f8b9e81eb.eot");
+  src: url("https://db.onlinewebfonts.com/t/1f05b8fc4960eb3e3ad4973f8b9e81eb.eot?#iefix")format("embedded-opentype"),
+  url("https://db.onlinewebfonts.com/t/1f05b8fc4960eb3e3ad4973f8b9e81eb.woff2")format("woff2"),
+  url("https://db.onlinewebfonts.com/t/1f05b8fc4960eb3e3ad4973f8b9e81eb.woff")format("woff"),
+  url("https://db.onlinewebfonts.com/t/1f05b8fc4960eb3e3ad4973f8b9e81eb.ttf")format("truetype"),
+  url("https://db.onlinewebfonts.com/t/1f05b8fc4960eb3e3ad4973f8b9e81eb.svg#Suika DEMO")format("svg");
+}
+
+.suika-title {
+  font-family: "Suika DEMO" !important;
+}

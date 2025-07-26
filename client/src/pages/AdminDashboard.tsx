@@ -248,9 +248,11 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     console.log('AdminDashboard: Not authenticated, showing login form');
     return <LoginForm onLoginSuccess={() => {
-      console.log('Login successful, authentication state should update automatically');
-      // The useAuth hook will automatically update isAuthenticated state
-      // No need to reload the page
+      console.log('Login successful, forcing component refresh...');
+      // Force a small delay to ensure state is updated, then reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     }} />;
   }
 

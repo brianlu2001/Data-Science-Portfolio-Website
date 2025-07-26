@@ -17,15 +17,25 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('LoginForm: Form submitted');
     setIsLoading(true);
     setError('');
 
-    const success = await login(password);
-    
-    if (success) {
-      onLoginSuccess();
-    } else {
-      setError('Invalid password');
+    try {
+      console.log('LoginForm: Calling login function...');
+      const success = await login(password);
+      console.log('LoginForm: Login result:', success);
+      
+      if (success) {
+        console.log('LoginForm: Login successful, calling onLoginSuccess');
+        onLoginSuccess();
+      } else {
+        console.log('LoginForm: Login failed, showing error');
+        setError('Invalid password');
+      }
+    } catch (error) {
+      console.error('LoginForm: Error during login:', error);
+      setError('Login failed. Please try again.');
     }
     
     setIsLoading(false);

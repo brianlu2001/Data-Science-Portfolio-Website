@@ -1,5 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage } from '../server/storage';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { siteSettings } from '../shared/schema';
+import ws from 'ws';
+
+// Configure Neon for serverless
+neonConfig.webSocketConstructor = ws;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
@@ -12,8 +18,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Database connection
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      console.error('DATABASE_URL not configured');
+      return res.status(500).json({ message: "Database URL not configured" });
+    }
+
+    const pool = new Pool({ connectionString: databaseUrl });
+    const db = drizzle(pool);
+
     if (req.method === 'GET') {
-      const settings = await storage.getSiteSettings();
+      console.log('Fetching site settings...');
+      const [settings] = await db.select().from(siteSettings).limit(1);
+      console.log('Site settings found:', !!settings);
       return res.json(settings || {});
     }
     

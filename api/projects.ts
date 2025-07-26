@@ -1,5 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage } from '../server/storage';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { projects } from '../shared/schema';
+import { desc } from 'drizzle-orm';
+import ws from 'ws';
+
+// Configure Neon for serverless
+neonConfig.webSocketConstructor = ws;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
@@ -12,9 +19,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Database connection
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      console.error('DATABASE_URL not configured');
+      return res.status(500).json({ message: "Database URL not configured" });
+    }
+
+    const pool = new Pool({ connectionString: databaseUrl });
+    const db = drizzle(pool);
+
     if (req.method === 'GET') {
-      const projects = await storage.getProjects();
-      return res.json(projects);
+      console.log('Fetching projects...');
+      const projectList = await db.select().from(projects).orderBy(desc(projects.sortOrder));
+      console.log(`Found ${projectList.length} projects`);
+      return res.json(projectList);
     }
     
     return res.status(405).json({ message: "Method not allowed" });

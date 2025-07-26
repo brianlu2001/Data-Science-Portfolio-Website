@@ -93,49 +93,13 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
     return weeklyStats;
   };
 
-  // Generate mock data for demonstration purposes
-  const generateMockData = (timeWindow: TimeWindow): AnalyticsSummary => {
-    const days = timeWindow === '7d' ? 7 : timeWindow === '30d' ? 30 : timeWindow === '90d' ? 90 : 365;
-    const dailyStats = [];
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      
-      // Generate realistic random data based on time window
-      const basePageViews = timeWindow === '7d' ? 25 : timeWindow === '30d' ? 35 : timeWindow === '90d' ? 45 : 55;
-      const baseProjectClicks = timeWindow === '7d' ? 12 : timeWindow === '30d' ? 18 : timeWindow === '90d' ? 25 : 30;
-      
-      dailyStats.push({
-        date: date.toISOString().split('T')[0],
-        pageViews: Math.floor(Math.random() * basePageViews) + 10,
-        projectClicks: Math.floor(Math.random() * baseProjectClicks) + 5,
-      });
-    }
-
-    const totalPageViews = dailyStats.reduce((sum, day) => sum + day.pageViews, 0);
-    const totalProjectClicks = dailyStats.reduce((sum, day) => sum + day.projectClicks, 0);
-
-    const topProjects = [
-      { projectId: 1, projectTitle: "AI Music Detection with Deep Learning", clicks: Math.floor(totalProjectClicks * 0.25) },
-      { projectId: 2, projectTitle: "Time Series SPX Stock Price Analysis", clicks: Math.floor(totalProjectClicks * 0.20) },
-      { projectId: 3, projectTitle: "Recommender Systems with Matrix Factorization", clicks: Math.floor(totalProjectClicks * 0.18) },
-      { projectId: 4, projectTitle: "Machine Learning Predicting Spotify Hits", clicks: Math.floor(totalProjectClicks * 0.15) },
-      { projectId: 5, projectTitle: "Startup Success Prediction with ML", clicks: Math.floor(totalProjectClicks * 0.12) },
-    ].sort((a, b) => b.clicks - a.clicks); // Sort by clicks descending
-
-    return {
-      totalPageViews,
-      totalProjectClicks,
-      topProjects,
-      dailyStats,
-    };
+  // Use real data only, no mock data
+  const rawData = analytics || {
+    totalPageViews: 0,
+    totalProjectClicks: 0,
+    topProjects: [],
+    dailyStats: []
   };
-
-  // Use mock data if no real analytics data exists yet
-  const rawData = analytics && (analytics.totalPageViews > 0 || analytics.totalProjectClicks > 0) 
-    ? analytics 
-    : generateMockData(timeWindow);
 
   // Determine if we should use weekly aggregation by default for longer time windows
   const shouldUseWeeklyByDefault = (timeWindow === '90d' || timeWindow === '1y') && resolutionMode === 'weekly';

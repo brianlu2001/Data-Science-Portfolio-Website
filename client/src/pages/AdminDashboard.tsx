@@ -30,30 +30,17 @@ export default function AdminDashboard() {
   const { isAuthenticated, isLoading, logout } = useAuth();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-  // Show loading while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-        <div className="text-white text-xl">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <LoginForm onLoginSuccess={() => {
-      // Force a small delay then reload to ensure localStorage is set
-      setTimeout(() => window.location.reload(), 100);
-    }} />;
-  }
-
+  // All hooks must be called before any conditional returns
   const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
     retry: 1,
+    enabled: isAuthenticated, // Only run when authenticated
   });
 
   const { data: siteSettings, error: settingsError } = useQuery<SiteSettings>({
     queryKey: ["/api/site-settings"],
     retry: 1,
+    enabled: isAuthenticated, // Only run when authenticated
   });
 
   // Log any API errors
@@ -105,6 +92,7 @@ export default function AdminDashboard() {
     }
   }, [siteSettings, settingsForm]);
 
+  // ALL MUTATIONS MUST BE DEFINED BEFORE CONDITIONAL RETURNS
   const createProjectMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const response = await apiRequest("POST", "/api/projects", data);
@@ -184,7 +172,8 @@ export default function AdminDashboard() {
 
   const deleteProjectMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/projects/${id}`);
+      const response = await apiRequest("DELETE", `/api/projects/${id}`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
@@ -215,14 +204,15 @@ export default function AdminDashboard() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: InsertSiteSettingsData) => {
-      const response = await apiRequest("POST", "/api/site-settings", data);
+      const response = await apiRequest("PUT", "/api/site-settings", data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/site-settings"] });
+      setIsEditingSettings(false);
       toast({
         title: "Success",
-        description: "Site settings updated successfully",
+        description: "Settings updated successfully",
       });
     },
     onError: (error) => {
@@ -239,11 +229,32 @@ export default function AdminDashboard() {
       }
       toast({
         title: "Error",
-        description: "Failed to update site settings",
+        description: "Failed to update settings",
         variant: "destructive",
       });
     },
   });
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    console.log('AdminDashboard: Still loading auth...');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    console.log('AdminDashboard: Not authenticated, showing login form');
+    return <LoginForm onLoginSuccess={() => {
+      console.log('Login successful, authentication state should update automatically');
+      // The useAuth hook will automatically update isAuthenticated state
+      // No need to reload the page
+    }} />;
+  }
+
+  console.log('AdminDashboard: Authenticated, rendering main content');
 
   const handleProjectSubmit = (data: InsertProjectData) => {
     console.log("Form data received:", data);

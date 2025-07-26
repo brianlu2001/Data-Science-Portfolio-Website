@@ -30,7 +30,7 @@ export default function AdminDashboard() {
   const { isAuthenticated, isLoading, logout } = useAuth();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-  // Show login form if not authenticated
+  // Show loading while checking authentication
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
@@ -40,16 +40,31 @@ export default function AdminDashboard() {
   }
 
   if (!isAuthenticated) {
-    return <LoginForm onLoginSuccess={() => window.location.reload()} />;
+    return <LoginForm onLoginSuccess={() => {
+      // Force a small delay then reload to ensure localStorage is set
+      setTimeout(() => window.location.reload(), 100);
+    }} />;
   }
 
-  const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
+  const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+    retry: 1,
   });
 
-  const { data: siteSettings } = useQuery<SiteSettings>({
+  const { data: siteSettings, error: settingsError } = useQuery<SiteSettings>({
     queryKey: ["/api/site-settings"],
+    retry: 1,
   });
+
+  // Log any API errors
+  useEffect(() => {
+    if (projectsError) {
+      console.error('Projects API error:', projectsError);
+    }
+    if (settingsError) {
+      console.error('Settings API error:', settingsError);
+    }
+  }, [projectsError, settingsError]);
 
   const projectForm = useForm<InsertProjectData>({
     resolver: zodResolver(insertProjectSchema),
@@ -664,10 +679,11 @@ export default function AdminDashboard() {
                               <FormLabel className="text-gray-300">Contact Email</FormLabel>
                               <FormControl>
                                 <Input
-                                  {...field}
                                   type="email"
+                                  {...field}
+                                  value={field.value || ""}
                                   className="bg-charcoal-800 border-gray-600 text-white"
-                                  placeholder="your@email.com"
+                                  placeholder="your.email@example.com"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -683,6 +699,7 @@ export default function AdminDashboard() {
                               <FormControl>
                                 <Input
                                   {...field}
+                                  value={field.value || ""}
                                   type="tel"
                                   className="bg-charcoal-800 border-gray-600 text-white"
                                   placeholder="+1 (555) 123-4567"
@@ -703,6 +720,7 @@ export default function AdminDashboard() {
                             <FormControl>
                               <Input
                                 {...field}
+                                value={field.value || ""}
                                 className="bg-charcoal-800 border-gray-600 text-white"
                                 placeholder="https://linkedin.com/in/yourusername"
                               />
@@ -721,6 +739,7 @@ export default function AdminDashboard() {
                             <FormControl>
                               <Textarea
                                 {...field}
+                                value={field.value || ""}
                                 className="bg-charcoal-800 border-gray-600 text-white"
                                 rows={4}
                                 placeholder="Tell visitors about yourself..."

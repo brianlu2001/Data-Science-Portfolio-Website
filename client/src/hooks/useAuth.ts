@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
 
+// Simple hash function for client-side (not truly secure, but better than plaintext)
+async function simpleHash(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + 'data_science_portfolio_salt_2024');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -11,16 +20,24 @@ export function useAuth() {
     setIsLoading(false);
   }, []);
 
-  const login = (password: string) => {
-    // Simple password check - in production, use proper authentication
-    const correctPassword = 'admin123'; // Change this to your desired password
-    
-    if (password === correctPassword) {
-      localStorage.setItem('admin_authenticated', 'true');
-      setIsAuthenticated(true);
-      return true;
+  const login = async (password: string) => {
+    try {
+      // Hash the provided password
+      const hashedPassword = await simpleHash(password);
+      
+      // Pre-computed hash of "Dance39850175_" with salt
+      const correctPasswordHash = '242840155af0b55f51a3ce04af122191d537f6a39a71a4e6b894d52228def094';
+      
+      if (hashedPassword === correctPasswordHash) {
+        localStorage.setItem('admin_authenticated', 'true');
+        setIsAuthenticated(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Authentication error:', error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {

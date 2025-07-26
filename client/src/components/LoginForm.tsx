@@ -20,7 +20,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true);
     setError('');
 
-    const success = login(password);
+    const success = await login(password);
     
     if (success) {
       onLoginSuccess();
@@ -65,11 +65,6 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
               {isLoading ? 'Authenticating...' : 'Login'}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <p className="text-xs text-gray-500">
-              For demo purposes, password is: admin123
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

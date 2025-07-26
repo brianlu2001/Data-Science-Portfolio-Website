@@ -379,6 +379,7 @@ export default function AdminDashboard() {
                             <FormControl>
                               <Input
                                 {...field}
+                                value={field.value || ""}
                                 className="bg-charcoal-800 border-gray-600 text-white"
                                 placeholder="Machine Learning, Data Science, etc."
                               />
@@ -483,6 +484,7 @@ export default function AdminDashboard() {
                             <FormControl>
                               <Input
                                 {...field}
+                                value={field.value || ""}
                                 className="bg-charcoal-800 border-gray-600 text-white"
                                 placeholder="https://github.com/..."
                               />

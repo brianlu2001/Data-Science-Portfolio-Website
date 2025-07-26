@@ -1,9 +1,5 @@
 {
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node"
-    }
-  },
+  "version": 2,
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist/public",
   "devCommand": "npm run dev",
@@ -11,6 +7,11 @@
   "build": {
     "env": {
       "NODE_ENV": "development"
+    }
+  },
+  "functions": {
+    "api/*.ts": {
+      "runtime": "@vercel/node@3.0.7"
     }
   },
   "rewrites": [

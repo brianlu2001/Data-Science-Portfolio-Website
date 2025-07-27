@@ -187,9 +187,14 @@ export default function ProjectView() {
                         <iframe
                           ref={iframeRef}
                           src={reportUrl}
-                          className="w-full h-full md:scale-100 scale-[0.4] md:origin-center origin-top-left md:w-full w-[250%] md:h-full h-[250%]"
+                          className="w-full h-full"
                           title={`${project.title} Report`}
-                          style={{ border: 'none' }}
+                          style={{ 
+                            border: 'none',
+                            transform: window.innerWidth < 768 ? 'scale(0.3)' : 'scale(1)',
+                            width: window.innerWidth < 768 ? '333%' : '100%',
+                            height: window.innerWidth < 768 ? '333%' : '100%'
+                          }}
                           onLoad={() => {
                             // Check if PDF loaded successfully
                             if (iframeRef.current) {
@@ -247,9 +252,14 @@ export default function ProjectView() {
                     <div className="w-full md:h-[800px] h-[calc(100vh-200px)] relative md:overflow-hidden overflow-auto">
                       <iframe
                         src={reportUrl}
-                        className="w-full h-full md:scale-100 scale-[0.4] md:origin-center origin-top-left md:w-full w-[250%] md:h-full h-[250%]"
+                        className="w-full h-full"
                         title={`${project.title} Report`}
-                        style={{ border: 'none' }}
+                        style={{ 
+                          border: 'none',
+                          transform: window.innerWidth < 768 ? 'scale(0.3)' : 'scale(1)',
+                          width: window.innerWidth < 768 ? '333%' : '100%',
+                          height: window.innerWidth < 768 ? '333%' : '100%'
+                        }}
                         onError={() => {
                           // Show fallback for HTML reports that fail to load
                           const container = document.createElement('div');

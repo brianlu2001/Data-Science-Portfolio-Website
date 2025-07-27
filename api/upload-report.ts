@@ -78,10 +78,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     console.log(`File read successfully, size: ${fileSize} bytes`);
 
-    // For now, let's create a data URL that can be used directly
+    // Check if file is too large for data URL (limit to 5MB for data URLs)
+    const maxDataUrlSize = 5 * 1024 * 1024; // 5MB
+    
+    if (fileSize > maxDataUrlSize) {
+      console.warn(`File too large for data URL: ${fileSize} bytes`);
+      // For large files, we'll need a different approach
+      // For now, return an error
+      await fs.unlink(reportFile.filepath);
+      return res.status(413).json({
+        message: `File too large. Maximum size for embedded files is ${maxDataUrlSize / (1024 * 1024)}MB`,
+        size: fileSize,
+        maxSize: maxDataUrlSize
+      });
+    }
+
+    // Create data URL for smaller files
     const mimeType = reportFile.mimetype || 'application/octet-stream';
     const base64Data = fileBuffer.toString('base64');
     const dataUrl = `data:${mimeType};base64,${base64Data}`;
+
+    console.log(`Created data URL of length: ${dataUrl.length} for file: ${fileName}`);
 
     // Clean up temporary file
     try {
@@ -99,6 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       dataUrl: dataUrl,
       size: fileSize,
       mimeType: mimeType,
+      dataUrlLength: dataUrl.length,
       message: 'File processed successfully'
     });
 

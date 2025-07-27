@@ -307,7 +307,12 @@ export default function AdminDashboard() {
           const result = await response.json();
           // Use the data URL as the project URL
           updatedData.projectUrl = result.dataUrl;
-          console.log("Report uploaded successfully, size:", result.size);
+          console.log("Report uploaded successfully:", {
+            fileName: result.fileName,
+            size: result.size,
+            dataUrlLength: result.dataUrl?.length,
+            updatedData: updatedData
+          });
         } else {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Report upload failed');
@@ -324,7 +329,12 @@ export default function AdminDashboard() {
     }
     
     if (editingProject) {
-      console.log("Updating project with data:", updatedData);
+      console.log("Updating project with data:", {
+        projectId: editingProject.id,
+        hasReportFile: !!reportFile,
+        projectUrlLength: updatedData.projectUrl?.length,
+        updatedData: updatedData
+      });
       updateProjectMutation.mutate({ id: editingProject.id, data: updatedData });
     } else {
       // For creation, use FormData for file uploads
@@ -587,12 +597,24 @@ export default function AdminDashboard() {
                             </a>
                           </div>
                         )}
-                        <Input
-                          id="project-report"
-                          type="file"
-                          accept=".pdf,.html,.htm"
-                          className="bg-charcoal-800 border-gray-600 text-white file:bg-royal-600 file:text-white file:border-0 file:rounded file:px-4 file:py-2 file:mr-4 file:cursor-pointer file:hover:bg-royal-700 file:font-medium"
-                        />
+                        <div className="relative">
+                          <Input
+                            id="project-report"
+                            type="file"
+                            accept=".pdf,.html,.htm"
+                            className="
+                              bg-charcoal-800 border-2 border-gray-600 text-white rounded-lg
+                              file:bg-royal-500 file:text-white file:border-0 file:rounded-md 
+                              file:px-6 file:py-3 file:mr-4 file:cursor-pointer 
+                              file:hover:bg-royal-600 file:font-semibold file:text-sm
+                              file:transition-colors file:duration-200
+                              hover:border-gray-500 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20
+                            "
+                          />
+                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                            <span className="text-gray-400 text-sm">PDF, HTML</span>
+                          </div>
+                        </div>
                         <p className="text-xs text-gray-500 mt-1">
                           Upload PDF or HTML file to replace the current report. File will be embedded as a data URL.
                         </p>

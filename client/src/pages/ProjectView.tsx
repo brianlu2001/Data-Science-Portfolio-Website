@@ -13,6 +13,7 @@ export default function ProjectView() {
   const { id } = useParams<{ id: string }>();
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { trackPageViewDebounced, trackProjectClick } = useAnalytics();
 
@@ -22,6 +23,16 @@ export default function ProjectView() {
       trackPageViewDebounced(`/projects/${id}`);
     }
   }, [id, trackPageViewDebounced]);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   const { data: project, isLoading: projectLoading, error: projectError } = useQuery<Project>({
     queryKey: [`/api/project-by-id?id=${id}`],
@@ -191,9 +202,9 @@ export default function ProjectView() {
                           title={`${project.title} Report`}
                           style={{ 
                             border: 'none',
-                            transform: window.innerWidth < 768 ? 'scale(0.3)' : 'scale(1)',
-                            width: window.innerWidth < 768 ? '333%' : '100%',
-                            height: window.innerWidth < 768 ? '333%' : '100%'
+                            transform: isMobile ? 'scale(0.3)' : 'scale(1)',
+                            width: isMobile ? '333%' : '100%',
+                            height: isMobile ? '333%' : '100%'
                           }}
                           onLoad={() => {
                             // Check if PDF loaded successfully
@@ -256,9 +267,9 @@ export default function ProjectView() {
                         title={`${project.title} Report`}
                         style={{ 
                           border: 'none',
-                          transform: window.innerWidth < 768 ? 'scale(0.3)' : 'scale(1)',
-                          width: window.innerWidth < 768 ? '333%' : '100%',
-                          height: window.innerWidth < 768 ? '333%' : '100%'
+                          transform: isMobile ? 'scale(0.3)' : 'scale(1)',
+                          width: isMobile ? '333%' : '100%',
+                          height: isMobile ? '333%' : '100%'
                         }}
                         onError={() => {
                           // Show fallback for HTML reports that fail to load

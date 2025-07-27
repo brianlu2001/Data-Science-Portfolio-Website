@@ -21,18 +21,18 @@ const RESTORE_TO_ORIGINAL_URLS: { [key: number]: string } = {
   10: 'https://example.com/nba-salary.jpg' // NBA Salary - might have been URL
 };
 
-// EXACT original mapping from server/seedData.ts - these were the working URLs
-const ORIGINAL_SEED_MAPPING: { [key: number]: { url: string; type: 'png' } } = {
-  1: { url: '/uploads/bert-diagram.png', type: 'png' }, // AI Music Detection
-  2: { url: '/uploads/itri-logo.png', type: 'png' }, // Startup Success
-  3: { url: '/uploads/compressed-sensing.png', type: 'png' }, // Compressed Sensing
+// EXACT original mapping from replit_dump.sql - these were the ACTUAL working URLs
+const ORIGINAL_DATABASE_MAPPING: { [key: number]: { url: string; type: 'url' | 'png' } } = {
+  1: { url: 'https://cdn.prod.website-files.com/66715118c4748bd61331f714/669796103c8f35e453e0fd8a_sound-ethics-share.jpg', type: 'url' }, // AI Music Detection
+  2: { url: '/uploads/itri-logo-updated.png', type: 'png' }, // Startup Success
+  3: { url: '/uploads/bert-diagram.png', type: 'png' }, // Book Review Analysis with BERT
   4: { url: '/uploads/finance-ml.png', type: 'png' }, // Financial Risk Management
-  5: { url: '/uploads/bert-diagram.png', type: 'png' }, // NLP BERT
-  6: { url: '/uploads/finance-ml.png', type: 'png' }, // Spotify Hits (was reusing)
-  7: { url: '/uploads/compressed-sensing.png', type: 'png' }, // Matrix Factorization (was reusing)
-  8: { url: '/uploads/spx-chart.png', type: 'png' }, // SPX Time Series
-  9: { url: '/uploads/yelp-logo.png', type: 'png' }, // Movie Recommender (using yelp as placeholder)
-  10: { url: '/uploads/finance-ml.png', type: 'png' } // NBA Salary (was reusing)
+  5: { url: '/uploads/compressed-sensing.png', type: 'png' }, // Compressed Sensing
+  6: { url: 'https://koto.studio/wp-content/uploads/2025/04/Amazon_CS_01_Intro_00_Thumbnail.jpg', type: 'url' }, // Amazon Matrix Factorization
+  7: { url: '/uploads/yelp-logo.png', type: 'png' }, // Restaurant Collaborative Filtering
+  8: { url: 'https://img.4gamers.com.tw/puku-clone-version/53cb4dbc919ccb10d6cc5cf98b5395b9b5091521.jpg', type: 'url' }, // Spotify Hits
+  9: { url: '/uploads/spx-chart.png', type: 'png' }, // Time Series SPX
+  10: { url: 'https://sportshub.cbsistatic.com/i/r/2024/08/10/a0110e0e-543f-4df4-bf1a-660be328433b/thumbnail/1200x675/ef4ff686397ab81936a840388045033d/lebron-kd-steph-usa-medal-getty.png', type: 'url' } // NBA Salary
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -64,7 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       client.release();
 
       const restorePlan = result.rows.map(row => {
-        const planned = ORIGINAL_SEED_MAPPING[row.id];
+        const planned = ORIGINAL_DATABASE_MAPPING[row.id];
         return {
           id: row.id,
           title: row.title,
@@ -76,9 +76,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       return res.json({
-        message: "Restore plan - EXACT original seed data mapping (all were PNG files)",
+        message: "Restore plan - EXACT original database mapping (mix of URLs and PNG files)",
         restorePlan,
-        note: "These are the exact imageUrl paths from server/seedData.ts before any changes"
+        note: "These are the exact imageUrl paths from replit_dump.sql - the ACTUAL working configuration"
       });
     }
 
@@ -101,7 +101,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ORDER BY id ASC
       `);
 
-      for (const [projectId, config] of Object.entries(ORIGINAL_SEED_MAPPING)) {
+      for (const [projectId, config] of Object.entries(ORIGINAL_DATABASE_MAPPING)) {
         const id = parseInt(projectId);
         const project = currentResult.rows.find(row => row.id === id);
         
@@ -127,9 +127,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       client.release();
 
       return res.json({
-        message: `✅ Restored ${updates.length} project images to EXACT original seed data paths!`,
+        message: `✅ Restored ${updates.length} project images to EXACT original database paths!`,
         updates,
-        note: "All images restored to the exact paths from server/seedData.ts"
+        note: "All images restored to the exact paths from replit_dump.sql (mix of URLs and PNG files)"
       });
     }
 

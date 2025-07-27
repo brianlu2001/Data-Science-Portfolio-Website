@@ -24,7 +24,7 @@ export default function ProjectView() {
   }, [id, trackPageViewDebounced]);
   
   const { data: project, isLoading: projectLoading } = useQuery<Project>({
-    queryKey: ["/api/projects-simple", id],
+    queryKey: [`/api/projects-simple/${id}`],
     enabled: !!id,
   });
 
@@ -98,8 +98,8 @@ export default function ProjectView() {
               {reportUrl && (
                 <Button
                   onClick={() => {
-                    trackProjectClick(parseInt(id!), 'report');
-                    window.open(reportUrl, '_blank');
+                    if (id) trackProjectClick(parseInt(id), 'report');
+                    window.open(reportUrl!, '_blank');
                   }}
                   className="bg-royal-500 hover:bg-royal-600 text-white"
                 >
@@ -110,8 +110,8 @@ export default function ProjectView() {
               {project.githubUrl && (
                 <Button
                   onClick={() => {
-                    trackProjectClick(parseInt(id!), 'github');
-                    window.open(project.githubUrl, '_blank');
+                    if (id) trackProjectClick(parseInt(id), 'github');
+                    window.open(project.githubUrl!, '_blank');
                   }}
                   variant="outline"
                   className="border-gray-600 text-gray-300 hover:text-white"
@@ -289,7 +289,7 @@ export default function ProjectView() {
                       key={file.id}
                       className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
                     >
-                      <span className="text-gray-300">{file.filename}</span>
+                      <span className="text-gray-300">{file.fileName}</span>
                       <Button
                         onClick={() => window.open(file.fileUrl, '_blank')}
                         size="sm"

@@ -128,7 +128,7 @@ export default function AdminDashboard() {
   });
 
   const updateProjectMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: FormData }) => {
+    mutationFn: async ({ id, data }: { id: number; data: InsertProjectData }) => {
       const response = await apiRequest("PUT", `/api/projects/${id}`, data);
       return response.json();
     },
@@ -273,30 +273,34 @@ export default function AdminDashboard() {
   const handleProjectSubmit = (data: InsertProjectData) => {
     console.log("Form data received:", data);
     
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (Array.isArray(value)) {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, value.toString());
-        }
-      }
-    });
-
-    const imageFile = (document.getElementById('project-image') as HTMLInputElement)?.files?.[0];
-    if (imageFile) {
-      formData.append('image', imageFile);
-    }
-
-    const reportFile = (document.getElementById('project-report') as HTMLInputElement)?.files?.[0];
-    if (reportFile) {
-      formData.append('report', reportFile);
-    }
-    
+    // For updates, send JSON instead of FormData to avoid serverless function issues
     if (editingProject) {
-      updateProjectMutation.mutate({ id: editingProject.id, data: formData });
+      console.log("Updating project with JSON data");
+      updateProjectMutation.mutate({ id: editingProject.id, data: data });
     } else {
+      // For creation, use FormData for file uploads
+      console.log("Creating project with FormData");
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value.toString());
+          }
+        }
+      });
+
+      const imageFile = (document.getElementById('project-image') as HTMLInputElement)?.files?.[0];
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      const reportFile = (document.getElementById('project-report') as HTMLInputElement)?.files?.[0];
+      if (reportFile) {
+        formData.append('report', reportFile);
+      }
+      
       createProjectMutation.mutate(formData);
     }
   };

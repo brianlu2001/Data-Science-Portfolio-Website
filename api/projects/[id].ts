@@ -88,27 +88,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       // Handle both JSON and FormData
       let data;
-      if (req.headers['content-type']?.includes('multipart/form-data')) {
-        // Handle FormData (from admin dashboard)
-        console.log('Processing FormData for project update');
-        const formData = req.body;
-        data = {
-          title: formData.title,
-          simplifiedDescription: formData.simplifiedDescription,
-          fullDescription: formData.fullDescription,
-          technologies: formData.technologies ? 
-            (Array.isArray(formData.technologies) ? formData.technologies : 
-             typeof formData.technologies === 'string' ? JSON.parse(formData.technologies) : formData.technologies) : 
-            [],
-          category: formData.category,
-          imageUrl: formData.imageUrl,
-          projectUrl: formData.projectUrl,
-          githubUrl: formData.githubUrl,
-          sortOrder: formData.sortOrder ? parseInt(formData.sortOrder) : 0
-        };
-      } else {
+      console.log('Content-Type:', req.headers['content-type']);
+      console.log('Request body type:', typeof req.body);
+      console.log('Request body:', req.body);
+      
+      if (req.headers['content-type']?.includes('application/json')) {
         // Handle JSON
+        console.log('Processing JSON data');
         data = req.body;
+      } else {
+        // Handle FormData or other formats
+        console.log('Processing FormData/other format');
+        const bodyData = req.body;
+        
+        // Handle technologies field specially since it might be JSON string
+        let technologies = [];
+        if (bodyData.technologies) {
+          try {
+            technologies = typeof bodyData.technologies === 'string' ? 
+              JSON.parse(bodyData.technologies) : bodyData.technologies;
+          } catch (e) {
+            console.warn('Failed to parse technologies:', bodyData.technologies);
+            technologies = Array.isArray(bodyData.technologies) ? bodyData.technologies : [];
+          }
+        }
+        
+        data = {
+          title: bodyData.title || '',
+          simplifiedDescription: bodyData.simplifiedDescription || '',
+          fullDescription: bodyData.fullDescription || '',
+          technologies: technologies,
+          category: bodyData.category || '',
+          imageUrl: bodyData.imageUrl || '',
+          projectUrl: bodyData.projectUrl || '',
+          githubUrl: bodyData.githubUrl || '',
+          sortOrder: bodyData.sortOrder ? parseInt(bodyData.sortOrder) : 0
+        };
       }
 
       console.log('Project update data:', data);

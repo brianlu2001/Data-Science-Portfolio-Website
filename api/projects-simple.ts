@@ -7,6 +7,23 @@ neonConfig.webSocketConstructor = ws;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+// Function to properly encode URLs while preserving the path structure
+function sanitizeProjectUrl(url: string): string {
+  if (!url) return url;
+  
+  // Split URL into parts
+  const urlParts = url.split('/');
+  
+  // URL encode only the filename (last part)
+  const filename = urlParts[urlParts.length - 1];
+  const encodedFilename = encodeURIComponent(filename);
+  
+  // Reconstruct the URL
+  urlParts[urlParts.length - 1] = encodedFilename;
+  
+  return urlParts.join('/');
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -62,6 +79,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'POST') {
     try {
+      // Handle both JSON and FormData
+      let data;
+      if (req.headers['content-type']?.includes('multipart/form-data')) {
+        // Handle FormData (from admin dashboard)
+        const formData = req.body;
+        data = {
+          title: formData.title,
+          simplifiedDescription: formData.simplifiedDescription,
+          fullDescription: formData.fullDescription,
+          technologies: formData.technologies ? 
+            (Array.isArray(formData.technologies) ? formData.technologies : formData.technologies.split(',').map((t: string) => t.trim())) : 
+            [],
+          category: formData.category,
+          imageUrl: formData.imageUrl,
+          projectUrl: formData.projectUrl,
+          githubUrl: formData.githubUrl
+        };
+      } else {
+        // Handle JSON
+        data = req.body;
+      }
+
       const {
         title,
         simplifiedDescription,
@@ -71,7 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         imageUrl,
         projectUrl,
         githubUrl
-      } = req.body;
+      } = data;
 
       if (!title) {
         return res.status(400).json({ message: 'Title is required' });
@@ -84,6 +123,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Push all existing projects down by 1
         await client.query('UPDATE projects SET sort_order = sort_order + 1');
+
+        // Sanitize URLs before inserting
+        const sanitizedProjectUrl = sanitizeProjectUrl(projectUrl);
+        const sanitizedGithubUrl = sanitizeProjectUrl(githubUrl);
 
         // Insert new project at position 1
         const result = await client.query(`
@@ -100,8 +143,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           technologies,
           category,
           imageUrl,
-          projectUrl,
-          githubUrl
+          sanitizedProjectUrl,
+          sanitizedGithubUrl
         ]);
 
         await client.query('COMMIT');

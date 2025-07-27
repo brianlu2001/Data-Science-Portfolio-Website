@@ -96,11 +96,11 @@ export default function AdminDashboard() {
   // ALL MUTATIONS MUST BE DEFINED BEFORE CONDITIONAL RETURNS
   const createProjectMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("POST", "/api/projects", data);
+      const response = await apiRequest("POST", "/api/projects-simple", data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects-simple"] });
       projectForm.reset();
       toast({
         title: "Success",
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
       return response.json();
     },
     onSuccess: (updatedProject) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects-simple"] });
       // Update the form with the latest data instead of clearing it
       projectForm.reset({
         title: updatedProject.title,

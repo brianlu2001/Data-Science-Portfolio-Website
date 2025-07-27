@@ -11,6 +11,12 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 function sanitizeProjectUrl(url: string): string {
   if (!url) return url;
   
+  // Check if URL is already encoded by looking for % characters
+  if (url.includes('%')) {
+    console.log('URL appears already encoded, returning as-is:', url);
+    return url;
+  }
+  
   // Split URL into parts
   const urlParts = url.split('/');
   
@@ -21,7 +27,9 @@ function sanitizeProjectUrl(url: string): string {
   // Reconstruct the URL
   urlParts[urlParts.length - 1] = encodedFilename;
   
-  return urlParts.join('/');
+  const result = urlParts.join('/');
+  console.log('URL sanitization:', url, '→', result);
+  return result;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

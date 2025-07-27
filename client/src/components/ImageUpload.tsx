@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,10 +13,19 @@ interface ImageUploadProps {
 }
 
 export default function ImageUpload({ value, onChange, label = "Project Image" }: ImageUploadProps) {
-  const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('url');
+  // Automatically detect if the current value is a local file path vs URL
+  const isLocalFile = value && (value.startsWith('/uploads/') || value.includes('.png') || value.includes('.jpg') || value.includes('.jpeg') || value.includes('.gif') || value.includes('.webp')) && !value.startsWith('http');
+  
+  const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>(isLocalFile ? 'file' : 'url');
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update upload method when value changes (e.g., when editing different projects)
+  useEffect(() => {
+    const isFileUpload = value && (value.startsWith('/uploads/') || (value.includes('.png') || value.includes('.jpg') || value.includes('.jpeg') || value.includes('.gif') || value.includes('.webp')) && !value.startsWith('http'));
+    setUploadMethod(isFileUpload ? 'file' : 'url');
+  }, [value]);
 
   // Handle file upload to server
   const uploadFile = async (file: File) => {

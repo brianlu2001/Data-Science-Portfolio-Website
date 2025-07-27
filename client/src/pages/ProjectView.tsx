@@ -24,7 +24,7 @@ export default function ProjectView() {
   }, [id, trackPageViewDebounced]);
   
   const { data: project, isLoading: projectLoading } = useQuery<Project>({
-    queryKey: [`/api/projects-simple/${id}`],
+    queryKey: [`/api/project-by-id?id=${id}`],
     enabled: !!id,
   });
 

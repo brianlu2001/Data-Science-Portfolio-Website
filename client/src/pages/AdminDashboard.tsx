@@ -278,6 +278,21 @@ export default function AdminDashboard() {
     
     const reportFile = (document.getElementById('project-report') as HTMLInputElement)?.files?.[0];
     if (reportFile) {
+      // If editing an existing project with a report, confirm the replacement
+      if (editingProject && editingProject.projectUrl) {
+        const confirmReplace = window.confirm(
+          `Are you sure you want to replace the current report with "${reportFile.name}"?`
+        );
+        if (!confirmReplace) {
+          // Clear the file input and return
+          const reportFileInput = document.getElementById('project-report') as HTMLInputElement;
+          if (reportFileInput) {
+            reportFileInput.value = '';
+          }
+          return;
+        }
+      }
+      
       console.log("Uploading report file:", reportFile.name);
       try {
         const formData = new FormData();
@@ -352,6 +367,12 @@ export default function AdminDashboard() {
       githubUrl: project.githubUrl || "",
       sortOrder: project.sortOrder,
     });
+    
+    // Clear the file input when switching between projects
+    const reportFileInput = document.getElementById('project-report') as HTMLInputElement;
+    if (reportFileInput) {
+      reportFileInput.value = '';
+    }
   };
 
   const cancelEditing = () => {
@@ -368,6 +389,12 @@ export default function AdminDashboard() {
       githubUrl: "",
       sortOrder: 0,
     });
+    
+    // Clear the file input when canceling
+    const reportFileInput = document.getElementById('project-report') as HTMLInputElement;
+    if (reportFileInput) {
+      reportFileInput.value = '';
+    }
   };
 
   const handleProjectReorder = (reorderedProjects: Project[]) => {
@@ -564,7 +591,7 @@ export default function AdminDashboard() {
                           id="project-report"
                           type="file"
                           accept=".pdf,.html,.htm"
-                          className="bg-charcoal-800 border-gray-600 text-white file:bg-royal-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:mr-3"
+                          className="bg-charcoal-800 border-gray-600 text-white file:bg-royal-600 file:text-white file:border-0 file:rounded file:px-4 file:py-2 file:mr-4 file:cursor-pointer file:hover:bg-royal-700 file:font-medium"
                         />
                         <p className="text-xs text-gray-500 mt-1">
                           Upload PDF or HTML file to replace the current report. File will be embedded as a data URL.

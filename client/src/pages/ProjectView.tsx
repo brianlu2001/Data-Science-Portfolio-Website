@@ -24,14 +24,16 @@ export default function ProjectView() {
   }, [id, trackPageViewDebounced]);
   
   const { data: project, isLoading: projectLoading } = useQuery<Project>({
-    queryKey: ["/api/projects", id],
+    queryKey: ["/api/projects-simple", id],
     enabled: !!id,
   });
 
-  const { data: projectFiles = [] } = useQuery<ProjectFile[]>({
-    queryKey: ["/api/projects", id, "files"],
-    enabled: !!id,
-  });
+  // Disable project files query for now since it's causing issues
+  // const { data: projectFiles = [] } = useQuery<ProjectFile[]>({
+  //   queryKey: ["/api/projects", id, "files"],
+  //   enabled: !!id,
+  // });
+  const projectFiles: ProjectFile[] = []; // Empty array for now
 
   // Use project URL directly from the database
   useEffect(() => {

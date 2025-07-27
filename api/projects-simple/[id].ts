@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  console.log(`Simple Projects API: ${req.method} /api/projects-simple`);
+  console.log(`Simple Individual Project API: ${req.method} /api/projects-simple/${req.query.id}`);
 
   try {
     const databaseUrl = process.env.DATABASE_URL;
@@ -24,13 +24,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ message: "Database URL not configured" });
     }
 
-    console.log('Creating database connection...');
+    // Extract project ID from URL
+    const { id } = req.query;
+    const projectId = parseInt(id as string);
+    
+    if (isNaN(projectId)) {
+      return res.status(400).json({ message: "Invalid project ID" });
+    }
+
+    console.log(`Fetching project ${projectId}...`);
     const pool = new Pool({ connectionString: databaseUrl });
     const client = await pool.connect();
 
     if (req.method === 'GET') {
-      console.log('Fetching projects with raw SQL...');
-      
       const result = await client.query(`
         SELECT 
           id,
@@ -46,13 +52,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           created_at,
           updated_at
         FROM projects 
-        ORDER BY sort_order ASC
-      `);
+        WHERE id = $1
+      `, [projectId]);
       
-      console.log(`Found ${result.rows.length} projects`);
+      if (result.rows.length === 0) {
+        client.release();
+        return res.status(404).json({ message: "Project not found" });
+      }
       
       // Transform to match expected format
-      const projects = result.rows.map(row => ({
+      const row = result.rows[0];
+      const project = {
         id: row.id,
         title: row.title,
         simplifiedDescription: row.simplified_description,
@@ -65,18 +75,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         sortOrder: row.sort_order,
         createdAt: row.created_at,
         updatedAt: row.updated_at
-      }));
+      };
       
       client.release();
-      console.log('Sample project:', projects[0] ? { id: projects[0].id, title: projects[0].title } : 'none');
-      return res.json(projects);
+      console.log(`Found project: ${project.title}`);
+      return res.json(project);
     }
     
     client.release();
     return res.status(405).json({ message: "Method not allowed" });
     
   } catch (error) {
-    console.error('Projects API Error:', error);
+    console.error('Individual Project API Error:', error);
     return res.status(500).json({ 
       message: "Internal server error", 
       error: error instanceof Error ? error.message : 'Unknown error',

@@ -45,7 +45,7 @@ export default function Portfolio() {
   };
 
   const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: ["/api/projects-simple"],
   });
 
   const { data: siteSettings, error: settingsError } = useQuery<SiteSettings>({

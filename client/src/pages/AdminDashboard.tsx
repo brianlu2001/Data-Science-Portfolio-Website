@@ -323,7 +323,18 @@ export default function AdminDashboard() {
 
   const cancelEditing = () => {
     setEditingProject(null);
-    projectForm.reset();
+    // Reset form to empty state for new project creation
+    projectForm.reset({
+      title: "",
+      simplifiedDescription: "",
+      fullDescription: "",
+      technologies: [],
+      category: "",
+      imageUrl: "",
+      projectUrl: "",
+      githubUrl: "",
+      sortOrder: 0,
+    });
   };
 
   const handleProjectReorder = (reorderedProjects: Project[]) => {

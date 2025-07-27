@@ -102,7 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           category: formData.category,
           imageUrl: formData.imageUrl,
           projectUrl: formData.projectUrl,
-          githubUrl: formData.githubUrl
+          githubUrl: '' // GitHub URLs disabled
         };
       } else {
         // Handle JSON
@@ -134,7 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Sanitize URLs before inserting
         const sanitizedProjectUrl = sanitizeProjectUrl(projectUrl);
-        const sanitizedGithubUrl = sanitizeProjectUrl(githubUrl);
+        const sanitizedGithubUrl = ''; // GitHub URLs disabled
 
         // Insert new project at position 1
         const result = await client.query(`

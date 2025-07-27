@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowLeft, ExternalLink, Github, FileText } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import NeuralNetworkBackground from "@/components/NeuralNetworkBackground";
@@ -120,19 +120,7 @@ export default function ProjectView() {
                   View Full Report
                 </Button>
               )}
-              {project.githubUrl && (
-                <Button
-                  onClick={() => {
-                    if (id) trackProjectClick(parseInt(id), 'github');
-                    window.open(project.githubUrl!, '_blank');
-                  }}
-                  variant="outline"
-                  className="border-gray-600 text-gray-300 hover:text-white"
-                >
-                  <Github size={16} className="mr-2" />
-                  GitHub
-                </Button>
-              )}
+
             </div>
           </div>
         </div>

@@ -129,7 +129,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           category: bodyData.category || '',
           imageUrl: bodyData.imageUrl || '',
           projectUrl: bodyData.projectUrl || '',
-          githubUrl: bodyData.githubUrl || '',
+          githubUrl: '', // GitHub URLs disabled
           sortOrder: bodyData.sortOrder ? parseInt(bodyData.sortOrder) : 0
         };
       }
@@ -154,7 +154,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Sanitize URLs before updating
       const sanitizedProjectUrl = sanitizeProjectUrl(projectUrl);
-      const sanitizedGithubUrl = sanitizeProjectUrl(githubUrl);
+      const sanitizedGithubUrl = ''; // GitHub URLs disabled
 
       const client = await pool.connect();
       try {

@@ -64,7 +64,6 @@ export default function AdminDashboard() {
       category: "",
       imageUrl: "",
       projectUrl: "",
-      githubUrl: "",
       sortOrder: 0,
     },
   });
@@ -143,7 +142,6 @@ export default function AdminDashboard() {
         category: updatedProject.category || "",
         imageUrl: updatedProject.imageUrl || "",
         projectUrl: updatedProject.projectUrl || "",
-        githubUrl: updatedProject.githubUrl || "",
         sortOrder: updatedProject.sortOrder,
       });
       toast({
@@ -273,67 +271,16 @@ export default function AdminDashboard() {
   const handleProjectSubmit = async (data: InsertProjectData) => {
     console.log("Form data received:", data);
     
-    // Handle report file upload first (both create and update)
-    let updatedData = { ...data };
-    
-    const reportFile = (document.getElementById('project-report') as HTMLInputElement)?.files?.[0];
-    if (reportFile) {
-      console.log("Uploading report file:", reportFile.name);
-      try {
-        const formData = new FormData();
-        formData.append('report', reportFile);
-        
-        const response = await fetch('/api/upload-report', {
-          method: 'POST',
-          body: formData,
-        });
-        
-        if (response.ok) {
-          const result = await response.json();
-          // Use the report URL instead of data URL
-          updatedData.projectUrl = result.reportUrl;
-          console.log("Report uploaded successfully:", {
-            fileName: result.fileName,
-            originalName: result.originalName,
-            reportUrl: result.reportUrl,
-            size: result.size,
-            message: result.message
-          });
-          
-          // Show a toast with instructions
-          toast({
-            title: "File Processed",
-            description: result.message,
-            duration: 8000,
-          });
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Report upload failed');
-        }
-      } catch (error) {
-        console.error('Report upload error:', error);
-        toast({
-          title: "Error",
-          description: `Failed to upload report file: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
+    // No file upload processing needed anymore
     
     if (editingProject) {
-      console.log("Updating project with data:", {
-        projectId: editingProject.id,
-        hasReportFile: !!reportFile,
-        projectUrlLength: updatedData.projectUrl?.length,
-        updatedData: updatedData
-      });
-      updateProjectMutation.mutate({ id: editingProject.id, data: updatedData });
+      console.log("Updating project with data:", data);
+      updateProjectMutation.mutate({ id: editingProject.id, data: data });
     } else {
       // For creation, use FormData for file uploads
       console.log("Creating project with FormData");
       const formData = new FormData();
-      Object.entries(updatedData).forEach(([key, value]) => {
+      Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (Array.isArray(value)) {
             formData.append(key, JSON.stringify(value));
@@ -367,15 +314,10 @@ export default function AdminDashboard() {
       category: project.category || "",
       imageUrl: project.imageUrl || "",
       projectUrl: project.projectUrl || "",
-      githubUrl: project.githubUrl || "",
       sortOrder: project.sortOrder,
     });
     
-    // Clear the file input when switching between projects
-    const reportFileInput = document.getElementById('project-report') as HTMLInputElement;
-    if (reportFileInput) {
-      reportFileInput.value = '';
-    }
+    // No file input to clear anymore
   };
 
   const cancelEditing = () => {
@@ -389,15 +331,10 @@ export default function AdminDashboard() {
       category: "",
       imageUrl: "",
       projectUrl: "",
-      githubUrl: "",
       sortOrder: 0,
     });
     
-    // Clear the file input when canceling
-    const reportFileInput = document.getElementById('project-report') as HTMLInputElement;
-    if (reportFileInput) {
-      reportFileInput.value = '';
-    }
+    // No file input to clear anymore
   };
 
   const handleProjectReorder = (reorderedProjects: Project[]) => {
@@ -576,60 +513,41 @@ export default function AdminDashboard() {
                         />
                       </div>
                       <div>
-                        <Label className="text-gray-300">Project Report File</Label>
-                        {editingProject?.projectUrl && (
-                          <div className="mb-2">
-                            <p className="text-sm text-gray-400">Current report:</p>
-                            <a 
-                              href={editingProject.projectUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-royal-400 hover:text-royal-300 text-sm underline"
-                            >
-                              {editingProject.projectUrl.split('/').pop() || 'View Current Report'}
-                            </a>
-                          </div>
-                        )}
-                        <div className="relative">
-                          <Input
-                            id="project-report"
-                            type="file"
-                            accept=".pdf,.html,.htm"
-                            className="
-                              bg-charcoal-800 border-gray-600 text-white rounded
-                              file:bg-royal-500 file:text-white file:border-0 file:rounded 
-                              file:px-3 file:py-1.5 file:mr-3 file:cursor-pointer 
-                              file:hover:bg-royal-600 file:font-medium file:text-xs
-                              file:transition-colors file:duration-200
-                              hover:border-gray-500 focus:border-royal-400
-                            "
-                          />
-                          <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-                            <span className="text-gray-400 text-xs">PDF, HTML</span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Upload PDF or HTML file to replace the current report. File will be embedded as a data URL.
-                        </p>
+                        <FormField
+                          control={projectForm.control}
+                          name="projectUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Project Report URL</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  value={field.value || ""}
+                                  className="bg-charcoal-800 border-gray-600 text-white"
+                                  placeholder="/reports/your-report-file.pdf or .html"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                              <p className="text-xs text-gray-500 mt-1">
+                                Enter the path to your report file in the /reports/ folder. Add files manually to public/reports/ in your GitHub repo.
+                              </p>
+                              {editingProject?.projectUrl && (
+                                <div className="mt-2">
+                                  <p className="text-sm text-gray-400">Current report:</p>
+                                  <a 
+                                    href={editingProject.projectUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-royal-400 hover:text-royal-300 text-sm underline"
+                                  >
+                                    {editingProject.projectUrl}
+                                  </a>
+                                </div>
+                              )}
+                            </FormItem>
+                          )}
+                        />
                       </div>
-                      <FormField
-                        control={projectForm.control}
-                        name="githubUrl"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-gray-300">GitHub URL</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                value={field.value || ""}
-                                className="bg-charcoal-800 border-gray-600 text-white"
-                                placeholder="https://github.com/..."
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
 
                     <div className="flex gap-4">

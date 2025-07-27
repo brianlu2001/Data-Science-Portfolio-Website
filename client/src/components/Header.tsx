@@ -251,9 +251,9 @@ export default function Header({ siteSettings }: HeaderProps) {
                 </motion.h2>
               </div>
 
-              {/* Back Face */}
-              <div 
-                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-center sm:justify-end items-center"
+                            {/* Back Face */}
+              <div
+                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-center items-center"
                 style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
@@ -261,10 +261,12 @@ export default function Header({ siteSettings }: HeaderProps) {
                   '--reflection-y': '30%',
                   '--secondary-reflection-x': '70%',
                   '--secondary-reflection-y': '70%',
-                  '--highlight-angle': '135deg'
+                  '--highlight-angle': '135deg',
+                  // Ensure same height as front face on mobile
+                  minHeight: '100%'
                 }}
               >
-                <div className="flex flex-col items-center mt-auto sm:mt-0">
+                <div className="flex flex-col items-center justify-center h-full">
                   <motion.p 
                     className="suika-title text-lg sm:text-xl md:text-2xl lg:text-3xl text-[#242931] font-light mb-4 text-center leading-relaxed"
                     animate={{ 

@@ -180,14 +180,14 @@ export default function ProjectView() {
                   <h2 className="text-2xl font-semibold text-white suika-fallback">Full Project Report</h2>
                 </div>
                 
-                <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
+                <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700 md:overflow-hidden overflow-x-auto">
                   {getReportType(reportUrl) === 'pdf' ? (
                     <div className="w-full h-[800px] relative">
                       {!pdfError ? (
                         <iframe
                           ref={iframeRef}
                           src={reportUrl}
-                          className="w-full h-full"
+                          className="w-full h-full md:w-full md:h-full w-[800px] h-full"
                           title={`${project.title} Report`}
                           style={{ border: 'none' }}
                           onLoad={() => {
@@ -247,7 +247,7 @@ export default function ProjectView() {
                     <div className="w-full h-[800px] relative">
                       <iframe
                         src={reportUrl}
-                        className="w-full h-full"
+                        className="w-full h-full md:w-full md:h-full w-[800px] h-full"
                         title={`${project.title} Report`}
                         style={{ border: 'none' }}
                         onError={() => {

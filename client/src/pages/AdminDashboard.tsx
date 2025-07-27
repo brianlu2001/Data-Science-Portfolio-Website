@@ -18,8 +18,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { insertProjectSchema, insertSiteSettingsSchema, type Project, type SiteSettings } from "@shared/schema";
 import ImageUpload from "@/components/ImageUpload";
+import DraggableProjectList from "@/components/DraggableProjectList";
 import { type z } from "zod";
-import { BarChart3, Users, Eye, MousePointer, Settings, LogOut, Plus, Upload, Edit2, Trash2, X } from "lucide-react";
+import { BarChart3, Users, Eye, MousePointer, Settings, LogOut, Plus, Upload, Edit2, Trash2, X, GripVertical } from "lucide-react";
 import AnalyticsCharts from "@/components/AnalyticsCharts";
 import LoginForm from "@/components/LoginForm";
 
@@ -176,10 +177,21 @@ export default function AdminDashboard() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects-simple"] });
       toast({
         title: "Success",
         description: "Project deleted successfully",
+      });
+    },
+  });
+
+  const updateProjectOrderMutation = useMutation({
+    mutationFn: (projects: Project[]) => apiRequest("PUT", "/api/update-project-order", { projects }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects-simple"] });
+      toast({
+        title: "Success",
+        description: "Project order updated successfully",
       });
     },
     onError: (error) => {
@@ -312,6 +324,18 @@ export default function AdminDashboard() {
   const cancelEditing = () => {
     setEditingProject(null);
     projectForm.reset();
+  };
+
+  const handleProjectReorder = (reorderedProjects: Project[]) => {
+    // Optimistically update the UI
+    queryClient.setQueryData(["/api/projects-simple"], reorderedProjects);
+    
+    // Save to backend
+    updateProjectOrderMutation.mutate(reorderedProjects);
+  };
+
+  const handleDeleteProject = (id: string) => {
+    deleteProjectMutation.mutate(parseInt(id));
   };
 
   return (
@@ -548,7 +572,13 @@ export default function AdminDashboard() {
 
             <Card className="glass-effect border-gray-600">
               <CardHeader>
-                <CardTitle className="text-white">Existing Projects</CardTitle>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <GripVertical className="w-5 h-5" />
+                  Existing Projects
+                  <span className="text-sm text-gray-400 font-normal">
+                    (Drag to reorder)
+                  </span>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {projectsLoading ? (
@@ -556,51 +586,13 @@ export default function AdminDashboard() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal-500 mx-auto"></div>
                     <p className="text-gray-300 mt-4">Loading projects...</p>
                   </div>
-                ) : projects.length === 0 ? (
-                  <p className="text-gray-400 text-center py-8">No projects yet. Add your first project above!</p>
                 ) : (
-                  <div className="space-y-4">
-                    {projects.map((project) => (
-                      <motion.div
-                        key={project.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="glass-effect rounded-xl p-4 border border-gray-600"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white mb-2">{project.title}</h3>
-                            <p className="text-gray-300 text-sm mb-2">{project.simplifiedDescription}</p>
-                            {project.technologies && project.technologies.length > 0 && (
-                              <p className="text-royal-400 text-sm font-mono">{project.technologies.join(', ')}</p>
-                            )}
-                            {project.category && (
-                              <p className="text-blue-400 text-sm">{project.category}</p>
-                            )}
-                          </div>
-                          <div className="flex gap-2 ml-4">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => startEditing(project)}
-                              className="glass-effect border-gray-600 text-gray-300 hover:text-white"
-                            >
-                              <Edit2 size={16} />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => deleteProjectMutation.mutate(project.id)}
-                              className="glass-effect border-gray-600 text-red-400 hover:text-red-300"
-                              disabled={deleteProjectMutation.isPending}
-                            >
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                  <DraggableProjectList
+                    projects={projects}
+                    onReorder={handleProjectReorder}
+                    onEdit={startEditing}
+                    onDelete={handleDeleteProject}
+                  />
                 )}
               </CardContent>
             </Card>

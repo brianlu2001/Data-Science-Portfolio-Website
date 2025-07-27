@@ -12,11 +12,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { action } = req.query;
 
   // Handle different auth actions based on query parameter
-  if (req.method === 'POST' && action === 'login') {
+  if (action === 'login') {
     return handleLogin(req, res);
   }
   
-  if (req.method === 'POST' && action === 'logout') {
+  if (action === 'logout') {
     return handleLogout(req, res);
   }
   
@@ -32,6 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 // Handle login
 async function handleLogin(req: VercelRequest, res: VercelResponse) {
   try {
+    console.log('Login request received, redirecting to /admin');
     // For Vercel deployment, redirect to admin
     res.redirect(302, '/admin');
   } catch (error) {
@@ -46,6 +47,7 @@ async function handleLogin(req: VercelRequest, res: VercelResponse) {
 // Handle logout
 async function handleLogout(req: VercelRequest, res: VercelResponse) {
   try {
+    console.log('Logout request received, redirecting to /');
     // For Vercel deployment, redirect to homepage
     res.redirect(302, '/');
   } catch (error) {

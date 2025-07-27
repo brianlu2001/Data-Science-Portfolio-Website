@@ -212,7 +212,7 @@ export default function Header({ siteSettings }: HeaderProps) {
             >
                             {/* Front Face */}
               <div
-                className="title-face-front stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 md:min-h-0 min-h-[280px]"
+                className="title-face-front stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12"
                 style={{
                   backfaceVisibility: 'hidden',
                   '--reflection-x': '30%',
@@ -226,17 +226,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8 }}
-                  className="volter-black-title text-4xl sm:text-5xl md:text-7xl lg:text-9xl mb-8 md:mb-12 text-[#242931] leading-tight md:block hidden"
-                >
-                  Kuan-I (Brian) Lu
-                </motion.h1>
-                
-                {/* Mobile Name - Hidden when flipped but space maintained */}
-                <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8 }}
-                  className={`volter-black-title text-4xl sm:text-5xl text-[#242931] leading-tight md:hidden ${isFlipped ? 'opacity-0' : 'opacity-100'} mb-8`}
+                  className="volter-black-title text-4xl sm:text-5xl md:text-7xl lg:text-9xl mb-8 md:mb-12 text-[#242931] leading-tight"
                 >
                   Kuan-I (Brian) Lu
                 </motion.h1>
@@ -245,7 +235,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className={`suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold md:block ${isFlipped ? 'opacity-0 md:opacity-100' : 'opacity-100'}`}
+                  className="suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold"
                 >
                   Data Science Project Portfolio
                 </motion.h2>
@@ -253,7 +243,7 @@ export default function Header({ siteSettings }: HeaderProps) {
 
                             {/* Back Face */}
               <div
-                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-center items-center md:min-h-0 min-h-[280px]"
+                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-center items-center"
                 style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
@@ -264,7 +254,8 @@ export default function Header({ siteSettings }: HeaderProps) {
                   '--highlight-angle': '135deg'
                 }}
               >
-                <div className="flex flex-col items-center justify-center h-full">
+                {/* Mobile: Only show scroll text, hide everything else */}
+                <div className="flex flex-col items-center justify-center h-full md:block hidden">
                   <motion.p 
                     className="suika-title text-lg sm:text-xl md:text-2xl lg:text-3xl text-[#242931] font-light mb-4 text-center leading-relaxed"
                     animate={{ 
@@ -276,6 +267,48 @@ export default function Header({ siteSettings }: HeaderProps) {
                   >
                     <span className="block sm:inline">Scroll Down to See</span>{" "}
                     <span className="block sm:inline">My Data Science Journey</span>
+                  </motion.p>
+                  
+                  <motion.div
+                    animate={{
+                      y: [0, 8, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="text-[#242931] opacity-70"
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M7 13l3 3 7-7" />
+                      <path d="M12 17l-3-3 3-3" />
+                    </svg>
+                  </motion.div>
+                </div>
+
+                {/* Mobile-only back face content */}
+                <div className="flex flex-col items-center justify-center h-full md:hidden block">
+                  <motion.p 
+                    className="suika-title text-lg text-[#242931] font-light text-center leading-relaxed"
+                    animate={{ 
+                      textShadow: isHovered 
+                        ? "0 0 15px rgba(36, 41, 49, 0.4)" 
+                        : "0 0 8px rgba(36, 41, 49, 0.2)"
+                    }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <span className="block">Scroll Down to See</span>
+                    <span className="block">My Data Science Journey</span>
                   </motion.p>
                   <motion.div
                     className="flex justify-center"

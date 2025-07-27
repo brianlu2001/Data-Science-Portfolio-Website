@@ -182,12 +182,12 @@ export default function ProjectView() {
                 
                 <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
                   {getReportType(reportUrl) === 'pdf' ? (
-                    <div className="w-full md:h-[800px] h-[500px] relative overflow-auto">
+                    <div className="w-full md:h-[800px] h-[calc(100vh-200px)] relative md:overflow-hidden overflow-auto">
                       {!pdfError ? (
                         <iframe
                           ref={iframeRef}
                           src={reportUrl}
-                          className="w-full h-full md:w-full md:h-full min-w-[800px] md:min-w-0"
+                          className="w-full h-full md:scale-100 scale-[0.4] md:origin-center origin-top-left md:w-full w-[250%] md:h-full h-[250%]"
                           title={`${project.title} Report`}
                           style={{ border: 'none' }}
                           onLoad={() => {
@@ -244,10 +244,10 @@ export default function ProjectView() {
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full md:h-[800px] h-[500px] relative overflow-auto">
+                    <div className="w-full md:h-[800px] h-[calc(100vh-200px)] relative md:overflow-hidden overflow-auto">
                       <iframe
                         src={reportUrl}
-                        className="w-full h-full md:w-full md:h-full min-w-[800px] md:min-w-0"
+                        className="w-full h-full md:scale-100 scale-[0.4] md:origin-center origin-top-left md:w-full w-[250%] md:h-full h-[250%]"
                         title={`${project.title} Report`}
                         style={{ border: 'none' }}
                         onError={() => {

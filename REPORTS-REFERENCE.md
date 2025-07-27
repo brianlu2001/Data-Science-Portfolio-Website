@@ -22,9 +22,9 @@ Use these exact URLs in your admin dashboard for the "Project Report URL" field:
 
 ## 🔧 **How to Use:**
 
-1. **Copy the exact URL** from above
+1. **Copy the exact URL** from above (with spaces as-is)
 2. **Paste into "Project Report URL" field** in admin dashboard
-3. **Update project** - the link will work immediately!
+3. **Update project** - the system automatically URL-encodes spaces and special characters!
 
 ## ➕ **To Add New Reports:**
 
@@ -34,4 +34,14 @@ Use these exact URLs in your admin dashboard for the "Project Report URL" field:
 
 ---
 
-> **Note:** File names with spaces need to be URL-encoded when accessing, but the system handles this automatically. 
+## 🔧 **URL Encoding Info:**
+
+**✅ What you enter:** `/reports/My Project Report.pdf`  
+**🔗 What gets used:** `/reports/My%20Project%20Report.pdf`
+
+The system automatically handles:
+- **Spaces** → `%20`
+- **Special characters** → Proper encoding
+- **Test links** in admin show both raw and encoded versions
+
+> **Note:** You can use spaces in filenames! The system handles URL encoding automatically. 

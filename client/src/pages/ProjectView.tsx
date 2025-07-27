@@ -46,11 +46,15 @@ export default function ProjectView() {
   // });
   const projectFiles: ProjectFile[] = []; // Empty array for now
 
-  // Use project URL directly from the database
+  // Use project URL directly from the database, encode it for safety
   useEffect(() => {
     if (project?.projectUrl) {
-      console.log('Setting report URL:', project.projectUrl);
-      setReportUrl(project.projectUrl);
+      // URL encode the path to handle spaces and special characters
+      const encodedUrl = project.projectUrl.split('/').map((segment, index) => 
+        index === 0 ? segment : encodeURIComponent(segment)
+      ).join('/');
+      console.log('Setting report URL:', project.projectUrl, '→', encodedUrl);
+      setReportUrl(encodedUrl);
     }
   }, [project]);
 

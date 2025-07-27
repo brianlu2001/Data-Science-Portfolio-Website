@@ -19,6 +19,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { insertProjectSchema, insertSiteSettingsSchema, type Project, type SiteSettings } from "@shared/schema";
 import ImageUpload from "@/components/ImageUpload";
 import DraggableProjectList from "@/components/DraggableProjectList";
+import ReportSelector from "@/components/ReportSelector";
 import { type z } from "zod";
 import { BarChart3, Users, Eye, MousePointer, Settings, LogOut, Plus, Upload, Edit2, Trash2, X, GripVertical } from "lucide-react";
 import AnalyticsCharts from "@/components/AnalyticsCharts";
@@ -518,29 +519,32 @@ export default function AdminDashboard() {
                           name="projectUrl"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-gray-300">Project Report URL</FormLabel>
+                              <FormLabel className="text-gray-300">Project Report</FormLabel>
                               <FormControl>
-                                <Input
-                                  {...field}
+                                <ReportSelector
                                   value={field.value || ""}
-                                  className="bg-charcoal-800 border-gray-600 text-white"
-                                  placeholder="/reports/your-report-file.pdf or .html"
+                                  onChange={field.onChange}
                                 />
                               </FormControl>
                               <FormMessage />
                               <p className="text-xs text-gray-500 mt-1">
-                                Enter the path to your report file in the /reports/ folder. Add files manually to public/reports/ in your GitHub repo.
+                                Search and select from available reports in your /reports/ folder.
                               </p>
-                              {editingProject?.projectUrl && (
-                                <div className="mt-2">
-                                  <p className="text-sm text-gray-400">Current report:</p>
+                              {field.value && (
+                                <div className="mt-2 space-y-1">
+                                  <p className="text-sm text-gray-400">Selected report:</p>
+                                  <div className="text-xs text-gray-500">
+                                    File: <code className="bg-gray-800 px-1 rounded">{field.value.split('/').pop()}</code>
+                                  </div>
                                   <a 
-                                    href={editingProject.projectUrl} 
+                                    href={field.value.split('/').map((segment, index) => 
+                                      index === 0 ? segment : encodeURIComponent(segment)
+                                    ).join('/')} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    className="text-royal-400 hover:text-royal-300 text-sm underline"
+                                    className="text-royal-400 hover:text-royal-300 text-sm underline inline-block"
                                   >
-                                    {editingProject.projectUrl}
+                                    Test Link →
                                   </a>
                                 </div>
                               )}

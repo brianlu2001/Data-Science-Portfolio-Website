@@ -270,18 +270,51 @@ export default function AdminDashboard() {
 
   console.log('AdminDashboard: Authenticated, rendering main content');
 
-  const handleProjectSubmit = (data: InsertProjectData) => {
+  const handleProjectSubmit = async (data: InsertProjectData) => {
     console.log("Form data received:", data);
     
-    // For updates, send JSON instead of FormData to avoid serverless function issues
+    // Handle file uploads first (both create and update)
+    let updatedData = { ...data };
+    
+    // Check for report file upload
+    const reportFile = (document.getElementById('project-report') as HTMLInputElement)?.files?.[0];
+    if (reportFile) {
+      console.log("Uploading report file:", reportFile.name);
+      try {
+        const formData = new FormData();
+        formData.append('report', reportFile);
+        
+        const response = await fetch('/api/upload-report', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          updatedData.projectUrl = result.reportUrl;
+          console.log("Report uploaded successfully:", result.reportUrl);
+        } else {
+          throw new Error('Report upload failed');
+        }
+      } catch (error) {
+        console.error('Report upload error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to upload report file",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     if (editingProject) {
-      console.log("Updating project with JSON data");
-      updateProjectMutation.mutate({ id: editingProject.id, data: data });
+      console.log("Updating project with data:", updatedData);
+      updateProjectMutation.mutate({ id: editingProject.id, data: updatedData });
     } else {
-      // For creation, use FormData for file uploads
+      // For creation, still use FormData but with uploaded report URL
       console.log("Creating project with FormData");
       const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
+      Object.entries(updatedData).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (Array.isArray(value)) {
             formData.append(key, JSON.stringify(value));
@@ -294,11 +327,6 @@ export default function AdminDashboard() {
       const imageFile = (document.getElementById('project-image') as HTMLInputElement)?.files?.[0];
       if (imageFile) {
         formData.append('image', imageFile);
-      }
-
-      const reportFile = (document.getElementById('project-report') as HTMLInputElement)?.files?.[0];
-      if (reportFile) {
-        formData.append('report', reportFile);
       }
       
       createProjectMutation.mutate(formData);
@@ -516,30 +544,54 @@ export default function AdminDashboard() {
                           )}
                         />
                       </div>
-                      <div>
-                        <Label className="text-gray-300">Project Report</Label>
-                        {editingProject?.projectUrl && (
-                          <div className="mb-2">
-                            <p className="text-sm text-gray-400">Current report:</p>
-                            <a 
-                              href={editingProject.projectUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-royal-400 hover:text-royal-300 text-sm underline"
-                            >
-                              {editingProject.projectUrl.split('/').pop()}
-                            </a>
-                          </div>
-                        )}
-                        <Input
-                          id="project-report"
-                          type="file"
-                          accept=".pdf,.html,.htm"
-                          className="bg-charcoal-800 border-gray-600 text-white"
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="text-gray-300">Project Report File</Label>
+                          {editingProject?.projectUrl && (
+                            <div className="mb-2">
+                              <p className="text-sm text-gray-400">Current report:</p>
+                              <a 
+                                href={editingProject.projectUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-royal-400 hover:text-royal-300 text-sm underline"
+                              >
+                                {editingProject.projectUrl.split('/').pop()}
+                              </a>
+                            </div>
+                          )}
+                          <Input
+                            id="project-report"
+                            type="file"
+                            accept=".pdf,.html,.htm"
+                            className="bg-charcoal-800 border-gray-600 text-white"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Upload PDF or HTML file for the project report
+                          </p>
+                        </div>
+                        
+                        <FormField
+                          control={projectForm.control}
+                          name="projectUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-300">Or Report URL</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  value={field.value || ""}
+                                  className="bg-charcoal-800 border-gray-600 text-white"
+                                  placeholder="https://example.com/report.pdf or /reports/file.pdf"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                              <p className="text-xs text-gray-500">
+                                Alternatively, enter a direct URL to the report
+                              </p>
+                            </FormItem>
+                          )}
                         />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Upload PDF or HTML file for the project report
-                        </p>
                       </div>
                       <FormField
                         control={projectForm.control}

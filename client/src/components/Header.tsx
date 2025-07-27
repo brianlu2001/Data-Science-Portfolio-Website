@@ -210,8 +210,8 @@ export default function Header({ siteSettings }: HeaderProps) {
                 transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
-              {/* Front Face */}
-              <div 
+                            {/* Front Face */}
+              <div
                 className="title-face-front stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12"
                 style={{
                   backfaceVisibility: 'hidden',
@@ -226,7 +226,17 @@ export default function Header({ siteSettings }: HeaderProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8 }}
-                  className="volter-black-title text-4xl sm:text-5xl md:text-7xl lg:text-9xl mb-8 md:mb-12 text-[#242931] leading-tight"
+                  className="volter-black-title text-4xl sm:text-5xl md:text-7xl lg:text-9xl mb-8 md:mb-12 text-[#242931] leading-tight md:block hidden"
+                >
+                  Kuan-I (Brian) Lu
+                </motion.h1>
+                
+                {/* Mobile Name - Hidden when flipped */}
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className={`volter-black-title text-4xl sm:text-5xl text-[#242931] leading-tight md:hidden ${isFlipped ? 'hidden' : 'block'} mb-8`}
                 >
                   Kuan-I (Brian) Lu
                 </motion.h1>
@@ -235,7 +245,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className="suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold"
+                  className={`suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold md:block ${isFlipped ? 'hidden md:block' : 'block'}`}
                 >
                   Data Science Project Portfolio
                 </motion.h2>

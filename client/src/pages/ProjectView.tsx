@@ -140,7 +140,7 @@ export default function ProjectView() {
               {project.title}
             </h1>
             <p 
-              className="text-gray-300 leading-relaxed text-lg"
+              className="text-gray-300 leading-relaxed text-lg md:text-lg text-sm"
               dangerouslySetInnerHTML={{
                 __html: displayDescription
                   .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')

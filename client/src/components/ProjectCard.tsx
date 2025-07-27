@@ -122,7 +122,7 @@ export default function ProjectCard({ project, isExpanded, onToggleExpanded, col
         </div>
       </div>
 
-      {/* Full-width expanded description spanning both columns */}
+      {/* Expanded description - spans both columns on desktop, single width on mobile */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -132,13 +132,46 @@ export default function ProjectCard({ project, isExpanded, onToggleExpanded, col
             transition={{ duration: 0.3 }}
             className="absolute top-full z-[9999] mt-2"
             style={{ 
+              // Desktop: span both columns, Mobile: match card width
               left: columnIndex === 0 ? 0 : 'calc(-100% - 2rem)',
               width: 'calc(200% + 2rem)'
             }}
           >
-            <div className="glass-effect border-gray-600 rounded-2xl p-6 shadow-2xl">
+            <div className="glass-effect border-gray-600 rounded-2xl p-6 shadow-2xl md:block hidden">
               <div 
                 className="text-gray-300 mb-4 leading-relaxed whitespace-pre-wrap"
+                dangerouslySetInnerHTML={{
+                  __html: project.simplifiedDescription
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                }}
+              />
+              
+              <Button
+                onClick={handleViewProject}
+                className="bg-royal-500 hover:bg-royal-600 text-white"
+              >
+                <ExternalLink size={16} className="mr-2" />
+                View Full Project
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile-only dropdown - single card width */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-full z-[9999] mt-2 w-full left-0 md:hidden"
+          >
+            <div className="glass-effect border-gray-600 rounded-2xl p-6 shadow-2xl">
+              <div 
+                className="text-gray-300 mb-4 leading-relaxed whitespace-pre-wrap text-sm"
                 dangerouslySetInnerHTML={{
                   __html: project.simplifiedDescription
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')

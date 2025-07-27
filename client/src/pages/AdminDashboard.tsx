@@ -270,17 +270,52 @@ export default function AdminDashboard() {
 
   console.log('AdminDashboard: Authenticated, rendering main content');
 
-  const handleProjectSubmit = (data: InsertProjectData) => {
+  const handleProjectSubmit = async (data: InsertProjectData) => {
     console.log("Form data received:", data);
     
+    // Handle report file upload first (both create and update)
+    let updatedData = { ...data };
+    
+    const reportFile = (document.getElementById('project-report') as HTMLInputElement)?.files?.[0];
+    if (reportFile) {
+      console.log("Uploading report file:", reportFile.name);
+      try {
+        const formData = new FormData();
+        formData.append('report', reportFile);
+        
+        const response = await fetch('/api/upload-report', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          // Use the data URL as the project URL
+          updatedData.projectUrl = result.dataUrl;
+          console.log("Report uploaded successfully, size:", result.size);
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Report upload failed');
+        }
+      } catch (error) {
+        console.error('Report upload error:', error);
+        toast({
+          title: "Error",
+          description: `Failed to upload report file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     if (editingProject) {
-      console.log("Updating project with JSON data");
-      updateProjectMutation.mutate({ id: editingProject.id, data: data });
+      console.log("Updating project with data:", updatedData);
+      updateProjectMutation.mutate({ id: editingProject.id, data: updatedData });
     } else {
       // For creation, use FormData for file uploads
       console.log("Creating project with FormData");
       const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
+      Object.entries(updatedData).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           if (Array.isArray(value)) {
             formData.append(key, JSON.stringify(value));
@@ -511,40 +546,29 @@ export default function AdminDashboard() {
                         />
                       </div>
                       <div>
-                        <FormField
-                          control={projectForm.control}
-                          name="projectUrl"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-gray-300">Project Report URL</FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  value={field.value || ""}
-                                  className="bg-charcoal-800 border-gray-600 text-white"
-                                  placeholder="https://example.com/report.pdf or /reports/file.pdf"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                              <p className="text-xs text-gray-500">
-                                Enter the URL to the project report (PDF or HTML)
-                              </p>
-                              {editingProject?.projectUrl && (
-                                <div className="mt-2">
-                                  <p className="text-sm text-gray-400">Current report:</p>
-                                  <a 
-                                    href={editingProject.projectUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-royal-400 hover:text-royal-300 text-sm underline"
-                                  >
-                                    {editingProject.projectUrl}
-                                  </a>
-                                </div>
-                              )}
-                            </FormItem>
-                          )}
+                        <Label className="text-gray-300">Project Report File</Label>
+                        {editingProject?.projectUrl && (
+                          <div className="mb-2">
+                            <p className="text-sm text-gray-400">Current report:</p>
+                            <a 
+                              href={editingProject.projectUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-royal-400 hover:text-royal-300 text-sm underline"
+                            >
+                              {editingProject.projectUrl.split('/').pop() || 'View Current Report'}
+                            </a>
+                          </div>
+                        )}
+                        <Input
+                          id="project-report"
+                          type="file"
+                          accept=".pdf,.html,.htm"
+                          className="bg-charcoal-800 border-gray-600 text-white file:bg-royal-600 file:text-white file:border-0 file:rounded file:px-3 file:py-1 file:mr-3"
                         />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Upload PDF or HTML file to replace the current report. File will be embedded as a data URL.
+                        </p>
                       </div>
                       <FormField
                         control={projectForm.control}

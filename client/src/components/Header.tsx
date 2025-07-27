@@ -226,7 +226,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8 }}
-                  className={`volter-black-title text-4xl sm:text-5xl md:text-7xl lg:text-9xl mb-8 md:mb-12 text-[#242931] leading-tight ${isFlipped ? 'md:block hidden' : 'block'}`}
+                  className={`volter-black-title text-4xl sm:text-5xl md:text-7xl lg:text-9xl mb-8 md:mb-12 text-[#242931] leading-tight ${isFlipped ? 'md:opacity-100 opacity-0' : 'opacity-100'}`}
                 >
                   Kuan-I (Brian) Lu
                 </motion.h1>
@@ -235,7 +235,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className={`suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold ${isFlipped ? 'md:block hidden' : 'block'}`}
+                  className={`suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold ${isFlipped ? 'md:opacity-100 opacity-0' : 'opacity-100'}`}
                 >
                   Data Science Project Portfolio
                 </motion.h2>

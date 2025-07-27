@@ -78,28 +78,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     console.log(`File read successfully, size: ${fileSize} bytes`);
 
-    // Check if file is too large for data URL (limit to 5MB for data URLs)
-    const maxDataUrlSize = 5 * 1024 * 1024; // 5MB
+    // Since we can't write to filesystem in Vercel, let's use a different approach
+    // We'll return a reference URL based on the original filename
+    // The actual file content should be manually added to public/reports/
     
-    if (fileSize > maxDataUrlSize) {
-      console.warn(`File too large for data URL: ${fileSize} bytes`);
-      // For large files, we'll need a different approach
-      // For now, return an error
-      await fs.unlink(reportFile.filepath);
-      return res.status(413).json({
-        message: `File too large. Maximum size for embedded files is ${maxDataUrlSize / (1024 * 1024)}MB`,
-        size: fileSize,
-        maxSize: maxDataUrlSize
-      });
-    }
-
-    // Create data URL for smaller files
-    const mimeType = reportFile.mimetype || 'application/octet-stream';
-    const base64Data = fileBuffer.toString('base64');
-    const dataUrl = `data:${mimeType};base64,${base64Data}`;
-
-    console.log(`Created data URL of length: ${dataUrl.length} for file: ${fileName}`);
-
+    console.log(`Processing file: ${reportFile.originalFilename}, size: ${fileSize} bytes`);
+    
     // Clean up temporary file
     try {
       await fs.unlink(reportFile.filepath);
@@ -108,16 +92,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.warn('Could not clean up temp file:', err);
     }
 
-    // Return the data URL and filename for the client to handle
+    // Create a reports URL based on the original filename
+    // This assumes the file will be manually placed in public/reports/
+    const cleanFileName = reportFile.originalFilename?.replace(/[^a-zA-Z0-9.-]/g, '-') || 'report.pdf';
+    const reportUrl = `/reports/${cleanFileName}`;
+
+    // Return the report URL for the database
     return res.json({
       success: true,
-      fileName: fileName,
+      fileName: cleanFileName,
       originalName: reportFile.originalFilename,
-      dataUrl: dataUrl,
+      reportUrl: reportUrl,
       size: fileSize,
-      mimeType: mimeType,
-      dataUrlLength: dataUrl.length,
-      message: 'File processed successfully'
+      mimeType: reportFile.mimetype,
+      message: `File processed. Please manually add "${reportFile.originalFilename}" to public/reports/ folder as "${cleanFileName}"`
     });
 
   } catch (error) {

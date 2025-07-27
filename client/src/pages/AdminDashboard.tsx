@@ -278,21 +278,6 @@ export default function AdminDashboard() {
     
     const reportFile = (document.getElementById('project-report') as HTMLInputElement)?.files?.[0];
     if (reportFile) {
-      // If editing an existing project with a report, confirm the replacement
-      if (editingProject && editingProject.projectUrl) {
-        const confirmReplace = window.confirm(
-          `Are you sure you want to replace the current report with "${reportFile.name}"?`
-        );
-        if (!confirmReplace) {
-          // Clear the file input and return
-          const reportFileInput = document.getElementById('project-report') as HTMLInputElement;
-          if (reportFileInput) {
-            reportFileInput.value = '';
-          }
-          return;
-        }
-      }
-      
       console.log("Uploading report file:", reportFile.name);
       try {
         const formData = new FormData();
@@ -305,13 +290,21 @@ export default function AdminDashboard() {
         
         if (response.ok) {
           const result = await response.json();
-          // Use the data URL as the project URL
-          updatedData.projectUrl = result.dataUrl;
+          // Use the report URL instead of data URL
+          updatedData.projectUrl = result.reportUrl;
           console.log("Report uploaded successfully:", {
             fileName: result.fileName,
+            originalName: result.originalName,
+            reportUrl: result.reportUrl,
             size: result.size,
-            dataUrlLength: result.dataUrl?.length,
-            updatedData: updatedData
+            message: result.message
+          });
+          
+          // Show a toast with instructions
+          toast({
+            title: "File Processed",
+            description: result.message,
+            duration: 8000,
           });
         } else {
           const errorData = await response.json();
@@ -603,16 +596,16 @@ export default function AdminDashboard() {
                             type="file"
                             accept=".pdf,.html,.htm"
                             className="
-                              bg-charcoal-800 border-2 border-gray-600 text-white rounded-lg
-                              file:bg-royal-500 file:text-white file:border-0 file:rounded-md 
-                              file:px-6 file:py-3 file:mr-4 file:cursor-pointer 
-                              file:hover:bg-royal-600 file:font-semibold file:text-sm
+                              bg-charcoal-800 border-gray-600 text-white rounded
+                              file:bg-royal-500 file:text-white file:border-0 file:rounded 
+                              file:px-3 file:py-1.5 file:mr-3 file:cursor-pointer 
+                              file:hover:bg-royal-600 file:font-medium file:text-xs
                               file:transition-colors file:duration-200
-                              hover:border-gray-500 focus:border-royal-400 focus:ring-2 focus:ring-royal-400/20
+                              hover:border-gray-500 focus:border-royal-400
                             "
                           />
-                          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                            <span className="text-gray-400 text-sm">PDF, HTML</span>
+                          <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                            <span className="text-gray-400 text-xs">PDF, HTML</span>
                           </div>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">

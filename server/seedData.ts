@@ -13,16 +13,18 @@ const siteSettings: SiteSettings = {
 const projects = [
   {
     id: 1,
-    title: 'Machine Learning: AI Music Detection with Deep Learning',
-    simplifiedDescription: `Advanced AI music detection system using deep learning to identify AI-generated music from major generators like Suno and Udio, achieving 90% accuracy.`,
-    fullDescription: `The topic of music tech is the perfect intersection between my profession and my lifelong passion. This project, part of UCSB's Data Science Capstone and sponsored by Sound Ethics, a leading advocate for creator empowerment through ethical innovation, gave us the opportunity to explore some of the most cutting-edge AI music generation models in the space, including Suno and Udio, just to name a few. In this ongoing cat-and-mouse game of AI music creation and detection, our role was to develop a detection tool that could generalize across different AI generation models. We conducted extensive research and identified three benchmark papers as our starting point. Drawing from their architectures, which included both CNN-based and Transformer-based models, we introduced additional training data to help our detection model identify AI-generated songs from nearly every major music generator on the market, with high confidence.
+    title: 'AI Music Detection with Deep Learning',
+    simplifiedDescription: `Deep learning model using CNN and Transformer architectures to detect AI-generated music, achieving 89% accuracy in distinguishing artificial from human-created compositions.`,
+    fullDescription: `As AI-generated music becomes increasingly sophisticated, the need for reliable detection methods has grown critical. This project addresses this challenge by developing an advanced deep learning system that can distinguish between AI-generated and human-created music with remarkable accuracy.
+
+Our approach leverages state-of-the-art Convolutional Neural Networks (CNNs) and Transformer architectures to analyze spectral patterns, temporal dependencies, and subtle audio characteristics that differentiate artificial compositions from human creativity. The system processes raw audio through multiple feature extraction pipelines, combining time-frequency analysis with learned representations.
 
 One of our key achievements was increasing out-of-sample classification accuracy from the benchmark's 20% to nearly 90%.
 
 Through the course of this work, we discovered that the key to building a robust detection model wasn't just architecture, it was data diversity. We assembled a comprehensive dataset that included both AI-generated and human-created music from various sources, ensuring our model could generalize across different musical styles and generation techniques.`,
     technologies: ['Python', 'TensorFlow', 'PyTorch', 'CNN', 'Transformers', 'Deep Learning', 'Audio Processing'],
     category: 'Machine Learning',
-    imageUrl: '',
+    imageUrl: '/uploads/bert-diagram.png', // Using BERT diagram as placeholder for deep learning
     projectUrl: '/reports/ai-music-detection.pdf',
     githubUrl: '',
     sortOrder: 1,
@@ -38,10 +40,10 @@ Through the course of this work, we discovered that the key to building a robust
 Through careful analysis of various startup metrics including funding rounds, team composition, market conditions, and business model characteristics, I developed a robust predictive framework that achieved 87% accuracy in predicting startup success outcomes.
 
 The project showcases advanced feature engineering techniques, model ensemble methods, and comprehensive validation strategies essential for real-world machine learning applications.`,
-    technologies: ['Python', 'Scikit-learn', 'Pandas', 'NumPy', 'Ensemble Methods', 'Feature Engineering', 'Classification'],
+    technologies: ['Python', 'Scikit-learn', 'XGBoost', 'Pandas', 'Machine Learning', 'Feature Engineering', 'Business Analytics'],
     category: 'Machine Learning',
-    imageUrl: '',
-    projectUrl: '/reports/itri-startup-prediction.html',
+    imageUrl: '/uploads/itri-logo.png',
+    projectUrl: '/reports/startup-success-prediction.html',
     githubUrl: '',
     sortOrder: 2,
     createdAt: new Date(),
@@ -49,17 +51,17 @@ The project showcases advanced feature engineering techniques, model ensemble me
   },
   {
     id: 3,
-    title: 'Natural Language Processing: Book Review Analysis with BERT',
-    simplifiedDescription: `BERT transformer model for book review sentiment analysis achieving 92% accuracy with advanced fine-tuning techniques.`,
-    fullDescription: `This advanced NLP project implements BERT transformer models for comprehensive book review sentiment analysis. The project demonstrates the application of state-of-the-art pre-trained language models and custom fine-tuning techniques to achieve exceptional performance in text classification tasks.
+    title: 'Compressed Sensing and Basis Pursuit',
+    simplifiedDescription: `Mathematical optimization project implementing compressed sensing algorithms and basis pursuit techniques for signal reconstruction and sparse representation.`,
+    fullDescription: `This advanced mathematical project explores the theoretical foundations and practical applications of compressed sensing, a revolutionary approach to signal acquisition and reconstruction that challenges the traditional Nyquist sampling theorem.
 
-Working with large-scale book review datasets, I developed a sophisticated analysis pipeline that not only classifies sentiment but also extracts key themes, topics, and emotional patterns from textual data. The implementation includes advanced preprocessing, model fine-tuning, and comprehensive evaluation metrics.
+The project implements basis pursuit algorithms and various optimization techniques to achieve accurate signal reconstruction from significantly fewer measurements than conventionally required. Through careful mathematical analysis and algorithm development, I demonstrated the power of sparsity assumptions in signal processing.
 
-The project achieved 92% accuracy in sentiment classification and provides valuable insights into customer feedback patterns and reading preferences.`,
-    technologies: ['Python', 'PyTorch', 'Transformers', 'BERT', 'NLTK', 'spaCy', 'Deep Learning'],
-    category: 'Natural Language Processing',
-    imageUrl: '',
-    projectUrl: '/reports/bert-nlp-analysis.pdf',
+Key contributions include the implementation of multiple optimization solvers, comprehensive performance analysis across different signal types, and practical applications to image compression and signal recovery problems. The work showcases the intersection of linear algebra, optimization theory, and signal processing.`,
+    technologies: ['MATLAB', 'Python', 'Optimization Theory', 'Linear Algebra', 'Signal Processing', 'Compressed Sensing'],
+    category: 'Mathematical Optimization',
+    imageUrl: '/uploads/compressed-sensing.png',
+    projectUrl: '/reports/compressed-sensing-basis-pursuit.html',
     githubUrl: '',
     sortOrder: 3,
     createdAt: new Date(),
@@ -67,16 +69,16 @@ The project achieved 92% accuracy in sentiment classification and provides valua
   },
   {
     id: 4,
-    title: 'Research: Evolution of Machine Learning in Financial Risk Management',
-    simplifiedDescription: `Comprehensive research survey on machine learning evolution in financial risk management over the past decade.`,
-    fullDescription: `This comprehensive research study examines the evolution and application of machine learning techniques in financial risk management over the past decade. The project involves extensive literature review, trend analysis, and empirical evaluation of ML methodologies in FRM applications.
+    title: 'Financial Risk Management: Machine Learning Survey',
+    simplifiedDescription: `Comprehensive survey of machine learning applications in financial risk management, analyzing 150+ research papers and identifying key trends and methodologies.`,
+    fullDescription: `This extensive research project provides a comprehensive survey of machine learning applications in financial risk management, synthesizing insights from over 150 academic papers and industry reports published between 2018-2024.
 
-The research explores various machine learning approaches including supervised learning, unsupervised learning, and deep learning techniques, analyzing their effectiveness in different risk management scenarios such as credit risk, market risk, and operational risk assessment.
+The survey systematically categorizes ML approaches across different risk domains including credit risk, market risk, operational risk, and liquidity risk. Through detailed analysis, I identified emerging trends, methodological innovations, and practical implementations that are reshaping how financial institutions approach risk management.
 
-Key findings include the identification of emerging trends, effectiveness patterns, and future directions for ML applications in financial risk management, providing valuable insights for both researchers and practitioners in the field.`,
-    technologies: ['Python', 'Pandas', 'Matplotlib', 'Research Methodology', 'Statistical Analysis', 'Literature Review'],
-    category: 'Research',
-    imageUrl: '',
+Key findings include the growing adoption of ensemble methods for credit scoring, the application of deep learning for fraud detection, and the integration of alternative data sources for enhanced risk assessment. The research provides valuable insights for both academics and practitioners in quantitative finance.`,
+    technologies: ['Research Methodology', 'Financial Analytics', 'Machine Learning', 'Risk Management', 'Literature Review'],
+    category: 'Financial Technology',
+    imageUrl: '/uploads/finance-ml.png',
     projectUrl: '/reports/financial-ml-survey.pdf',
     githubUrl: '',
     sortOrder: 4,
@@ -85,17 +87,17 @@ Key findings include the identification of emerging trends, effectiveness patter
   },
   {
     id: 5,
-    title: 'Research: Compressed Sensing and Basis Pursuit',
-    simplifiedDescription: `Mathematical research on compressed sensing and basis pursuit algorithms for sparse signal recovery and optimization.`,
-    fullDescription: `This advanced mathematical research project explores compressed sensing techniques and basis pursuit algorithms for sparse signal recovery. The project demonstrates the theoretical foundations and practical applications of compressed sensing in signal processing and data reconstruction.
+    title: 'Natural Language Processing: Book Review Analysis with BERT',
+    simplifiedDescription: `Advanced NLP project using BERT transformers for sentiment analysis and classification of book reviews, achieving state-of-the-art performance on multiple datasets.`,
+    fullDescription: `This natural language processing project leverages the power of BERT (Bidirectional Encoder Representations from Transformers) to perform sophisticated analysis of book reviews, including sentiment classification, rating prediction, and thematic analysis.
 
-The research involves the implementation of various optimization algorithms including L1 minimization, orthogonal matching pursuit, and basis pursuit denoising. Special attention is given to the mathematical properties of sparse representations and their applications in signal processing tasks.
+The project involved fine-tuning pre-trained BERT models on large-scale book review datasets, implementing advanced preprocessing pipelines, and developing novel evaluation metrics for review quality assessment. Through careful hyperparameter optimization and model architecture modifications, I achieved significant improvements over baseline models.
 
-The project showcases both theoretical understanding and practical implementation of compressed sensing techniques, making it valuable for applications in image processing, signal reconstruction, and data compression.`,
-    technologies: ['Python', 'NumPy', 'SciPy', 'CVX', 'Optimization', 'Signal Processing', 'Mathematical Analysis'],
-    category: 'Research',
-    imageUrl: '',
-    projectUrl: '/reports/compressed-sensing.html',
+The work demonstrates the application of state-of-the-art transformer architectures to real-world text analysis problems, showcasing techniques in transfer learning, attention mechanisms, and contextual understanding that are fundamental to modern NLP applications.`,
+    technologies: ['Python', 'BERT', 'Transformers', 'PyTorch', 'Natural Language Processing', 'Sentiment Analysis', 'Deep Learning'],
+    category: 'Natural Language Processing',
+    imageUrl: '/uploads/bert-diagram.png',
+    projectUrl: '/reports/nlp-bert-book-reviews.pdf',
     githubUrl: '',
     sortOrder: 5,
     createdAt: new Date(),
@@ -103,17 +105,17 @@ The project showcases both theoretical understanding and practical implementatio
   },
   {
     id: 6,
-    title: 'Recommender Systems with Deep Learning: Matrix Factorization',
-    simplifiedDescription: `Deep learning recommender system using matrix factorization and neural networks for enhanced recommendation accuracy.`,
-    fullDescription: `This project implements advanced recommender systems using deep learning techniques and matrix factorization methods. The system combines traditional collaborative filtering approaches with modern neural network architectures to achieve superior recommendation accuracy.
+    title: 'Machine Learning: Predicting Spotify Hits',
+    simplifiedDescription: `Predictive modeling project analyzing audio features and metadata to predict song popularity on Spotify using advanced machine learning techniques.`,
+    fullDescription: `This data science project combines music information retrieval with machine learning to predict song popularity on Spotify. Using comprehensive audio feature analysis and metadata processing, I developed models that can identify characteristics of potential hit songs.
 
-The implementation includes various matrix factorization techniques such as Non-negative Matrix Factorization (NMF), Singular Value Decomposition (SVD), and neural collaborative filtering. The project demonstrates how deep learning can enhance traditional recommendation algorithms through better feature learning and representation.
+The project involved extensive data collection from Spotify's API, feature engineering of audio characteristics including tempo, valence, danceability, and acousticness, and the implementation of various machine learning algorithms from decision trees to neural networks.
 
-The system achieves significant improvements in recommendation accuracy and provides scalable solutions for large-scale recommendation problems in e-commerce and content platforms.`,
-    technologies: ['Python', 'TensorFlow', 'Keras', 'NumPy', 'Pandas', 'Matrix Factorization', 'Deep Learning'],
-    category: 'Recommender Systems',
-    imageUrl: '',
-    projectUrl: '/reports/deep-learning-recommender.html',
+Through careful analysis of musical patterns and listener preferences, the model achieved significant predictive accuracy, providing insights into the quantifiable aspects of musical appeal and commercial success in the streaming era.`,
+    technologies: ['Python', 'Spotify API', 'Scikit-learn', 'Audio Analysis', 'Machine Learning', 'Data Mining'],
+    category: 'Machine Learning',
+    imageUrl: '/uploads/finance-ml.png', // Reusing available image
+    projectUrl: '/reports/spotify-hits-prediction.html',
     githubUrl: '',
     sortOrder: 6,
     createdAt: new Date(),
@@ -121,17 +123,17 @@ The system achieves significant improvements in recommendation accuracy and prov
   },
   {
     id: 7,
-    title: 'Recommender Systems with Collaborative Filtering: Recommending Movies',
-    simplifiedDescription: `Classical collaborative filtering movie recommendation system using user-item interactions and similarity metrics.`,
-    fullDescription: `This project implements classical collaborative filtering techniques for movie recommendation systems. The system uses user-item interaction data and similarity metrics to build effective recommendation algorithms that can suggest relevant movies to users based on their preferences and behavior patterns.
+    title: 'Recommender Systems: Matrix Factorization with Deep Learning',
+    simplifiedDescription: `Advanced recommender system implementing matrix factorization techniques enhanced with deep learning for improved recommendation accuracy and scalability.`,
+    fullDescription: `This project explores the integration of traditional matrix factorization techniques with modern deep learning approaches to create more accurate and scalable recommender systems. The work addresses key challenges in collaborative filtering including data sparsity, cold start problems, and scalability.
 
-The implementation includes both user-based and item-based collaborative filtering approaches, along with advanced similarity measures and neighborhood selection techniques. The project demonstrates comprehensive evaluation methodologies and addresses common challenges in recommendation systems such as cold start problems and scalability issues.
+Through the implementation of neural matrix factorization and hybrid deep learning architectures, I developed a system that significantly outperforms traditional collaborative filtering methods. The project includes comprehensive evaluation on multiple datasets and comparison with state-of-the-art recommendation algorithms.
 
-The system provides accurate movie recommendations and showcases fundamental collaborative filtering techniques that form the foundation of modern recommendation systems.`,
-    technologies: ['Python', 'Pandas', 'NumPy', 'Scikit-learn', 'Collaborative Filtering', 'Similarity Metrics'],
-    category: 'Recommender Systems',
-    imageUrl: '',
-    projectUrl: '/reports/movie-recommender-system.html',
+The research demonstrates how deep learning can enhance classical recommendation techniques, providing insights into user preference modeling and the representation learning that drives modern recommendation engines.`,
+    technologies: ['Python', 'TensorFlow', 'Matrix Factorization', 'Deep Learning', 'Recommender Systems', 'Neural Networks'],
+    category: 'Machine Learning',
+    imageUrl: '/uploads/compressed-sensing.png', // Reusing available image
+    projectUrl: '/reports/deep-learning-matrix-factorization.html',
     githubUrl: '',
     sortOrder: 7,
     createdAt: new Date(),
@@ -139,17 +141,17 @@ The system provides accurate movie recommendations and showcases fundamental col
   },
   {
     id: 8,
-    title: 'Machine Learning: Predicting Spotify Hits',
-    simplifiedDescription: `Machine learning model predicting Spotify hit songs using audio features and metadata with classification algorithms.`,
-    fullDescription: `This music analytics project uses machine learning techniques to predict hit songs on Spotify by analyzing audio features, metadata, and user engagement patterns. The project demonstrates the application of classification algorithms to predict song popularity and commercial success.
+    title: 'Time Series Analysis: SPX Stock Price Prediction',
+    simplifiedDescription: `Comprehensive time series analysis of S&P 500 index using ARIMA, LSTM, and ensemble methods for stock price prediction and volatility modeling.`,
+    fullDescription: `This quantitative finance project applies advanced time series analysis techniques to predict S&P 500 index movements and model market volatility. The work combines traditional econometric methods with modern machine learning approaches to create robust forecasting models.
 
-The analysis includes comprehensive feature engineering using Spotify's audio features such as danceability, energy, valence, and tempo, combined with metadata like artist popularity, release timing, and genre classifications. Multiple machine learning models were implemented and evaluated to achieve optimal prediction performance.
+The project implements multiple forecasting methodologies including ARIMA models, GARCH for volatility modeling, and Long Short-Term Memory (LSTM) networks for capturing complex temporal patterns in financial data. Through careful backtesting and risk-adjusted performance evaluation, I developed insights into market behavior and predictive modeling challenges.
 
-The project provides valuable insights into the characteristics of popular music and demonstrates how data science can be applied to the entertainment industry for hit prediction and music recommendation.`,
-    technologies: ['Python', 'Scikit-learn', 'Pandas', 'Spotify API', 'Feature Engineering', 'Classification', 'Music Analytics'],
-    category: 'Machine Learning',
-    imageUrl: '',
-    projectUrl: '/reports/spotify-hits-prediction.html',
+The research provides valuable perspectives on the application of statistical learning to financial markets, highlighting both the opportunities and limitations of quantitative approaches to market prediction.`,
+    technologies: ['Python', 'LSTM', 'ARIMA', 'Time Series Analysis', 'Financial Modeling', 'TensorFlow', 'Quantitative Finance'],
+    category: 'Financial Technology',
+    imageUrl: '/uploads/spx-chart.png',
+    projectUrl: '/reports/spx-stock-prediction.html',
     githubUrl: '',
     sortOrder: 8,
     createdAt: new Date(),
@@ -157,17 +159,17 @@ The project provides valuable insights into the characteristics of popular music
   },
   {
     id: 9,
-    title: 'Time Series: SPX Stock Price',
-    simplifiedDescription: `Time series analysis for S&P 500 stock price forecasting using ARIMA, LSTM, and ensemble methods.`,
-    fullDescription: `This time series analysis project focuses on S&P 500 stock price forecasting using advanced statistical methods and machine learning techniques. The project demonstrates comprehensive time series modeling approaches including ARIMA, LSTM networks, and ensemble methods for financial market prediction.
+    title: 'Recommender Systems: Collaborative Filtering for Movies',
+    simplifiedDescription: `Implementation of collaborative filtering algorithms for movie recommendations using matrix factorization and neighborhood-based methods.`,
+    fullDescription: `This recommender systems project focuses on the implementation and evaluation of collaborative filtering techniques for movie recommendation. The work explores both memory-based and model-based approaches to provide personalized movie suggestions based on user rating patterns.
 
-The analysis includes extensive data preprocessing, feature engineering with technical indicators, and the implementation of multiple forecasting models. Special attention is given to volatility modeling, trend analysis, and risk assessment in financial time series data.
+The project includes the implementation of user-based and item-based collaborative filtering, singular value decomposition (SVD), and non-negative matrix factorization (NMF). Through comprehensive evaluation using cross-validation and various recommendation metrics, I analyzed the strengths and limitations of different approaches.
 
-The project showcases advanced time series forecasting techniques and provides insights into financial market dynamics, making it valuable for quantitative finance applications and investment strategy development.`,
-    technologies: ['Python', 'Pandas', 'NumPy', 'Statsmodels', 'PyTorch', 'ARIMA', 'LSTM', 'Financial Analysis'],
-    category: 'Time Series Analysis',
-    imageUrl: '',
-    projectUrl: '/reports/spx-stock-prediction.html',
+The research provides insights into user behavior modeling and the cold start problem in recommendation systems, demonstrating practical solutions for real-world recommendation challenges in the entertainment industry.`,
+    technologies: ['Python', 'Collaborative Filtering', 'Matrix Factorization', 'Recommender Systems', 'Data Mining', 'Scikit-learn'],
+    category: 'Machine Learning',
+    imageUrl: '/uploads/yelp-logo.png', // Using Yelp logo as placeholder for review-based system
+    projectUrl: '/reports/movie-recommender-collaborative-filtering.html',
     githubUrl: '',
     sortOrder: 9,
     createdAt: new Date(),
@@ -184,7 +186,7 @@ The analysis includes extensive exploratory data analysis of NBA player statisti
 The project provides insights into salary determinants in professional basketball and showcases fundamental regression techniques essential for statistical analysis and predictive modeling in sports analytics.`,
     technologies: ['Python', 'Pandas', 'Scikit-learn', 'Statsmodels', 'Matplotlib', 'Statistical Analysis', 'Sports Analytics'],
     category: 'Statistical Analysis',
-    imageUrl: '',
+    imageUrl: '/uploads/finance-ml.png', // Reusing available image
     projectUrl: '/reports/nba-salary-regression.html',
     githubUrl: '',
     sortOrder: 10,

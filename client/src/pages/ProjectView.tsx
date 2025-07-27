@@ -46,13 +46,11 @@ export default function ProjectView() {
   // });
   const projectFiles: ProjectFile[] = []; // Empty array for now
 
-  // Use project URL directly from the database, encode it for safety
+  // Use project URL directly from the database, encode spaces only
   useEffect(() => {
     if (project?.projectUrl) {
-      // URL encode the path to handle spaces and special characters
-      const encodedUrl = project.projectUrl.split('/').map((segment, index) => 
-        index === 0 ? segment : encodeURIComponent(segment)
-      ).join('/');
+      // Only replace spaces with %20, don't over-encode
+      const encodedUrl = project.projectUrl.replace(/ /g, '%20');
       console.log('Setting report URL:', project.projectUrl, '→', encodedUrl);
       setReportUrl(encodedUrl);
     }

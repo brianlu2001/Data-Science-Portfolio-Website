@@ -537,9 +537,7 @@ export default function AdminDashboard() {
                                     File: <code className="bg-gray-800 px-1 rounded">{field.value.split('/').pop()}</code>
                                   </div>
                                   <a 
-                                    href={field.value.split('/').map((segment, index) => 
-                                      index === 0 ? segment : encodeURIComponent(segment)
-                                    ).join('/')} 
+                                    href={field.value.replace(/ /g, '%20')} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="text-royal-400 hover:text-royal-300 text-sm underline inline-block"

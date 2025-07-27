@@ -44,13 +44,26 @@ export default function Portfolio() {
     setBioBoxTilt({ x: 0, y: 0 });
   };
 
-  const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
+  const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
-  const { data: siteSettings } = useQuery<SiteSettings>({
+  const { data: siteSettings, error: settingsError } = useQuery<SiteSettings>({
     queryKey: ["/api/site-settings"],
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Portfolio page - Projects data:', { 
+      projects: projects?.length || 0, 
+      isLoading: projectsLoading, 
+      error: projectsError 
+    });
+    console.log('Portfolio page - Site settings:', { 
+      settings: !!siteSettings, 
+      error: settingsError 
+    });
+  }, [projects, projectsLoading, projectsError, siteSettings, settingsError]);
 
   if (projectsLoading) {
     return (

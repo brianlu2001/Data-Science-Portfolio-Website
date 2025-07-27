@@ -205,10 +205,10 @@ export default function ProjectView() {
                           title={`${project.title} Report`}
                           style={{ 
                             border: 'none',
-                            transform: isMobile ? 'scale(0.7)' : 'scale(1)',
+                            transform: isMobile ? 'scale(0.25)' : 'scale(1)',
                             transformOrigin: isMobile ? 'top left' : 'center',
-                            width: isMobile ? '143%' : '100%',
-                            height: isMobile ? '143%' : '100%'
+                            width: isMobile ? '400%' : '100%',
+                            height: isMobile ? '400%' : '100%'
                           }}
                           onLoad={() => {
                             // Check if PDF loaded successfully
@@ -271,10 +271,10 @@ export default function ProjectView() {
                         title={`${project.title} Report`}
                         style={{ 
                           border: 'none',
-                          transform: isMobile ? 'scale(0.7)' : 'scale(1)',
+                          transform: isMobile ? 'scale(0.25)' : 'scale(1)',
                           transformOrigin: isMobile ? 'top left' : 'center',
-                          width: isMobile ? '143%' : '100%',
-                          height: isMobile ? '143%' : '100%'
+                          width: isMobile ? '400%' : '100%',
+                          height: isMobile ? '400%' : '100%'
                         }}
                         onError={() => {
                           // Show fallback for HTML reports that fail to load

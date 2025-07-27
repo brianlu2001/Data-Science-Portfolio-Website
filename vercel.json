@@ -11,6 +11,10 @@
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/reports/(.*)", "destination": "/reports/$1" },
+    { "source": "/uploads/(.*)", "destination": "/uploads/$1" },
+    { "source": "/projects/:id", "destination": "/index.html" },
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/", "destination": "/index.html" }
   ]
 }

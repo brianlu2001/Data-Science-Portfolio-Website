@@ -86,6 +86,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'PUT') {
     try {
+      // Handle both JSON and FormData
+      let data;
+      if (req.headers['content-type']?.includes('multipart/form-data')) {
+        // Handle FormData (from admin dashboard)
+        console.log('Processing FormData for project update');
+        const formData = req.body;
+        data = {
+          title: formData.title,
+          simplifiedDescription: formData.simplifiedDescription,
+          fullDescription: formData.fullDescription,
+          technologies: formData.technologies ? 
+            (Array.isArray(formData.technologies) ? formData.technologies : 
+             typeof formData.technologies === 'string' ? JSON.parse(formData.technologies) : formData.technologies) : 
+            [],
+          category: formData.category,
+          imageUrl: formData.imageUrl,
+          projectUrl: formData.projectUrl,
+          githubUrl: formData.githubUrl,
+          sortOrder: formData.sortOrder ? parseInt(formData.sortOrder) : 0
+        };
+      } else {
+        // Handle JSON
+        data = req.body;
+      }
+
+      console.log('Project update data:', data);
+
       const {
         title,
         simplifiedDescription,
@@ -96,7 +123,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         projectUrl,
         githubUrl,
         sortOrder
-      } = req.body;
+      } = data;
 
       if (!title) {
         return res.status(400).json({ message: 'Title is required' });

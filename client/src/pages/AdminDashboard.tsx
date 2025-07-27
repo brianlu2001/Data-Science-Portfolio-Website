@@ -275,7 +275,7 @@ export default function AdminDashboard() {
     
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
-      if (key !== 'projectUrl' && value !== undefined && value !== null) {
+      if (value !== undefined && value !== null) {
         if (Array.isArray(value)) {
           formData.append(key, JSON.stringify(value));
         } else {

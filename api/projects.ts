@@ -44,15 +44,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.log('Database URL preview:', databaseUrl ? databaseUrl.substring(0, 20) + '...' : 'undefined');
       
       try {
+        // Test 1: Simple select without ordering
+        console.log('Step 1: Testing basic select...');
+        const simpleQuery = await db.select().from(projects).limit(1);
+        console.log('Simple query successful, found records:', simpleQuery.length);
+        
+        // Test 2: Full select without ordering
+        console.log('Step 2: Testing full select...');
+        const allProjects = await db.select().from(projects);
+        console.log(`Full select successful, found ${allProjects.length} projects`);
+        
+        // Test 3: Select with ordering (potential issue)
+        console.log('Step 3: Testing select with ordering...');
         const projectList = await db.select().from(projects).orderBy(desc(projects.sortOrder));
-        console.log(`Found ${projectList.length} projects`);
+        console.log(`Ordered select successful, found ${projectList.length} projects`);
+        
         console.log('Sample project:', projectList[0] ? { id: projectList[0].id, title: projectList[0].title } : 'none');
         return res.json(projectList);
       } catch (dbError) {
         console.error('Database query error:', dbError);
+        console.error('Error details:', {
+          name: dbError instanceof Error ? dbError.name : 'Unknown',
+          message: dbError instanceof Error ? dbError.message : 'Unknown error',
+          stack: dbError instanceof Error ? dbError.stack : 'No stack trace'
+        });
         return res.status(500).json({ 
           message: "Database query failed", 
-          error: dbError instanceof Error ? dbError.message : 'Unknown database error'
+          error: dbError instanceof Error ? dbError.message : 'Unknown database error',
+          details: dbError instanceof Error ? dbError.stack : undefined
         });
       }
     }

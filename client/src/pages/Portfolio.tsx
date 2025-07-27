@@ -49,7 +49,7 @@ export default function Portfolio() {
   });
 
   const { data: siteSettings, error: settingsError } = useQuery<SiteSettings>({
-    queryKey: ["/api/site-settings"],
+    queryKey: ["/api/site-settings-simple"],
   });
 
   // Debug logging

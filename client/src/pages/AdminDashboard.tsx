@@ -37,10 +37,9 @@ export default function AdminDashboard() {
     enabled: isAuthenticated, // Only run when authenticated
   });
 
-  const { data: siteSettings, error: settingsError } = useQuery<SiteSettings>({
-    queryKey: ["/api/site-settings"],
-    retry: 1,
-    enabled: isAuthenticated, // Only run when authenticated
+  const { data: siteSettings, isLoading: settingsLoading, error: settingsError } = useQuery<SiteSettings>({
+    queryKey: ["/api/site-settings-simple"],
+    enabled: isAuthenticated,
   });
 
   // Log any API errors
@@ -204,11 +203,11 @@ export default function AdminDashboard() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: InsertSiteSettingsData) => {
-      const response = await apiRequest("PUT", "/api/site-settings", data);
+      const response = await apiRequest("PUT", "/api/site-settings-simple", data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/site-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/site-settings-simple"] });
       setIsEditingSettings(false);
       toast({
         title: "Success",

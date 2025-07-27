@@ -15,7 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  console.log(`Site Settings API: ${req.method} /api/site-settings`);
+  console.log(`Simple Site Settings API: ${req.method} /api/site-settings-simple`);
 
   try {
     const databaseUrl = process.env.DATABASE_URL;
@@ -24,12 +24,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ message: "Database URL not configured" });
     }
 
+    console.log('Creating database connection...');
     const pool = new Pool({ connectionString: databaseUrl });
     const client = await pool.connect();
 
     if (req.method === 'GET') {
       console.log('Fetching site settings with raw SQL...');
-      
+
       const result = await client.query(`
         SELECT
           id,
@@ -42,8 +43,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         WHERE id = 1
       `);
 
-      client.release();
-      
+      console.log(`Found ${result.rows.length} site settings`);
+
       if (result.rows.length > 0) {
         const row = result.rows[0];
         const settings = {
@@ -54,10 +55,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           linkedinUrl: row.linkedin_url,
           updatedAt: row.updated_at
         };
-        
+
+        client.release();
         console.log('Site settings found, bio length:', settings.bio ? settings.bio.length : 0);
         return res.json(settings);
       } else {
+        client.release();
         console.log('No site settings found');
         return res.json({});
       }
@@ -66,31 +69,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'PUT') {
       console.log('Updating site settings with raw SQL...');
       const body = req.body;
-      
-      // Upsert operation
+
       const result = await client.query(`
-        INSERT INTO site_settings (
-          id, 
-          contact_email, 
-          contact_phone, 
-          bio, 
-          linkedin_url, 
-          updated_at
-        ) VALUES (
-          1,
-          $1,
-          $2,
-          $3,
-          $4,
-          NOW()
-        )
-        ON CONFLICT (id) 
-        DO UPDATE SET
+        UPDATE site_settings 
+        SET 
           contact_email = $1,
           contact_phone = $2,
           bio = $3,
           linkedin_url = $4,
           updated_at = NOW()
+        WHERE id = 1
         RETURNING *
       `, [body.contactEmail, body.contactPhone, body.bio, body.linkedinUrl]);
 
@@ -110,19 +98,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         console.log('Site settings updated successfully');
         return res.json(updatedSettings);
       } else {
-        return res.status(500).json({ message: "Failed to update settings" });
+        return res.status(404).json({ message: "Site settings not found" });
       }
     }
-    
+
     client.release();
     return res.status(405).json({ message: "Method not allowed" });
-    
+
   } catch (error) {
-    console.error('Site Settings API Error:', error);
-    return res.status(500).json({ 
-      message: "Internal server error", 
+    console.error('Site Settings Simple API Error:', error);
+    return res.status(500).json({
+      message: "Internal server error",
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
     });
   }
-}
+} 

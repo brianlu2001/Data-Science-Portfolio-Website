@@ -1,10 +1,4 @@
 import {
-  users,
-  projects,
-  projectFiles,
-  siteSettings,
-  pageViews,
-  projectClicks,
   type User,
   type UpsertUser,
   type Project,
@@ -18,8 +12,7 @@ import {
   type ProjectClick,
   type InsertProjectClick,
 } from "../shared/schema";
-import { db } from "./db";
-import { eq, desc, and, gte, lte, count, sql } from "drizzle-orm";
+import { pool } from "./db";
 
 export interface IStorage {
   // User operations - mandatory for Replit Auth
@@ -48,273 +41,552 @@ export interface IStorage {
   getPageViews(startDate: Date, endDate: Date): Promise<PageView[]>;
   getProjectClicks(startDate: Date, endDate: Date): Promise<(ProjectClick & { projectTitle: string })[]>;
   getAnalyticsSummary(startDate: Date, endDate: Date): Promise<{
-    totalPageViews: number;
-    totalProjectClicks: number;
-    topProjects: { projectId: number; projectTitle: string; clicks: number }[];
-    dailyStats: { date: string; pageViews: number; projectClicks: number }[];
+    totalViews: number;
+    totalClicks: number;
+    topPages: Array<{ page: string; views: number }>;
+    topProjects: Array<{ projectTitle: string; clicks: number }>;
   }>;
 }
 
-export class DatabaseStorage implements IStorage {
-  // User operations - mandatory for Replit Auth
+class PostgreSQLStorage implements IStorage {
+  // User operations
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    const client = await pool.connect();
+    try {
+      const result = await client.query('SELECT * FROM users WHERE id = $1', [id]);
+      return result.rows[0] || undefined;
+    } finally {
+      client.release();
+    }
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
+  async upsertUser(user: UpsertUser): Promise<User> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        INSERT INTO users (id, email, first_name, last_name, profile_image_url, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        ON CONFLICT (id) 
+        DO UPDATE SET
+          email = $2,
+          first_name = $3,
+          last_name = $4,
+          profile_image_url = $5,
+          updated_at = NOW()
+        RETURNING *
+      `, [user.id, user.email, user.firstName, user.lastName, user.profileImageUrl]);
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        email: row.email,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        profileImageUrl: row.profile_image_url,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    } finally {
+      client.release();
+    }
   }
 
   // Project operations
   async getProjects(): Promise<Project[]> {
-    return await db
-      .select()
-      .from(projects)
-      .orderBy(projects.sortOrder);
-  }
-
-  async getProject(id: number): Promise<Project | undefined> {
-    const [project] = await db
-      .select()
-      .from(projects)
-      .where(eq(projects.id, id));
-    return project;
-  }
-
-  async createProject(project: InsertProject): Promise<Project> {
-    const [newProject] = await db
-      .insert(projects)
-      .values(project)
-      .returning();
-    return newProject;
-  }
-
-  async updateProject(id: number, project: Partial<InsertProject>): Promise<Project> {
-    const [updatedProject] = await db
-      .update(projects)
-      .set({ ...project, updatedAt: new Date() })
-      .where(eq(projects.id, id))
-      .returning();
-    return updatedProject;
-  }
-
-  async deleteProject(id: number): Promise<void> {
-    await db.delete(projects).where(eq(projects.id, id));
-  }
-
-  // Project files
-  async getProjectFiles(projectId: number): Promise<ProjectFile[]> {
-    return await db
-      .select()
-      .from(projectFiles)
-      .where(eq(projectFiles.projectId, projectId));
-  }
-
-  async createProjectFile(file: InsertProjectFile): Promise<ProjectFile> {
-    const [newFile] = await db
-      .insert(projectFiles)
-      .values(file)
-      .returning();
-    return newFile;
-  }
-
-  async deleteProjectFile(id: number): Promise<void> {
-    await db.delete(projectFiles).where(eq(projectFiles.id, id));
-  }
-
-  // Site settings
-  async getSiteSettings(): Promise<SiteSettings | undefined> {
-    const [settings] = await db
-      .select()
-      .from(siteSettings)
-      .orderBy(desc(siteSettings.updatedAt))
-      .limit(1);
-    return settings;
-  }
-
-  async upsertSiteSettings(settings: InsertSiteSettings): Promise<SiteSettings> {
-    const existing = await this.getSiteSettings();
-    
-    if (existing) {
-      const [updated] = await db
-        .update(siteSettings)
-        .set({ ...settings, updatedAt: new Date() })
-        .where(eq(siteSettings.id, existing.id))
-        .returning();
-      return updated;
-    } else {
-      const [newSettings] = await db
-        .insert(siteSettings)
-        .values(settings)
-        .returning();
-      return newSettings;
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT 
+          id,
+          title,
+          simplified_description,
+          full_description,
+          technologies,
+          category,
+          image_url,
+          project_url,
+          github_url,
+          sort_order,
+          created_at,
+          updated_at
+        FROM projects 
+        ORDER BY sort_order DESC
+      `);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        title: row.title,
+        simplifiedDescription: row.simplified_description,
+        fullDescription: row.full_description,
+        technologies: row.technologies || [],
+        category: row.category,
+        imageUrl: row.image_url,
+        projectUrl: row.project_url,
+        githubUrl: row.github_url,
+        sortOrder: row.sort_order,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }));
+    } finally {
+      client.release();
     }
   }
 
-  // Analytics methods
+  async getProject(id: number): Promise<Project | undefined> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT 
+          id,
+          title,
+          simplified_description,
+          full_description,
+          technologies,
+          category,
+          image_url,
+          project_url,
+          github_url,
+          sort_order,
+          created_at,
+          updated_at
+        FROM projects 
+        WHERE id = $1
+      `, [id]);
+      
+      if (result.rows.length === 0) return undefined;
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        title: row.title,
+        simplifiedDescription: row.simplified_description,
+        fullDescription: row.full_description,
+        technologies: row.technologies || [],
+        category: row.category,
+        imageUrl: row.image_url,
+        projectUrl: row.project_url,
+        githubUrl: row.github_url,
+        sortOrder: row.sort_order,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    } finally {
+      client.release();
+    }
+  }
+
+  async createProject(project: InsertProject): Promise<Project> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        INSERT INTO projects (
+          title,
+          simplified_description,
+          full_description,
+          technologies,
+          category,
+          image_url,
+          project_url,
+          github_url,
+          sort_order,
+          created_at,
+          updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+        RETURNING *
+      `, [
+        project.title,
+        project.simplifiedDescription,
+        project.fullDescription,
+        JSON.stringify(project.technologies || []),
+        project.category,
+        project.imageUrl,
+        project.projectUrl,
+        project.githubUrl,
+        project.sortOrder
+      ]);
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        title: row.title,
+        simplifiedDescription: row.simplified_description,
+        fullDescription: row.full_description,
+        technologies: row.technologies || [],
+        category: row.category,
+        imageUrl: row.image_url,
+        projectUrl: row.project_url,
+        githubUrl: row.github_url,
+        sortOrder: row.sort_order,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    } finally {
+      client.release();
+    }
+  }
+
+  async updateProject(id: number, project: Partial<InsertProject>): Promise<Project> {
+    const client = await pool.connect();
+    try {
+      const setParts: string[] = [];
+      const values: any[] = [];
+      let paramIndex = 1;
+
+      if (project.title !== undefined) {
+        setParts.push(`title = $${paramIndex++}`);
+        values.push(project.title);
+      }
+      if (project.simplifiedDescription !== undefined) {
+        setParts.push(`simplified_description = $${paramIndex++}`);
+        values.push(project.simplifiedDescription);
+      }
+      if (project.fullDescription !== undefined) {
+        setParts.push(`full_description = $${paramIndex++}`);
+        values.push(project.fullDescription);
+      }
+      if (project.technologies !== undefined) {
+        setParts.push(`technologies = $${paramIndex++}`);
+        values.push(JSON.stringify(project.technologies));
+      }
+      if (project.category !== undefined) {
+        setParts.push(`category = $${paramIndex++}`);
+        values.push(project.category);
+      }
+      if (project.imageUrl !== undefined) {
+        setParts.push(`image_url = $${paramIndex++}`);
+        values.push(project.imageUrl);
+      }
+      if (project.projectUrl !== undefined) {
+        setParts.push(`project_url = $${paramIndex++}`);
+        values.push(project.projectUrl);
+      }
+      if (project.githubUrl !== undefined) {
+        setParts.push(`github_url = $${paramIndex++}`);
+        values.push(project.githubUrl);
+      }
+      if (project.sortOrder !== undefined) {
+        setParts.push(`sort_order = $${paramIndex++}`);
+        values.push(project.sortOrder);
+      }
+
+      setParts.push(`updated_at = NOW()`);
+      values.push(id);
+
+      const result = await client.query(`
+        UPDATE projects 
+        SET ${setParts.join(', ')}
+        WHERE id = $${paramIndex}
+        RETURNING *
+      `, values);
+      
+      if (result.rows.length === 0) {
+        throw new Error(`Project with id ${id} not found`);
+      }
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        title: row.title,
+        simplifiedDescription: row.simplified_description,
+        fullDescription: row.full_description,
+        technologies: row.technologies || [],
+        category: row.category,
+        imageUrl: row.image_url,
+        projectUrl: row.project_url,
+        githubUrl: row.github_url,
+        sortOrder: row.sort_order,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      };
+    } finally {
+      client.release();
+    }
+  }
+
+  async deleteProject(id: number): Promise<void> {
+    const client = await pool.connect();
+    try {
+      await client.query('DELETE FROM projects WHERE id = $1', [id]);
+    } finally {
+      client.release();
+    }
+  }
+
+  // Project files operations
+  async getProjectFiles(projectId: number): Promise<ProjectFile[]> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT 
+          id,
+          project_id,
+          file_name,
+          file_url,
+          file_type,
+          created_at
+        FROM project_files 
+        WHERE project_id = $1
+        ORDER BY created_at ASC
+      `, [projectId]);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        projectId: row.project_id,
+        fileName: row.file_name,
+        fileUrl: row.file_url,
+        fileType: row.file_type,
+        createdAt: row.created_at
+      }));
+    } finally {
+      client.release();
+    }
+  }
+
+  async createProjectFile(file: InsertProjectFile): Promise<ProjectFile> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        INSERT INTO project_files (
+          project_id,
+          file_name,
+          file_url,
+          file_type,
+          created_at
+        ) VALUES ($1, $2, $3, $4, NOW())
+        RETURNING *
+      `, [file.projectId, file.fileName, file.fileUrl, file.fileType]);
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        projectId: row.project_id,
+        fileName: row.file_name,
+        fileUrl: row.file_url,
+        fileType: row.file_type,
+        createdAt: row.created_at
+      };
+    } finally {
+      client.release();
+    }
+  }
+
+  async deleteProjectFile(id: number): Promise<void> {
+    const client = await pool.connect();
+    try {
+      await client.query('DELETE FROM project_files WHERE id = $1', [id]);
+    } finally {
+      client.release();
+    }
+  }
+
+  // Site settings operations
+  async getSiteSettings(): Promise<SiteSettings | undefined> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT 
+          id,
+          contact_email,
+          contact_phone,
+          bio,
+          linkedin_url,
+          updated_at
+        FROM site_settings
+        WHERE id = 1
+      `);
+      
+      if (result.rows.length === 0) return undefined;
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        contactEmail: row.contact_email,
+        contactPhone: row.contact_phone,
+        bio: row.bio,
+        linkedinUrl: row.linkedin_url,
+        updatedAt: row.updated_at
+      };
+    } finally {
+      client.release();
+    }
+  }
+
+  async upsertSiteSettings(settings: InsertSiteSettings): Promise<SiteSettings> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        INSERT INTO site_settings (
+          id,
+          contact_email,
+          contact_phone,
+          bio,
+          linkedin_url,
+          updated_at
+        ) VALUES (1, $1, $2, $3, $4, NOW())
+        ON CONFLICT (id)
+        DO UPDATE SET
+          contact_email = $1,
+          contact_phone = $2,
+          bio = $3,
+          linkedin_url = $4,
+          updated_at = NOW()
+        RETURNING *
+      `, [settings.contactEmail, settings.contactPhone, settings.bio, settings.linkedinUrl]);
+      
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        contactEmail: row.contact_email,
+        contactPhone: row.contact_phone,
+        bio: row.bio,
+        linkedinUrl: row.linkedin_url,
+        updatedAt: row.updated_at
+      };
+    } finally {
+      client.release();
+    }
+  }
+
+  // Analytics operations
   async recordPageView(pageView: InsertPageView): Promise<void> {
-    await db.insert(pageViews).values(pageView);
+    const client = await pool.connect();
+    try {
+      await client.query(`
+        INSERT INTO page_views (page, timestamp)
+        VALUES ($1, $2)
+      `, [pageView.page, pageView.timestamp]);
+    } finally {
+      client.release();
+    }
   }
 
   async recordProjectClick(projectClick: InsertProjectClick): Promise<void> {
-    await db.insert(projectClicks).values(projectClick);
+    const client = await pool.connect();
+    try {
+      await client.query(`
+        INSERT INTO project_clicks (project_id, click_type, timestamp)
+        VALUES ($1, $2, $3)
+      `, [projectClick.projectId, projectClick.clickType, projectClick.timestamp]);
+    } finally {
+      client.release();
+    }
   }
 
   async getPageViews(startDate: Date, endDate: Date): Promise<PageView[]> {
-    return await db
-      .select()
-      .from(pageViews)
-      .where(
-        and(
-          gte(pageViews.timestamp, startDate),
-          lte(pageViews.timestamp, endDate)
-        )
-      )
-      .orderBy(desc(pageViews.timestamp));
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT id, page, user_agent, ip_address, timestamp
+        FROM page_views
+        WHERE timestamp BETWEEN $1 AND $2
+        ORDER BY timestamp DESC
+      `, [startDate, endDate]);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        page: row.page,
+        userAgent: row.user_agent,
+        ipAddress: row.ip_address,
+        timestamp: row.timestamp
+      }));
+    } finally {
+      client.release();
+    }
   }
 
   async getProjectClicks(startDate: Date, endDate: Date): Promise<(ProjectClick & { projectTitle: string })[]> {
-    return await db
-      .select({
-        id: projectClicks.id,
-        projectId: projectClicks.projectId,
-        clickType: projectClicks.clickType,
-        userAgent: projectClicks.userAgent,
-        ipAddress: projectClicks.ipAddress,
-        timestamp: projectClicks.timestamp,
-        projectTitle: projects.title,
-      })
-      .from(projectClicks)
-      .innerJoin(projects, eq(projectClicks.projectId, projects.id))
-      .where(
-        and(
-          gte(projectClicks.timestamp, startDate),
-          lte(projectClicks.timestamp, endDate)
-        )
-      )
-      .orderBy(desc(projectClicks.timestamp));
+    const client = await pool.connect();
+    try {
+      const result = await client.query(`
+        SELECT 
+          pc.id,
+          pc.project_id,
+          pc.click_type,
+          pc.user_agent,
+          pc.ip_address,
+          pc.timestamp,
+          p.title as project_title
+        FROM project_clicks pc
+        JOIN projects p ON pc.project_id = p.id
+        WHERE pc.timestamp BETWEEN $1 AND $2
+        ORDER BY pc.timestamp DESC
+      `, [startDate, endDate]);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        projectId: row.project_id,
+        clickType: row.click_type,
+        userAgent: row.user_agent,
+        ipAddress: row.ip_address,
+        timestamp: row.timestamp,
+        projectTitle: row.project_title
+      }));
+    } finally {
+      client.release();
+    }
   }
 
   async getAnalyticsSummary(startDate: Date, endDate: Date): Promise<{
-    totalPageViews: number;
-    totalProjectClicks: number;
-    topProjects: { projectId: number; projectTitle: string; clicks: number }[];
-    dailyStats: { date: string; pageViews: number; projectClicks: number }[];
+    totalViews: number;
+    totalClicks: number;
+    topPages: Array<{ page: string; views: number }>;
+    topProjects: Array<{ projectTitle: string; clicks: number }>;
   }> {
-    // Get total page views
-    const pageViewsResult = await db
-      .select({ count: count() })
-      .from(pageViews)
-      .where(
-        and(
-          gte(pageViews.timestamp, startDate),
-          lte(pageViews.timestamp, endDate)
-        )
-      );
-
-    // Get total project clicks
-    const projectClicksResult = await db
-      .select({ count: count() })
-      .from(projectClicks)
-      .where(
-        and(
-          gte(projectClicks.timestamp, startDate),
-          lte(projectClicks.timestamp, endDate)
-        )
-      );
-
-    // Get top projects by clicks
-    const topProjectsResult = await db
-      .select({
-        projectId: projectClicks.projectId,
-        projectTitle: projects.title,
-        clicks: count(),
-      })
-      .from(projectClicks)
-      .innerJoin(projects, eq(projectClicks.projectId, projects.id))
-      .where(
-        and(
-          gte(projectClicks.timestamp, startDate),
-          lte(projectClicks.timestamp, endDate)
-        )
-      )
-      .groupBy(projectClicks.projectId, projects.title)
-      .orderBy(desc(count()))
-      .limit(10);
-
-    // Get daily stats
-    const dailyPageViews = await db
-      .select({
-        date: sql`DATE(${pageViews.timestamp})::text`,
-        count: count(),
-      })
-      .from(pageViews)
-      .where(
-        and(
-          gte(pageViews.timestamp, startDate),
-          lte(pageViews.timestamp, endDate)
-        )
-      )
-      .groupBy(sql`DATE(${pageViews.timestamp})`)
-      .orderBy(sql`DATE(${pageViews.timestamp})`);
-
-    const dailyProjectClicks = await db
-      .select({
-        date: sql`DATE(${projectClicks.timestamp})::text`,
-        count: count(),
-      })
-      .from(projectClicks)
-      .where(
-        and(
-          gte(projectClicks.timestamp, startDate),
-          lte(projectClicks.timestamp, endDate)
-        )
-      )
-      .groupBy(sql`DATE(${projectClicks.timestamp})`)
-      .orderBy(sql`DATE(${projectClicks.timestamp})`);
-
-    // Combine daily stats
-    const dailyStatsMap = new Map<string, { pageViews: number; projectClicks: number }>();
-    
-    dailyPageViews.forEach(({ date, count }) => {
-      dailyStatsMap.set(String(date), { pageViews: Number(count), projectClicks: 0 });
-    });
-    
-    dailyProjectClicks.forEach(({ date, count }) => {
-      const dateStr = String(date);
-      const existing = dailyStatsMap.get(dateStr) || { pageViews: 0, projectClicks: 0 };
-      dailyStatsMap.set(dateStr, { ...existing, projectClicks: Number(count) });
-    });
-
-    const dailyStats = Array.from(dailyStatsMap.entries()).map(([date, stats]) => ({
-      date,
-      pageViews: stats.pageViews,
-      projectClicks: stats.projectClicks,
-    }));
-
-    return {
-      totalPageViews: Number(pageViewsResult[0]?.count || 0),
-      totalProjectClicks: Number(projectClicksResult[0]?.count || 0),
-      topProjects: topProjectsResult.map(p => ({
-        projectId: p.projectId,
-        projectTitle: p.projectTitle,
-        clicks: Number(p.clicks),
-      })),
-      dailyStats,
-    };
+    const client = await pool.connect();
+    try {
+      // Get total views
+      const viewsResult = await client.query(`
+        SELECT COUNT(*) as total
+        FROM page_views
+        WHERE timestamp BETWEEN $1 AND $2
+      `, [startDate, endDate]);
+      
+      // Get total clicks
+      const clicksResult = await client.query(`
+        SELECT COUNT(*) as total
+        FROM project_clicks
+        WHERE timestamp BETWEEN $1 AND $2
+      `, [startDate, endDate]);
+      
+      // Get top pages
+      const topPagesResult = await client.query(`
+        SELECT page, COUNT(*) as views
+        FROM page_views
+        WHERE timestamp BETWEEN $1 AND $2
+        GROUP BY page
+        ORDER BY views DESC
+        LIMIT 10
+      `, [startDate, endDate]);
+      
+      // Get top projects
+      const topProjectsResult = await client.query(`
+        SELECT 
+          p.title as project_title,
+          COUNT(*) as clicks
+        FROM project_clicks pc
+        JOIN projects p ON pc.project_id = p.id
+        WHERE pc.timestamp BETWEEN $1 AND $2
+        GROUP BY p.title
+        ORDER BY clicks DESC
+        LIMIT 10
+      `, [startDate, endDate]);
+      
+      return {
+        totalViews: parseInt(viewsResult.rows[0].total),
+        totalClicks: parseInt(clicksResult.rows[0].total),
+        topPages: topPagesResult.rows.map(row => ({
+          page: row.page,
+          views: parseInt(row.views)
+        })),
+        topProjects: topProjectsResult.rows.map(row => ({
+          projectTitle: row.project_title,
+          clicks: parseInt(row.clicks)
+        }))
+      };
+    } finally {
+      client.release();
+    }
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new PostgreSQLStorage();

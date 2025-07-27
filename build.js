@@ -2,6 +2,7 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { cp } from 'fs/promises';
 
 console.log('Starting Vercel build process...');
 
@@ -56,3 +57,18 @@ try {
   console.error('❌ Build failed:', error);
   process.exit(1);
 }
+
+// Copy uploads directory to dist/public after build
+async function copyUploads() {
+  try {
+    const src = path.resolve('./uploads');
+    const dest = path.resolve('./dist/public/uploads');
+    await cp(src, dest, { recursive: true });
+    console.log('✅ Uploads directory copied to dist/public/');
+  } catch (error) {
+    console.error('❌ Error copying uploads:', error);
+  }
+}
+
+// Copy uploads after build
+copyUploads();

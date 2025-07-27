@@ -32,7 +32,7 @@ export default function AdminDashboard() {
 
   // All hooks must be called before any conditional returns
   const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: ["/api/projects-simple"],
     retry: 1,
     enabled: isAuthenticated, // Only run when authenticated
   });

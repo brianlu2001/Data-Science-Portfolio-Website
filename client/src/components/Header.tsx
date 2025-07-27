@@ -212,7 +212,7 @@ export default function Header({ siteSettings }: HeaderProps) {
             >
                             {/* Front Face */}
               <div
-                className="title-face-front stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12"
+                className="title-face-front stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 md:min-h-0 min-h-[280px]"
                 style={{
                   backfaceVisibility: 'hidden',
                   '--reflection-x': '30%',
@@ -231,12 +231,12 @@ export default function Header({ siteSettings }: HeaderProps) {
                   Kuan-I (Brian) Lu
                 </motion.h1>
                 
-                {/* Mobile Name - Hidden when flipped */}
+                {/* Mobile Name - Hidden when flipped but space maintained */}
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8 }}
-                  className={`volter-black-title text-4xl sm:text-5xl text-[#242931] leading-tight md:hidden ${isFlipped ? 'hidden' : 'block'} mb-8`}
+                  className={`volter-black-title text-4xl sm:text-5xl text-[#242931] leading-tight md:hidden ${isFlipped ? 'opacity-0' : 'opacity-100'} mb-8`}
                 >
                   Kuan-I (Brian) Lu
                 </motion.h1>
@@ -245,7 +245,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className={`suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold md:block ${isFlipped ? 'hidden md:block' : 'block'}`}
+                  className={`suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold md:block ${isFlipped ? 'opacity-0 md:opacity-100' : 'opacity-100'}`}
                 >
                   Data Science Project Portfolio
                 </motion.h2>
@@ -253,7 +253,7 @@ export default function Header({ siteSettings }: HeaderProps) {
 
                             {/* Back Face */}
               <div
-                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-center items-center"
+                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-center items-center md:min-h-0 min-h-[280px]"
                 style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
@@ -261,9 +261,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                   '--reflection-y': '30%',
                   '--secondary-reflection-x': '70%',
                   '--secondary-reflection-y': '70%',
-                  '--highlight-angle': '135deg',
-                  // Ensure same height as front face on mobile
-                  minHeight: '100%'
+                  '--highlight-angle': '135deg'
                 }}
               >
                 <div className="flex flex-col items-center justify-center h-full">

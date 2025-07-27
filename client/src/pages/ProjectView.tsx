@@ -49,6 +49,7 @@ export default function ProjectView() {
   // Use project URL directly from the database
   useEffect(() => {
     if (project?.projectUrl) {
+      console.log('Setting report URL:', project.projectUrl);
       setReportUrl(project.projectUrl);
     }
   }, [project]);
@@ -109,6 +110,7 @@ export default function ProjectView() {
               {reportUrl && (
                 <Button
                   onClick={() => {
+                    console.log('Opening report URL:', reportUrl);
                     if (id) trackProjectClick(parseInt(id), 'report');
                     window.open(reportUrl!, '_blank');
                   }}

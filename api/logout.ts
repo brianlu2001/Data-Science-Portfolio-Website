@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
   if (req.method === 'OPTIONS') {
@@ -11,23 +11,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    if (req.method === 'GET') {
-      // For Vercel deployment, return a mock admin user
-      // In production, you would implement proper user authentication
-      return res.json({ 
-        id: 'admin', 
-        email: 'admin@example.com',
-        firstName: 'Admin',
-        lastName: 'User'
-      });
+    if (req.method === 'GET' || req.method === 'POST') {
+      // For Vercel deployment, simply redirect to homepage
+      // In production, you would clear authentication tokens/sessions here
+      res.writeHead(302, { Location: '/' });
+      return res.end();
     }
     
     return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
-    console.error('User API Error:', error);
+    console.error('Logout API Error:', error);
     return res.status(500).json({ 
       message: "Internal server error", 
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
-}
+} 

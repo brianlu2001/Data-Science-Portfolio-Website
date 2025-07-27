@@ -1,6 +1,6 @@
 {
-  "framework": null,
-  "buildCommand": "npx vite build",
+  "version": 2,
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist/public",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
@@ -8,5 +8,13 @@
     "env": {
       "NODE_ENV": "development"
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/reports/(.*)", "destination": "/reports/$1" },
+    { "source": "/uploads/(.*)", "destination": "/uploads/$1" },
+    { "source": "/projects/:id", "destination": "/index.html" },
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/", "destination": "/index.html" }
+  ]
 }

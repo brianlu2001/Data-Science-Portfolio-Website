@@ -23,19 +23,33 @@ export default function ProjectView() {
     }
   }, [id, trackPageViewDebounced]);
   
-  const { data: project, isLoading: projectLoading } = useQuery<Project>({
-    queryKey: ["/api/projects", id],
+  const { data: project, isLoading: projectLoading, error: projectError } = useQuery<Project>({
+    queryKey: [`/api/project-by-id?id=${id}`],
     enabled: !!id,
   });
 
-  const { data: projectFiles = [] } = useQuery<ProjectFile[]>({
-    queryKey: ["/api/projects", id, "files"],
-    enabled: !!id,
-  });
+  // Debug logging
+  useEffect(() => {
+    console.log('ProjectView Debug:', {
+      id,
+      project,
+      projectLoading,
+      projectError,
+      queryKey: `/api/project-by-id?id=${id}`
+    });
+  }, [id, project, projectLoading, projectError]);
+
+  // Disable project files query for now since it's causing issues
+  // const { data: projectFiles = [] } = useQuery<ProjectFile[]>({
+  //   queryKey: ["/api/projects", id, "files"],
+  //   enabled: !!id,
+  // });
+  const projectFiles: ProjectFile[] = []; // Empty array for now
 
   // Use project URL directly from the database
   useEffect(() => {
     if (project?.projectUrl) {
+      console.log('Setting report URL:', project.projectUrl);
       setReportUrl(project.projectUrl);
     }
   }, [project]);
@@ -96,8 +110,9 @@ export default function ProjectView() {
               {reportUrl && (
                 <Button
                   onClick={() => {
-                    trackProjectClick(parseInt(id!), 'report');
-                    window.open(reportUrl, '_blank');
+                    console.log('Opening report URL:', reportUrl);
+                    if (id) trackProjectClick(parseInt(id), 'report');
+                    window.open(reportUrl!, '_blank');
                   }}
                   className="bg-royal-500 hover:bg-royal-600 text-white"
                 >
@@ -108,8 +123,8 @@ export default function ProjectView() {
               {project.githubUrl && (
                 <Button
                   onClick={() => {
-                    trackProjectClick(parseInt(id!), 'github');
-                    window.open(project.githubUrl, '_blank');
+                    if (id) trackProjectClick(parseInt(id), 'github');
+                    window.open(project.githubUrl!, '_blank');
                   }}
                   variant="outline"
                   className="border-gray-600 text-gray-300 hover:text-white"
@@ -287,7 +302,7 @@ export default function ProjectView() {
                       key={file.id}
                       className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
                     >
-                      <span className="text-gray-300">{file.filename}</span>
+                      <span className="text-gray-300">{file.fileName}</span>
                       <Button
                         onClick={() => window.open(file.fileUrl, '_blank')}
                         size="sm"

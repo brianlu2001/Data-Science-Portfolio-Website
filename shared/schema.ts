@@ -7,6 +7,7 @@ import {
   index,
   serial,
   boolean,
+  integer,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -45,7 +46,7 @@ export const projects = pgTable("projects", {
   imageUrl: varchar("image_url"),
   projectUrl: varchar("project_url"),
   githubUrl: varchar("github_url"),
-  sortOrder: serial("sort_order"),
+  sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

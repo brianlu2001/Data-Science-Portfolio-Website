@@ -229,7 +229,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                   animate={{ opacity: isFlipped ? 0 : 1, y: 0 }}
                   transition={{ 
                     opacity: { 
-                      duration: isMobile ? 0.8 : 0.4, 
+                      duration: isMobile ? (isFlipped ? 0.4 : 0.8) : 0.4, 
                       ease: "easeInOut",
                       delay: isMobile && !isFlipped ? 0.2 : 0
                     }, 
@@ -245,9 +245,9 @@ export default function Header({ siteSettings }: HeaderProps) {
                   animate={{ opacity: isFlipped ? 0 : 1, y: 0 }}
                   transition={{ 
                     opacity: { 
-                      duration: isMobile ? 0 : 0.4, 
+                      duration: isMobile ? (isFlipped ? 0.4 : 0.8) : 0.4, 
                       ease: "easeInOut",
-                      delay: isMobile && !isFlipped ? 0.8 : 0
+                      delay: isMobile && !isFlipped ? 0.2 : 0
                     }, 
                     y: { duration: 0.8, delay: 0.2 } 
                   }}

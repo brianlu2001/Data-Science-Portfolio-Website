@@ -225,7 +225,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: isFlipped ? 0 : 1, y: 0 }}
-                  transition={{ duration: 0.8 }}
+                  transition={{ duration: 0 }}
                   className="volter-black-title text-4xl sm:text-5xl md:text-7xl lg:text-9xl mb-8 md:mb-12 text-[#242931] leading-tight"
                   style={{ opacity: isFlipped ? 0 : 1 }}
                 >
@@ -235,7 +235,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                 <motion.h2
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: isFlipped ? 0 : 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
+                  transition={{ duration: 0}}
                   className="suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold"
                   style={{ opacity: isFlipped ? 0 : 1 }}
                 >

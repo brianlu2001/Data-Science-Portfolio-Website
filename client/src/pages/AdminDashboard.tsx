@@ -17,6 +17,7 @@ import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { insertProjectSchema, insertSiteSettingsSchema, type Project, type SiteSettings } from "@shared/schema";
+import ImageUpload from "@/components/ImageUpload";
 import { type z } from "zod";
 import { BarChart3, Users, Eye, MousePointer, Settings, LogOut, Plus, Upload, Edit2, Trash2, X } from "lucide-react";
 import AnalyticsCharts from "@/components/AnalyticsCharts";
@@ -459,22 +460,21 @@ export default function AdminDashboard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-gray-300">Project Image</Label>
-                        {editingProject?.imageUrl && (
-                          <div className="mb-2">
-                            <p className="text-sm text-gray-400">Current image:</p>
-                            <img 
-                              src={editingProject.imageUrl} 
-                              alt="Current project image" 
-                              className="w-20 h-20 object-cover rounded border border-gray-600"
-                            />
-                          </div>
-                        )}
-                        <Input
-                          id="project-image"
-                          type="file"
-                          accept="image/*"
-                          className="bg-charcoal-800 border-gray-600 text-white"
+                        <FormField
+                          control={projectForm.control}
+                          name="imageUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                                                <ImageUpload
+                                   value={field.value || ""}
+                                   onChange={field.onChange}
+                                   label="Project Image"
+                                 />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                       </div>
                       <div>

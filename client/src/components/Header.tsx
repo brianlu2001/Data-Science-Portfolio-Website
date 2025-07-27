@@ -173,7 +173,7 @@ export default function Header({ siteSettings }: HeaderProps) {
           ) : (
             <Button
               variant="outline"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={() => window.location.href = "/api/auth?action=login"}
               className="glass-effect border-gray-600 text-gray-300 hover:text-white"
             >
               Admin

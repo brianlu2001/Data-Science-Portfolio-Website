@@ -115,7 +115,7 @@ export default function AdminDashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/api/auth?action=login";
         }, 500);
         return;
       }
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/api/auth?action=login";
         }, 500);
         return;
       }
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/api/auth?action=login";
         }, 500);
         return;
       }
@@ -235,7 +235,7 @@ export default function AdminDashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/api/auth?action=login";
         }, 500);
         return;
       }
@@ -364,7 +364,7 @@ export default function AdminDashboard() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => window.location.href = "/api/logout"}
+              onClick={() => window.location.href = "/api/auth?action=logout"}
               className="glass-effect border-gray-600 text-gray-300 hover:text-white"
             >
               Logout

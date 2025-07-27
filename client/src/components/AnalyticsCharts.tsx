@@ -58,7 +58,19 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
   }, [timeWindow]);
 
   const { data: analytics, isLoading, refetch } = useQuery<AnalyticsSummary>({
-    queryKey: ['/api/analytics/summary', startDate?.toISOString(), endDate?.toISOString()],
+    queryKey: ['/api/analytics', 'summary', timeWindow, startDate?.toISOString(), endDate?.toISOString()],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.set('timeWindow', timeWindow);
+      if (startDate) params.set('startDate', startDate.toISOString());
+      if (endDate) params.set('endDate', endDate.toISOString());
+      
+      const response = await fetch(`/api/analytics?action=summary&${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data');
+      }
+      return response.json();
+    },
     enabled: !!(startDate && endDate),
   });
 

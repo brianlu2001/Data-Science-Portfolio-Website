@@ -18,7 +18,7 @@ class AnalyticsTracker {
   async trackPageView(page: string) {
     try {
       this.log(`Page view: ${page}`);
-      const response = await fetch('/api/analytics/pageview', {
+      const response = await fetch('/api/analytics?action=pageview', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ class AnalyticsTracker {
   async trackProjectClick(projectId: number, clickType: 'view' | 'report' | 'github') {
     try {
       this.log(`Project click: ${projectId} - ${clickType}`);
-      const response = await fetch('/api/analytics/project-click', {
+      const response = await fetch('/api/analytics?action=project-click', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -192,9 +192,6 @@ export default function ProjectView() {
                 </div>
                 
                 <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
-                  <div className="text-xs text-gray-400 p-2">
-                    Debug: Mobile={isMobile.toString()}, URL={reportUrl}
-                  </div>
                   {getReportType(reportUrl) === 'pdf' ? (
                     <div className="w-full md:h-[800px] h-[calc(100vh-200px)] relative md:overflow-hidden overflow-auto">
                       {!pdfError ? (
@@ -205,10 +202,10 @@ export default function ProjectView() {
                           title={`${project.title} Report`}
                           style={{ 
                             border: 'none',
-                            transform: isMobile ? 'scale(0.25)' : 'scale(1)',
+                            transform: isMobile ? 'scale(0.125)' : 'scale(1)',
                             transformOrigin: isMobile ? 'top left' : 'center',
-                            width: isMobile ? '400%' : '100%',
-                            height: isMobile ? '400%' : '100%'
+                            width: isMobile ? '800%' : '100%',
+                            height: isMobile ? '800%' : '100%'
                           }}
                           onLoad={() => {
                             // Check if PDF loaded successfully
@@ -271,10 +268,10 @@ export default function ProjectView() {
                         title={`${project.title} Report`}
                         style={{ 
                           border: 'none',
-                          transform: isMobile ? 'scale(0.25)' : 'scale(1)',
+                          transform: isMobile ? 'scale(0.125)' : 'scale(1)',
                           transformOrigin: isMobile ? 'top left' : 'center',
-                          width: isMobile ? '400%' : '100%',
-                          height: isMobile ? '400%' : '100%'
+                          width: isMobile ? '800%' : '100%',
+                          height: isMobile ? '800%' : '100%'
                         }}
                         onError={() => {
                           // Show fallback for HTML reports that fail to load

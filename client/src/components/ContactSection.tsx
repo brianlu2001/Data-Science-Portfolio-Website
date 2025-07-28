@@ -5,9 +5,10 @@ import { SiteSettings } from "@shared/schema";
 
 interface ContactSectionProps {
   siteSettings?: SiteSettings;
+  isLandscapeMobile?: boolean;
 }
 
-export default function ContactSection({ siteSettings }: ContactSectionProps) {
+export default function ContactSection({ siteSettings, isLandscapeMobile = false }: ContactSectionProps) {
   const defaultSettings = {
     contactEmail: "brian901231@gmail.com",
     contactPhone: "8056897961",
@@ -17,7 +18,7 @@ export default function ContactSection({ siteSettings }: ContactSectionProps) {
   const settings = siteSettings || defaultSettings;
 
   return (
-    <section className="container mx-auto px-4 sm:px-6 py-16 relative z-0">
+    <section className={`container mx-auto py-16 relative z-0 ${isLandscapeMobile ? 'px-2' : 'px-4 sm:px-6'}`}>
       <div className="max-w-4xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

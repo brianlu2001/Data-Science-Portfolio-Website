@@ -12,6 +12,7 @@ import { useAnalytics } from "@/utils/analytics";
 export default function Portfolio() {
   const [expandedProject, setExpandedProject] = useState<number | null>(null);
   const [bioBoxTilt, setBioBoxTilt] = useState({ x: 0, y: 0 });
+  const [isLandscapeMobile, setIsLandscapeMobile] = useState(false);
   const { trackPageViewDebounced } = useAnalytics();
 
   const bioBoxRef = useRef<HTMLDivElement>(null);
@@ -19,6 +20,46 @@ export default function Portfolio() {
   useEffect(() => {
     trackPageViewDebounced('/');
   }, [trackPageViewDebounced]);
+
+  // Detect mobile landscape orientation
+  useEffect(() => {
+    const checkLandscapeMobile = () => {
+      const isMobile = window.innerWidth < 768;
+      const isLandscape = window.innerWidth > window.innerHeight;
+      setIsLandscapeMobile(isMobile && isLandscape);
+    };
+    
+    checkLandscapeMobile();
+    window.addEventListener('resize', checkLandscapeMobile);
+    window.addEventListener('orientationchange', checkLandscapeMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkLandscapeMobile);
+      window.removeEventListener('orientationchange', checkLandscapeMobile);
+    };
+  }, []);
+
+  // Close expanded project when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: Event) => {
+      const target = event.target as Element;
+      
+      // Check if the click is outside all project cards
+      const isInsideProjectCard = target.closest('[data-project-card]');
+      
+      if (!isInsideProjectCard && expandedProject !== null) {
+        setExpandedProject(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [expandedProject]);
 
 
   const handleBioMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -79,7 +120,7 @@ export default function Portfolio() {
   return (
     <div className="min-h-screen neural-network-bg">
       <Header siteSettings={siteSettings} />
-      <main className="container mx-auto px-4 sm:px-6 py-12">
+      <main className={`container mx-auto py-12 ${isLandscapeMobile ? 'px-0' : 'px-4 sm:px-6'}`}>
         {/* Bio Section with Blue Glow */}
         {siteSettings && (
           <motion.div
@@ -89,7 +130,7 @@ export default function Portfolio() {
           >
             <motion.div 
               ref={bioBoxRef}
-              className="blue-glow rounded-2xl p-4 sm:p-6 md:p-8 text-center cursor-pointer mx-4 sm:mx-0"
+              className={`blue-glow rounded-2xl p-4 sm:p-6 md:p-8 text-center cursor-pointer ${isLandscapeMobile ? 'mx-2' : 'mx-4 sm:mx-0'}`}
               onMouseMove={handleBioMouseMove}
               onMouseLeave={handleBioMouseLeave}
               animate={{
@@ -125,7 +166,7 @@ export default function Portfolio() {
           <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full"></div>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto relative z-10 px-4 sm:px-0">
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto relative z-10 ${isLandscapeMobile ? 'px-2' : 'px-4 sm:px-0'}`}>
           {projects.map((project, index) => (
             <motion.div
               key={project.id}
@@ -143,7 +184,7 @@ export default function Portfolio() {
           ))}
         </div>
       </main>
-      <ContactSection siteSettings={siteSettings} />
+      <ContactSection siteSettings={siteSettings} isLandscapeMobile={isLandscapeMobile} />
     </div>
   );
 }

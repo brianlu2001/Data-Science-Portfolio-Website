@@ -48,7 +48,7 @@ export default function ProjectCard({ project, isExpanded, onToggleExpanded, col
   };
 
   return (
-    <div className="relative">
+    <div className="relative" data-project-card>
       <div
         ref={cardRef}
         onMouseEnter={handleMouseEnter}

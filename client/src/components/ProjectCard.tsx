@@ -81,7 +81,7 @@ export default function ProjectCard({ project, isExpanded, onToggleExpanded, col
               {/* Category indicator */}
               <div className="mb-2">
                 {project.category && (
-                  <span className="inline-block bg-blue-900 text-blue-200 text-xs font-semibold px-3 py-1 rounded-full">
+                  <span className="inline-block bg-blue-900 text-blue-200 text-xs font-semibold px-3 py-1 rounded-full suika-fallback">
                     {project.category}
                   </span>
                 )}
@@ -94,13 +94,13 @@ export default function ProjectCard({ project, isExpanded, onToggleExpanded, col
                     {project.technologies.slice(0, 4).map((tech, index) => (
                       <span
                         key={index}
-                        className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded"
+                        className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded suika-fallback"
                       >
                         {tech}
                       </span>
                     ))}
                     {project.technologies.length > 4 && (
-                      <span className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded">
+                      <span className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded suika-fallback">
                         +{project.technologies.length - 4} more
                       </span>
                     )}

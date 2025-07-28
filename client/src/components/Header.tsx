@@ -212,8 +212,8 @@ export default function Header({ siteSettings }: HeaderProps) {
                 transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
-                            {/* Front Face */}
-              <div
+              {/* Front Face */}
+              <div 
                 className="title-face-front stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12"
                 style={{
                   backfaceVisibility: 'hidden',
@@ -257,8 +257,8 @@ export default function Header({ siteSettings }: HeaderProps) {
                 </motion.h2>
               </div>
 
-                            {/* Back Face */}
-              <div
+              {/* Back Face */}
+              <div 
                 className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-center sm:justify-end items-center"
                 style={{
                   backfaceVisibility: 'hidden',

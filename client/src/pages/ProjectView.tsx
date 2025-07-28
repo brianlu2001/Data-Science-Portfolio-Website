@@ -193,7 +193,7 @@ export default function ProjectView() {
                 
                 <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
                   {getReportType(reportUrl) === 'pdf' ? (
-                                          <div className="w-full md:h-[800px] h-[calc(100vh-100px)] relative md:overflow-hidden overflow-auto">
+                                          <div className="w-full md:h-[800px] h-[calc(100vh-100px)] relative overflow-hidden">
                       {!pdfError ? (
                         <iframe
                           ref={iframeRef}
@@ -202,12 +202,14 @@ export default function ProjectView() {
                           title={`${project.title} Report`}
                           style={{ 
                             border: 'none',
-                            transform: isMobile ? 'scale(0.125)' : 'scale(1)',
+                            transform: isMobile ? 'scale(0.4)' : 'scale(1)',
                             transformOrigin: isMobile ? 'top left' : 'center',
-                            width: isMobile ? '800%' : '100%',
-                            height: isMobile ? '800%' : '100%',
-                            touchAction: isMobile ? 'pan-x pan-y' : 'auto',
-                            pointerEvents: 'auto'
+                            width: isMobile ? '250%' : '100%',
+                            height: isMobile ? '250%' : '100%',
+                            touchAction: 'manipulation',
+                            userSelect: 'none',
+                            WebkitUserSelect: 'none',
+                            WebkitTouchCallout: 'none'
                           }}
                           onLoad={() => {
                             // Check if PDF loaded successfully
@@ -263,19 +265,21 @@ export default function ProjectView() {
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full md:h-[800px] h-[calc(100vh-100px)] relative md:overflow-hidden overflow-auto">
+                    <div className="w-full md:h-[800px] h-[calc(100vh-100px)] relative overflow-hidden">
                       <iframe
                         src={reportUrl}
                         className="w-full h-full"
                         title={`${project.title} Report`}
                         style={{ 
                           border: 'none',
-                          transform: isMobile ? 'scale(0.125)' : 'scale(1)',
+                          transform: isMobile ? 'scale(0.4)' : 'scale(1)',
                           transformOrigin: isMobile ? 'top left' : 'center',
-                          width: isMobile ? '800%' : '100%',
-                          height: isMobile ? '800%' : '100%',
-                          touchAction: isMobile ? 'pan-x pan-y' : 'auto',
-                          pointerEvents: 'auto'
+                          width: isMobile ? '250%' : '100%',
+                          height: isMobile ? '250%' : '100%',
+                          touchAction: 'manipulation',
+                          userSelect: 'none',
+                          WebkitUserSelect: 'none',
+                          WebkitTouchCallout: 'none'
                         }}
                         onError={() => {
                           // Show fallback for HTML reports that fail to load

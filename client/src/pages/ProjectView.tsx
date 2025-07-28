@@ -255,7 +255,7 @@ export default function ProjectView() {
                         <Button
                           onClick={() => window.open(reportUrl, '_blank')}
                           size="sm"
-                          className="bg-royal-500/90 hover:bg-royal-600 text-white shadow-lg"
+                          className="bg-gray-800/95 hover:bg-royal-600 text-gray-200 hover:text-white border border-gray-600 hover:border-royal-500 shadow-lg backdrop-blur-sm transition-all duration-200"
                         >
                           <ExternalLink size={14} className="mr-1" />
                           Open
@@ -296,7 +296,7 @@ export default function ProjectView() {
                         <Button
                           onClick={() => window.open(reportUrl, '_blank')}
                           size="sm"
-                          className="bg-royal-500/90 hover:bg-royal-600 text-white shadow-lg"
+                          className="bg-gray-800/95 hover:bg-royal-600 text-gray-200 hover:text-white border border-gray-600 hover:border-royal-500 shadow-lg backdrop-blur-sm transition-all duration-200"
                         >
                           <ExternalLink size={14} className="mr-1" />
                           Open

@@ -126,7 +126,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Start transaction
         await client.query('BEGIN');
 
-        // Push all existing projects down by 1
+        // Fix: Sync the ID sequence to prevent duplicate key errors
+        // This handles cases where data was seeded with explicit IDs
+        await client.query(`
+          SELECT setval('projects_id_seq', COALESCE((SELECT MAX(id) FROM projects), 0) + 1, false)
+        `);
+
+        // Push all existing projects down by 1 (new project becomes first)
         await client.query('UPDATE projects SET sort_order = sort_order + 1');
 
         // Sanitize URLs before inserting

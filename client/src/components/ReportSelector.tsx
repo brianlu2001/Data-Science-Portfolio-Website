@@ -1,99 +1,81 @@
-import React, { useState, useMemo } from 'react';
-import { Check, ChevronDown, Search, FileText, File } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Check, ChevronDown, Search, FileText, File, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+
+interface Report {
+  filename: string;
+  url: string;
+  type: string;
+  displayName: string;
+}
+
+interface ReportsManifest {
+  reports: Report[];
+  generatedAt: string;
+  count: number;
+}
 
 interface ReportSelectorProps {
   value?: string;
   onChange: (value: string) => void;
 }
 
-// Available reports from your current /reports/ folder
-const AVAILABLE_REPORTS = [
-  // HTML Reports
-  {
-    filename: "Compressed-Sensing-and-Basis-Pursuit.html",
-    url: "/reports/Compressed-Sensing-and-Basis-Pursuit.html",
-    type: "html",
-    displayName: "Compressed Sensing and Basis Pursuit"
-  },
-  {
-    filename: "ITRI-ML-project-no-time - Machine Learning Predicting Success of Startups.html",
-    url: "/reports/ITRI-ML-project-no-time - Machine Learning Predicting Success of Startups.html",
-    type: "html",
-    displayName: "ITRI ML - Machine Learning Predicting Success of Startups"
-  },
-  {
-    filename: "NBA_salary_linear_regression - Linear Regression NBA Salary Inference.html",
-    url: "/reports/NBA_salary_linear_regression - Linear Regression NBA Salary Inference.html",
-    type: "html",
-    displayName: "NBA Salary Linear Regression Analysis"
-  },
-  {
-    filename: "PSTAT-131-Final-Project - Machine Learning Predicting Spotify Hits.html",
-    url: "/reports/PSTAT-131-Final-Project - Machine Learning Predicting Spotify Hits.html",
-    type: "html",
-    displayName: "PSTAT 131 - Machine Learning Predicting Spotify Hits"
-  },
-  {
-    filename: "PSTAT-134-final-project-Group-1 - Recommender Systems with Collaborative Filtering Recommending Movies.html",
-    url: "/reports/PSTAT-134-final-project-Group-1 - Recommender Systems with Collaborative Filtering Recommending Movies.html",
-    type: "html",
-    displayName: "PSTAT 134 - Recommender Systems with Collaborative Filtering"
-  },
-  {
-    filename: "PSTAT-174-Final-Project - Time Series SPX Stock Price.html",
-    url: "/reports/PSTAT-174-Final-Project - Time Series SPX Stock Price.html",
-    type: "html",
-    displayName: "PSTAT 174 - Time Series SPX Stock Price Analysis"
-  },
-  
-  // PDF Reports
-  {
-    filename: "Evolution of machine learning in financial risk management_A survey.pdf",
-    url: "/reports/Evolution of machine learning in financial risk management_A survey.pdf",
-    type: "pdf",
-    displayName: "Evolution of Machine Learning in Financial Risk Management Survey"
-  },
-  {
-    filename: "NLP Final Project Report - Natural Language Processing Book Review Analysis with BERT.pdf",
-    url: "/reports/NLP Final Project Report - Natural Language Processing Book Review Analysis with BERT.pdf",
-    type: "pdf",
-    displayName: "NLP Final Project - Book Review Analysis with BERT"
-  },
-  {
-    filename: "Recommender Systems with Deep Learning - Matrix Factorization.pdf",
-    url: "/reports/Recommender Systems with Deep Learning - Matrix Factorization.pdf",
-    type: "pdf",
-    displayName: "Recommender Systems with Deep Learning - Matrix Factorization"
-  },
-  {
-    filename: "Team Sound Ethics - Machine Learning AI Music Detection with Deep Learning.pdf",
-    url: "/reports/Team Sound Ethics - Machine Learning AI Music Detection with Deep Learning.pdf",
-    type: "pdf",
-    displayName: "Team Sound Ethics - AI Music Detection with Deep Learning"
-  }
-];
-
 export default function ReportSelector({ value, onChange }: ReportSelectorProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch reports from API or manifest
+  useEffect(() => {
+    async function fetchReports() {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Try fetching from API first (works in local dev and Vercel)
+        let response = await fetch('/api/reports');
+        
+        if (!response.ok) {
+          // Fallback: try to fetch the static manifest directly
+          response = await fetch('/reports-manifest.json');
+        }
+        
+        if (response.ok) {
+          const data: ReportsManifest = await response.json();
+          setReports(data.reports || []);
+        } else {
+          throw new Error('Failed to load reports');
+        }
+      } catch (err) {
+        console.error('Error fetching reports:', err);
+        setError('Failed to load reports. Please refresh the page.');
+        setReports([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchReports();
+  }, []);
 
   // Find the current selection
-  const selectedReport = AVAILABLE_REPORTS.find(report => report.url === value);
+  const selectedReport = reports.find(report => report.url === value);
 
   // Filter reports based on search
   const filteredReports = useMemo(() => {
-    if (!searchValue) return AVAILABLE_REPORTS;
+    if (!searchValue) return reports;
     
     const search = searchValue.toLowerCase();
-    return AVAILABLE_REPORTS.filter(report =>
+    return reports.filter(report =>
       report.displayName.toLowerCase().includes(search) ||
       report.filename.toLowerCase().includes(search)
     );
-  }, [searchValue]);
+  }, [searchValue, reports]);
 
   const handleSelect = (reportUrl: string) => {
     onChange(reportUrl);
@@ -114,9 +96,15 @@ export default function ReportSelector({ value, onChange }: ReportSelectorProps)
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between bg-charcoal-800 border-gray-600 text-white hover:bg-charcoal-700"
+          disabled={isLoading}
         >
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            {selectedReport ? (
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin text-gray-400 flex-shrink-0" />
+                <span className="text-gray-400">Loading reports...</span>
+              </>
+            ) : selectedReport ? (
               <>
                 {selectedReport.type === 'pdf' ? (
                   <File className="h-4 w-4 text-red-400 flex-shrink-0" />
@@ -148,6 +136,12 @@ export default function ReportSelector({ value, onChange }: ReportSelectorProps)
           </div>
           
           <div className="max-h-64 overflow-y-auto">
+            {error && (
+              <div className="py-4 px-3 text-center text-sm text-red-400">
+                {error}
+              </div>
+            )}
+            
             {value && (
               <div className="px-2 py-1">
                 <Button
@@ -162,9 +156,16 @@ export default function ReportSelector({ value, onChange }: ReportSelectorProps)
             )}
             
             <CommandGroup>
-              {filteredReports.length === 0 ? (
+              {isLoading ? (
                 <div className="py-6 text-center text-sm text-gray-400">
-                  No reports found.
+                  <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+                  Loading reports...
+                </div>
+              ) : filteredReports.length === 0 ? (
+                <div className="py-6 text-center text-sm text-gray-400">
+                  {reports.length === 0 
+                    ? "No reports found in /reports/ folder."
+                    : "No reports match your search."}
                 </div>
               ) : (
                 filteredReports.map((report) => (
@@ -193,8 +194,14 @@ export default function ReportSelector({ value, onChange }: ReportSelectorProps)
               )}
             </CommandGroup>
           </div>
+          
+          {!isLoading && reports.length > 0 && (
+            <div className="border-t border-gray-600 px-3 py-2 text-xs text-gray-500">
+              {reports.length} report{reports.length !== 1 ? 's' : ''} available
+            </div>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
   );
-} 
+}

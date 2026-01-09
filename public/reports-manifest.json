@@ -1,0 +1,72 @@
+{
+  "reports": [
+    {
+      "filename": "Compressed-Sensing-and-Basis-Pursuit.html",
+      "url": "/reports/Compressed-Sensing-and-Basis-Pursuit.html",
+      "type": "html",
+      "displayName": "Compressed-Sensing-and-Basis-Pursuit"
+    },
+    {
+      "filename": "Evolution of machine learning in financial risk management_A survey.pdf",
+      "url": "/reports/Evolution of machine learning in financial risk management_A survey.pdf",
+      "type": "pdf",
+      "displayName": "Evolution of machine learning in financial risk management A survey"
+    },
+    {
+      "filename": "Opti Final Project Report - Hospital Bed Allocation.pdf",
+      "url": "/reports/Opti Final Project Report - Hospital Bed Allocation.pdf",
+      "type": "pdf",
+      "displayName": "Hospital Bed Allocation"
+    },
+    {
+      "filename": "NBA_salary_linear_regression - Linear Regression NBA Salary Inference.html",
+      "url": "/reports/NBA_salary_linear_regression - Linear Regression NBA Salary Inference.html",
+      "type": "html",
+      "displayName": "Linear Regression NBA Salary Inference"
+    },
+    {
+      "filename": "Team Sound Ethics - Machine Learning AI Music Detection with Deep Learning.pdf",
+      "url": "/reports/Team Sound Ethics - Machine Learning AI Music Detection with Deep Learning.pdf",
+      "type": "pdf",
+      "displayName": "Machine Learning AI Music Detection with Deep Learning"
+    },
+    {
+      "filename": "PSTAT-131-Final-Project - Machine Learning Predicting Spotify Hits.html",
+      "url": "/reports/PSTAT-131-Final-Project - Machine Learning Predicting Spotify Hits.html",
+      "type": "html",
+      "displayName": "Machine Learning Predicting Spotify Hits"
+    },
+    {
+      "filename": "ITRI-ML-project-no-time - Machine Learning Predicting Success of Startups.html",
+      "url": "/reports/ITRI-ML-project-no-time - Machine Learning Predicting Success of Startups.html",
+      "type": "html",
+      "displayName": "Machine Learning Predicting Success of Startups"
+    },
+    {
+      "filename": "Recommender Systems with Deep Learning - Matrix Factorization.pdf",
+      "url": "/reports/Recommender Systems with Deep Learning - Matrix Factorization.pdf",
+      "type": "pdf",
+      "displayName": "Matrix Factorization"
+    },
+    {
+      "filename": "NLP Final Project Report - Natural Language Processing Book Review Analysis with BERT.pdf",
+      "url": "/reports/NLP Final Project Report - Natural Language Processing Book Review Analysis with BERT.pdf",
+      "type": "pdf",
+      "displayName": "Natural Language Processing Book Review Analysis with BERT"
+    },
+    {
+      "filename": "PSTAT-134-final-project-Group-1 - Recommender Systems with Collaborative Filtering Recommending Movies.html",
+      "url": "/reports/PSTAT-134-final-project-Group-1 - Recommender Systems with Collaborative Filtering Recommending Movies.html",
+      "type": "html",
+      "displayName": "Recommender Systems with Collaborative Filtering Recommending Movies"
+    },
+    {
+      "filename": "PSTAT-174-Final-Project - Time Series SPX Stock Price.html",
+      "url": "/reports/PSTAT-174-Final-Project - Time Series SPX Stock Price.html",
+      "type": "html",
+      "displayName": "Time Series SPX Stock Price"
+    }
+  ],
+  "generatedAt": "2026-01-09T02:29:22.314Z",
+  "count": 11
+}

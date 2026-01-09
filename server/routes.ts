@@ -8,6 +8,28 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+// Helper to generate a display name from filename
+function generateDisplayName(filename: string): string {
+  // Remove extension
+  let name = filename.replace(/\.(html|pdf)$/i, '');
+  
+  // Try to extract description if filename has " - " separator (e.g., "prefix - Description")
+  const dashIndex = name.indexOf(' - ');
+  if (dashIndex !== -1) {
+    name = name.substring(dashIndex + 3); // Get everything after " - "
+  }
+  
+  // Clean up underscores and extra spaces
+  name = name.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  // Capitalize first letter if it's lowercase
+  if (name.length > 0 && name[0] === name[0].toLowerCase()) {
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+  }
+  
+  return name;
+}
+
 const upload = multer({ 
   dest: 'uploads/',
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
@@ -74,6 +96,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching site settings:", error);
       res.status(500).json({ message: "Failed to fetch site settings" });
+    }
+  });
+
+  // Reports listing route - dynamically reads from public/reports folder
+  app.get('/api/reports', async (req, res) => {
+    try {
+      const reportsDir = path.join(process.cwd(), 'public', 'reports');
+      
+      // Check if directory exists
+      if (!fs.existsSync(reportsDir)) {
+        return res.json({ reports: [], generatedAt: new Date().toISOString(), count: 0 });
+      }
+      
+      // Read all files
+      const files = fs.readdirSync(reportsDir);
+      
+      // Filter for HTML and PDF files
+      const reportFiles = files.filter(file => {
+        const ext = path.extname(file).toLowerCase();
+        return ext === '.html' || ext === '.pdf';
+      });
+      
+      // Generate report entries
+      const reports = reportFiles.map(filename => {
+        const ext = path.extname(filename).toLowerCase().slice(1);
+        return {
+          filename,
+          url: `/reports/${filename}`,
+          type: ext,
+          displayName: generateDisplayName(filename)
+        };
+      });
+      
+      // Sort by display name
+      reports.sort((a, b) => a.displayName.localeCompare(b.displayName));
+      
+      res.json({
+        reports,
+        generatedAt: new Date().toISOString(),
+        count: reports.length
+      });
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      res.status(500).json({ message: "Failed to fetch reports" });
     }
   });
 

@@ -95,7 +95,7 @@ export default function AdminDashboard() {
 
   // ALL MUTATIONS MUST BE DEFINED BEFORE CONDITIONAL RETURNS
   const createProjectMutation = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: async (data: InsertProjectData) => {
       const response = await apiRequest("POST", "/api/projects-simple", data);
       return response.json();
     },
@@ -272,31 +272,13 @@ export default function AdminDashboard() {
   const handleProjectSubmit = async (data: InsertProjectData) => {
     console.log("Form data received:", data);
     
-    // No file upload processing needed anymore
-    
     if (editingProject) {
       console.log("Updating project with data:", data);
       updateProjectMutation.mutate({ id: editingProject.id, data: data });
     } else {
-      // For creation, use FormData for file uploads
-      console.log("Creating project with FormData");
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (Array.isArray(value)) {
-            formData.append(key, JSON.stringify(value));
-          } else {
-            formData.append(key, value.toString());
-          }
-        }
-      });
-
-      const imageFile = (document.getElementById('project-image') as HTMLInputElement)?.files?.[0];
-      if (imageFile) {
-        formData.append('image', imageFile);
-      }
-      
-      createProjectMutation.mutate(formData);
+      // Send JSON directly - Vercel handles this properly
+      console.log("Creating project with JSON data:", data);
+      createProjectMutation.mutate(data);
     }
   };
 
@@ -424,7 +406,30 @@ export default function AdminDashboard() {
                                 value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ""}
                                 onChange={(e) => {
                                   const value = e.target.value;
-                                  field.onChange(value.split(',').map(item => item.trim()).filter(item => item));
+                                  // Split by comma but preserve spaces while typing
+                                  // Only trim the items that are "complete" (followed by a comma)
+                                  const parts = value.split(',');
+                                  const technologies = parts.map((item, index) => {
+                                    // Trim all items except the last one (which user is currently typing)
+                                    if (index < parts.length - 1) {
+                                      return item.trim();
+                                    }
+                                    // For the last item, only trim leading spaces
+                                    return item.trimStart();
+                                  }).filter((item, index) => {
+                                    // Filter empty items except the last one (to allow typing)
+                                    if (index < parts.length - 1) {
+                                      return item.length > 0;
+                                    }
+                                    return true;
+                                  });
+                                  field.onChange(technologies);
+                                }}
+                                onBlur={(e) => {
+                                  // On blur, trim all items properly
+                                  if (Array.isArray(field.value)) {
+                                    field.onChange(field.value.map(item => item.trim()).filter(item => item));
+                                  }
                                 }}
                                 className="bg-charcoal-800 border-gray-600 text-white"
                                 placeholder="Machine Learning, Python, TensorFlow, etc."

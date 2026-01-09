@@ -87,38 +87,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'POST') {
     try {
-      // Handle both JSON and FormData
-      let data;
-      if (req.headers['content-type']?.includes('multipart/form-data')) {
-        // Handle FormData (from admin dashboard)
-        const formData = req.body;
-        data = {
-          title: formData.title,
-          simplifiedDescription: formData.simplifiedDescription,
-          fullDescription: formData.fullDescription,
-          technologies: formData.technologies ? 
-            (Array.isArray(formData.technologies) ? formData.technologies : formData.technologies.split(',').map((t: string) => t.trim())) : 
-            [],
-          category: formData.category,
-          imageUrl: formData.imageUrl,
-          projectUrl: formData.projectUrl,
-          githubUrl: '' // GitHub URLs disabled
-        };
-      } else {
-        // Handle JSON
-        data = req.body;
+      console.log('POST request body:', JSON.stringify(req.body, null, 2));
+      console.log('Content-Type:', req.headers['content-type']);
+      
+      // Handle JSON body
+      const data = req.body;
+      
+      if (!data) {
+        console.error('Request body is empty or undefined');
+        return res.status(400).json({ message: 'Request body is required' });
       }
 
       const {
         title,
         simplifiedDescription,
         fullDescription,
-        technologies,
+        technologies: rawTechnologies,
         category,
         imageUrl,
         projectUrl,
-        githubUrl
       } = data;
+      
+      // Ensure technologies is an array
+      let technologies: string[] = [];
+      if (Array.isArray(rawTechnologies)) {
+        technologies = rawTechnologies;
+      } else if (typeof rawTechnologies === 'string' && rawTechnologies.trim()) {
+        // Handle comma-separated string
+        technologies = rawTechnologies.split(',').map((t: string) => t.trim()).filter(Boolean);
+      }
 
       if (!title) {
         return res.status(400).json({ message: 'Title is required' });

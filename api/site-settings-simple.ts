@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
+import { requireAuth } from './_authHelper';
 
 // Configure Neon for serverless
 neonConfig.webSocketConstructor = ws;
@@ -67,6 +68,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'PUT') {
+      if (!requireAuth(req, res)) return;
       console.log('Updating site settings with raw SQL...');
       const body = req.body;
 

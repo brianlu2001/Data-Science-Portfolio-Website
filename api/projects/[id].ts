@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
+import { requireAuth } from '../_authHelper';
 
 neonConfig.webSocketConstructor = ws;
 
@@ -93,6 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method === 'PUT') {
+    if (!requireAuth(req, res)) return;
     try {
       // Handle both JSON and FormData
       let data;
@@ -227,6 +229,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method === 'DELETE') {
+    if (!requireAuth(req, res)) return;
     try {
       const client = await pool.connect();
       try {

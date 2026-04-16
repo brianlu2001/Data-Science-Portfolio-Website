@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
+import { requireAuth } from './_authHelper';
 
 // Configure Neon for serverless
 neonConfig.webSocketConstructor = ws;
@@ -86,6 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method === 'POST') {
+    if (!requireAuth(req, res)) return;
     try {
       console.log('POST request body:', JSON.stringify(req.body, null, 2));
       console.log('Content-Type:', req.headers['content-type']);

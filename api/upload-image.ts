@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { IncomingForm } from 'formidable';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { requireAuth } from './_authHelper';
 
 // Disable default body parser for file uploads
 export const config = {
@@ -22,6 +23,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Only POST method allowed' });
   }
+
+  if (!requireAuth(req, res)) return;
 
   try {
     // Parse the form data

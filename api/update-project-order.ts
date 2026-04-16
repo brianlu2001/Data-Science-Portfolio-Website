@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
+import { requireAuth } from './_authHelper';
 
 neonConfig.webSocketConstructor = ws;
 
@@ -18,6 +19,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'PUT') {
     return res.status(405).json({ message: 'Only PUT method allowed' });
   }
+
+  if (!requireAuth(req, res)) return;
 
   try {
     const { projects } = req.body;

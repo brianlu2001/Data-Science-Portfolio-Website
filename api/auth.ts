@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import crypto from 'crypto';
+import { timingSafeEqual } from 'crypto';
 import { createToken, isAdminAuthenticated } from './_authHelper';
 
 const COOKIE_NAME = 'admin_token';
@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const a = Buffer.from(password);
     const b = Buffer.from(adminPassword);
-    const match = a.length === b.length && crypto.timingSafeEqual(a, b);
+    const match = a.length === b.length && timingSafeEqual(a, b);
 
     if (!match) {
       return res.status(401).json({ message: 'Incorrect password' });

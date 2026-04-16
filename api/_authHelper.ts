@@ -1,9 +1,9 @@
-import crypto from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export function createToken(secret: string): string {
   const payload = Date.now().toString();
-  const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  const sig = createHmac('sha256', secret).update(payload).digest('hex');
   return Buffer.from(`${payload}.${sig}`).toString('base64');
 }
 
@@ -13,11 +13,11 @@ export function verifyToken(token: string, secret: string): boolean {
     const dotIndex = decoded.lastIndexOf('.');
     const payload = decoded.slice(0, dotIndex);
     const sig = decoded.slice(dotIndex + 1);
-    const expected = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+    const expected = createHmac('sha256', secret).update(payload).digest('hex');
     const sigBuf = Buffer.from(sig, 'hex');
     const expectedBuf = Buffer.from(expected, 'hex');
     if (sigBuf.length !== expectedBuf.length) return false;
-    return crypto.timingSafeEqual(sigBuf, expectedBuf);
+    return timingSafeEqual(sigBuf, expectedBuf);
   } catch {
     return false;
   }

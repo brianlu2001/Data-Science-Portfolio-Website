@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ExternalLink, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -106,6 +107,15 @@ export default function ProjectView() {
 
   return (
     <div className="min-h-screen neural-network-bg">
+      <Helmet>
+        <title>{project.title} | Brian Lu AI/ML Portfolio</title>
+        <meta name="description" content={project.simplifiedDescription || project.title} />
+        <meta property="og:title" content={`${project.title} | Brian Lu AI/ML Portfolio`} />
+        <meta property="og:description" content={project.simplifiedDescription || project.title} />
+        <meta property="og:url" content={`https://www.luki90.com/projects/${id}`} />
+        {project.imageUrl && <meta property="og:image" content={`https://www.luki90.com${project.imageUrl}`} />}
+        <link rel="canonical" href={`https://www.luki90.com/projects/${id}`} />
+      </Helmet>
       <NeuralNetworkBackground />
       <header className="glass-effect border-b border-gray-600 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">

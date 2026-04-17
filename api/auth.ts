@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { timingSafeEqual } from 'crypto';
-import { createToken, isAdminAuthenticated } from './_authHelper';
+import { createToken, isAdminAuthenticated } from './authHelper';
 
 const COOKIE_NAME = 'admin_token';
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 1 week in seconds

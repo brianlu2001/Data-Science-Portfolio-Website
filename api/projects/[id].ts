@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
-import { requireAuth } from '../_authHelper';
+import { requireAuth } from '../authHelper';
 
 neonConfig.webSocketConstructor = ws;
 

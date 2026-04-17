@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { IncomingForm } from 'formidable';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { requireAuth } from './_authHelper';
+import { requireAuth } from './authHelper';
 
 // Disable default body parser for file uploads
 export const config = {

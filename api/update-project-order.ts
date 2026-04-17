@@ -1,7 +1,23 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool, neonConfig } from '@neondatabase/serverless';
+import { createHmac, timingSafeEqual } from 'crypto';
 import ws from 'ws';
-import { requireAuth } from './authHelper';
+
+function requireAuth(req: VercelRequest, res: VercelResponse): boolean {
+  const cookies = req.headers.cookie || '';
+  const match = cookies.match(/admin_token=([^;]+)/);
+  const token = match ? decodeURIComponent(match[1]) : null;
+  if (!token || !process.env.SESSION_SECRET) { res.status(401).json({ message: 'Unauthorized' }); return false; }
+  try {
+    const decoded = Buffer.from(token, 'base64').toString();
+    const dot = decoded.lastIndexOf('.');
+    const sig = decoded.slice(dot + 1);
+    const expected = createHmac('sha256', process.env.SESSION_SECRET).update(decoded.slice(0, dot)).digest('hex');
+    const ok = sig.length === expected.length && timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'));
+    if (!ok) { res.status(401).json({ message: 'Unauthorized' }); return false; }
+  } catch { res.status(401).json({ message: 'Unauthorized' }); return false; }
+  return true;
+}
 
 neonConfig.webSocketConstructor = ws;
 

@@ -1,9 +1,42 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { timingSafeEqual } from 'crypto';
-import { createToken, isAdminAuthenticated } from './authHelper';
+import { createHmac, timingSafeEqual } from 'crypto';
+
+// --- Auth helpers (inlined to avoid Vercel ESM module resolution issues) ---
+function createToken(secret: string): string {
+  const payload = Date.now().toString();
+  const sig = createHmac('sha256', secret).update(payload).digest('hex');
+  return Buffer.from(`${payload}.${sig}`).toString('base64');
+}
+
+function verifyToken(token: string, secret: string): boolean {
+  try {
+    const decoded = Buffer.from(token, 'base64').toString();
+    const dotIndex = decoded.lastIndexOf('.');
+    const payload = decoded.slice(0, dotIndex);
+    const sig = decoded.slice(dotIndex + 1);
+    const expected = createHmac('sha256', secret).update(payload).digest('hex');
+    const sigBuf = Buffer.from(sig, 'hex');
+    const expectedBuf = Buffer.from(expected, 'hex');
+    if (sigBuf.length !== expectedBuf.length) return false;
+    return timingSafeEqual(sigBuf, expectedBuf);
+  } catch {
+    return false;
+  }
+}
+
+function isAdminAuthenticated(req: VercelRequest): boolean {
+  const cookies = req.headers.cookie || '';
+  const match = cookies.match(/admin_token=([^;]+)/);
+  const token = match ? decodeURIComponent(match[1]) : null;
+  if (!token) return false;
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) return false;
+  return verifyToken(token, secret);
+}
+// --- End auth helpers ---
 
 const COOKIE_NAME = 'admin_token';
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 1 week in seconds
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
 function setCookie(res: VercelResponse, token: string) {
   const parts = [
@@ -31,7 +64,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  // POST /api/auth — login with password
   if (req.method === 'POST') {
     const { password } = req.body || {};
 
@@ -64,7 +96,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { action } = req.query;
 
-  // GET /api/auth?action=user — check session status
   if (action === 'user') {
     if (!isAdminAuthenticated(req)) {
       return res.status(401).json({ message: 'Not authenticated' });
@@ -72,7 +103,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.json({ id: 'admin', email: 'admin@portfolio.local' });
   }
 
-  // GET /api/auth?action=logout — clear session and redirect
   if (action === 'logout') {
     clearCookie(res);
     return res.redirect(302, '/');

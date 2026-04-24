@@ -71,17 +71,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: 'Password required' });
     }
 
-    const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminPassword = process.env.ADMIN_PASSWORD?.trim();
     if (!adminPassword) {
       return res.status(500).json({ message: 'Server misconfigured: ADMIN_PASSWORD not set' });
     }
 
-    const sessionSecret = process.env.SESSION_SECRET;
+    const sessionSecret = process.env.SESSION_SECRET?.trim();
     if (!sessionSecret) {
       return res.status(500).json({ message: 'Server misconfigured: SESSION_SECRET not set' });
     }
 
-    const a = Buffer.from(password);
+    const a = Buffer.from(password.trim());
     const b = Buffer.from(adminPassword);
     const match = a.length === b.length && timingSafeEqual(a, b);
 

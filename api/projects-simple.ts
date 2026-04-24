@@ -24,6 +24,21 @@ neonConfig.webSocketConstructor = ws;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+// Auto-migration: add status column if it doesn't exist
+let statusMigrated = false;
+async function ensureStatusColumn() {
+  if (statusMigrated) return;
+  try {
+    const client = await pool.connect();
+    await client.query(`
+      ALTER TABLE projects
+      ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'finished'
+    `);
+    client.release();
+    statusMigrated = true;
+  } catch { /* column already exists or migration already ran */ }
+}
+
 // Function to properly encode URLs while preserving the path structure
 function sanitizeProjectUrl(url: string): string {
   if (!url) return url;
@@ -61,18 +76,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   console.log(`Simple Projects API: ${req.method} /api/projects-simple`);
 
+  await ensureStatusColumn();
+
   if (req.method === 'GET') {
     try {
       const client = await pool.connect();
       try {
         const result = await client.query(`
-          SELECT id, title, simplified_description, full_description, 
-                 technologies, category, image_url, project_url, github_url, 
-                 sort_order, created_at, updated_at
-          FROM projects 
+          SELECT id, title, simplified_description, full_description,
+                 technologies, category, image_url, project_url, github_url,
+                 status, sort_order, created_at, updated_at
+          FROM projects
           ORDER BY sort_order ASC
         `);
-        
+
         const projects = result.rows.map(row => ({
           id: row.id,
           title: row.title,
@@ -83,6 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           imageUrl: row.image_url,
           projectUrl: row.project_url,
           githubUrl: row.github_url,
+          status: row.status || 'finished',
           sortOrder: row.sort_order,
           createdAt: row.created_at,
           updatedAt: row.updated_at
@@ -124,6 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         category,
         imageUrl,
         projectUrl,
+        status,
       } = data;
       
       // Ensure technologies is an array
@@ -160,10 +179,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Insert new project at position 1
         const result = await client.query(`
           INSERT INTO projects (
-            title, simplified_description, full_description, 
-            technologies, category, image_url, project_url, github_url, 
-            sort_order, created_at, updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 1, NOW(), NOW())
+            title, simplified_description, full_description,
+            technologies, category, image_url, project_url, github_url,
+            status, sort_order, created_at, updated_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1, NOW(), NOW())
           RETURNING *
         `, [
           title,
@@ -173,7 +192,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           category,
           imageUrl,
           sanitizedProjectUrl,
-          sanitizedGithubUrl
+          sanitizedGithubUrl,
+          status || 'finished',
         ]);
 
         await client.query('COMMIT');
@@ -189,6 +209,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           imageUrl: newProject.image_url,
           projectUrl: newProject.project_url,
           githubUrl: newProject.github_url,
+          status: newProject.status || 'finished',
           sortOrder: newProject.sort_order,
           createdAt: newProject.created_at,
           updatedAt: newProject.updated_at

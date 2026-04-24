@@ -65,6 +65,7 @@ export default function AdminDashboard() {
       category: "",
       imageUrl: "",
       projectUrl: "",
+      status: "finished" as const,
       sortOrder: 0,
     },
   });
@@ -143,6 +144,7 @@ export default function AdminDashboard() {
         category: updatedProject.category || "",
         imageUrl: updatedProject.imageUrl || "",
         projectUrl: updatedProject.projectUrl || "",
+        status: (updatedProject.status as 'finished' | 'ongoing') || 'finished',
         sortOrder: updatedProject.sortOrder,
       });
       toast({
@@ -297,6 +299,7 @@ export default function AdminDashboard() {
       category: project.category || "",
       imageUrl: project.imageUrl || "",
       projectUrl: project.projectUrl || "",
+      status: (project.status as 'finished' | 'ongoing') || 'finished',
       sortOrder: project.sortOrder,
     });
     
@@ -314,10 +317,9 @@ export default function AdminDashboard() {
       category: "",
       imageUrl: "",
       projectUrl: "",
+      status: "finished" as const,
       sortOrder: 0,
     });
-    
-    // No file input to clear anymore
   };
 
   const handleProjectReorder = (reorderedProjects: Project[]) => {
@@ -458,8 +460,43 @@ export default function AdminDashboard() {
                         )}
                       />
                     </div>
-                    
 
+                    <FormField
+                      control={projectForm.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Status</FormLabel>
+                          <FormControl>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => field.onChange('finished')}
+                                className={`px-5 py-2 rounded-full text-sm font-medium transition-all border ${
+                                  field.value === 'finished'
+                                    ? 'bg-royal-500 border-royal-500 text-white shadow-[0_0_14px_hsla(225,73%,57%,0.5)]'
+                                    : 'bg-transparent border-gray-600 text-gray-400 hover:border-gray-400'
+                                }`}
+                              >
+                                Finished
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => field.onChange('ongoing')}
+                                className={`px-5 py-2 rounded-full text-sm font-medium transition-all border ${
+                                  field.value === 'ongoing'
+                                    ? 'bg-royal-500 border-royal-500 text-white shadow-[0_0_14px_hsla(225,73%,57%,0.5)]'
+                                    : 'bg-transparent border-gray-600 text-gray-400 hover:border-gray-400'
+                                }`}
+                              >
+                                Ongoing
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={projectForm.control}

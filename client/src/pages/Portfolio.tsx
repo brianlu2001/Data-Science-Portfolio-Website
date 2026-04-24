@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import ProjectCard from "@/components/ProjectCard";
 import ContactSection from "@/components/ContactSection";
@@ -10,6 +10,7 @@ import { Project, SiteSettings } from "@shared/schema";
 import { useAnalytics } from "@/utils/analytics";
 
 export default function Portfolio() {
+  const [activeStatus, setActiveStatus] = useState<'finished' | 'ongoing'>('finished');
   const [expandedProject, setExpandedProject] = useState<number | null>(null);
   const [bioBoxTilt, setBioBoxTilt] = useState({ x: 0, y: 0 });
   const [isLandscapeMobile, setIsLandscapeMobile] = useState(false);
@@ -158,31 +159,71 @@ export default function Portfolio() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mb-12 text-center"
+          className="mb-8 text-center"
         >
           <h2 className="suika-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
             My Projects
           </h2>
-          <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full"></div>
+          <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full mb-8"></div>
+
+          {/* Status toggle */}
+          <div className="flex justify-center">
+            <div className="project-status-toggle">
+              <motion.div
+                className="project-status-thumb"
+                animate={{ x: activeStatus === 'finished' ? 0 : '100%' }}
+                transition={{ type: 'spring', stiffness: 480, damping: 36 }}
+              />
+              <button
+                onClick={() => { setActiveStatus('finished'); setExpandedProject(null); }}
+                className={`project-status-label${activeStatus === 'finished' ? ' active' : ''}`}
+              >
+                Finished
+              </button>
+              <button
+                onClick={() => { setActiveStatus('ongoing'); setExpandedProject(null); }}
+                className={`project-status-label${activeStatus === 'ongoing' ? ' active' : ''}`}
+              >
+                Ongoing
+              </button>
+            </div>
+          </div>
         </motion.div>
 
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto relative z-10 ${isLandscapeMobile ? 'px-2' : 'px-4 sm:px-0'}`}>
-          {projects.map((project, index) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <ProjectCard 
-                project={project} 
-                isExpanded={expandedProject === project.id}
-                onToggleExpanded={() => setExpandedProject(expandedProject === project.id ? null : project.id)}
-                columnIndex={index % 2}
-              />
-            </motion.div>
-          ))}
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeStatus}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
+            className={`grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto relative z-10 ${isLandscapeMobile ? 'px-2' : 'px-4 sm:px-0'}`}
+          >
+            {projects.filter(p => (p.status || 'finished') === activeStatus).length === 0 ? (
+              <div className="col-span-2 text-center py-20">
+                <p className="suika-title text-2xl text-gray-500">Coming soon...</p>
+              </div>
+            ) : (
+              projects
+                .filter(p => (p.status || 'finished') === activeStatus)
+                .map((project, index) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.08 }}
+                  >
+                    <ProjectCard
+                      project={project}
+                      isExpanded={expandedProject === project.id}
+                      onToggleExpanded={() => setExpandedProject(expandedProject === project.id ? null : project.id)}
+                      columnIndex={index % 2}
+                    />
+                  </motion.div>
+                ))
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
       <ContactSection siteSettings={siteSettings} isLandscapeMobile={isLandscapeMobile} />
     </div>

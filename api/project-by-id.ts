@@ -39,29 +39,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (req.method === 'GET') {
       const result = await client.query(`
-        SELECT 
-          id,
-          title,
-          simplified_description,
-          full_description,
-          technologies,
-          category,
-          image_url,
-          project_url,
-          github_url,
-          sort_order,
-          created_at,
-          updated_at
-        FROM projects 
+        SELECT
+          id, title, simplified_description, full_description,
+          technologies, category, image_url, project_url, github_url,
+          status, sort_order, created_at, updated_at
+        FROM projects
         WHERE id = $1
       `, [projectId]);
-      
+
       if (result.rows.length === 0) {
         client.release();
         return res.status(404).json({ message: "Project not found" });
       }
-      
-      // Transform to match expected format
+
       const row = result.rows[0];
       const project = {
         id: row.id,
@@ -73,6 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         imageUrl: row.image_url,
         projectUrl: row.project_url,
         githubUrl: row.github_url,
+        status: row.status || 'finished',
         sortOrder: row.sort_order,
         createdAt: row.created_at,
         updatedAt: row.updated_at

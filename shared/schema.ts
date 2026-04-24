@@ -46,6 +46,7 @@ export const projects = pgTable("projects", {
   imageUrl: varchar("image_url"),
   projectUrl: varchar("project_url"),
   githubUrl: varchar("github_url"),
+  status: varchar("status", { length: 20 }).notNull().default('finished'),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -124,6 +125,7 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
   updatedAt: true,
 }).extend({
   projectUrl: z.string().optional(),
+  status: z.enum(['finished', 'ongoing']).default('finished'),
 });
 
 export const updateProjectSchema = createInsertSchema(projects).omit({

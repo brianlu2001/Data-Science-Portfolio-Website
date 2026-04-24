@@ -23,6 +23,20 @@ neonConfig.webSocketConstructor = ws;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
+let statusMigrated = false;
+async function ensureStatusColumn() {
+  if (statusMigrated) return;
+  try {
+    const client = await pool.connect();
+    await client.query(`
+      ALTER TABLE projects
+      ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'finished'
+    `);
+    client.release();
+    statusMigrated = true;
+  } catch { /* already exists */ }
+}
+
 // Function to properly encode URLs while preserving the path structure
 function sanitizeProjectUrl(url: string): string {
   if (!url) return url;
@@ -64,15 +78,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ message: 'Invalid project ID' });
   }
 
+  await ensureStatusColumn();
+
   if (req.method === 'GET') {
     try {
       const client = await pool.connect();
       try {
         const result = await client.query(`
-          SELECT id, title, simplified_description, full_description, 
-                 technologies, category, image_url, project_url, github_url, 
-                 sort_order, created_at, updated_at
-          FROM projects 
+          SELECT id, title, simplified_description, full_description,
+                 technologies, category, image_url, project_url, github_url,
+                 status, sort_order, created_at, updated_at
+          FROM projects
           WHERE id = $1
         `, [projectId]);
 
@@ -91,6 +107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           imageUrl: row.image_url,
           projectUrl: row.project_url,
           githubUrl: row.github_url,
+          status: row.status || 'finished',
           sortOrder: row.sort_order,
           createdAt: row.created_at,
           updatedAt: row.updated_at
@@ -163,7 +180,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         imageUrl,
         projectUrl,
         githubUrl,
-        sortOrder
+        sortOrder,
+        status,
       } = data;
 
       if (!title) {
@@ -186,9 +204,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             image_url = $6,
             project_url = $7,
             github_url = $8,
-            sort_order = $9,
+            status = $9,
+            sort_order = $10,
             updated_at = NOW()
-          WHERE id = $10
+          WHERE id = $11
           RETURNING *
         `, [
           title,
@@ -199,6 +218,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           imageUrl,
           sanitizedProjectUrl,
           sanitizedGithubUrl,
+          status || 'finished',
           sortOrder,
           projectId
         ]);
@@ -218,6 +238,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           imageUrl: row.image_url,
           projectUrl: row.project_url,
           githubUrl: row.github_url,
+          status: row.status || 'finished',
           sortOrder: row.sort_order,
           createdAt: row.created_at,
           updatedAt: row.updated_at

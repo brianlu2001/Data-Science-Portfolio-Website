@@ -32,6 +32,8 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading, logout } = useAuth();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [adminListStatus, setAdminListStatus] = useState<'finished' | 'ongoing'>('finished');
+  const [isUploadingReport, setIsUploadingReport] = useState(false);
 
   // All hooks must be called before any conditional returns
   const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
@@ -215,6 +217,35 @@ export default function AdminDashboard() {
     },
   });
 
+  const moveStatusMutation = useMutation({
+    mutationFn: async ({ project, newStatus }: { project: Project; newStatus: 'finished' | 'ongoing' }) => {
+      const response = await apiRequest("PUT", `/api/projects/${project.id}`, {
+        title: project.title,
+        simplifiedDescription: project.simplifiedDescription || "",
+        fullDescription: project.fullDescription || "",
+        technologies: project.technologies || [],
+        category: project.category || "",
+        imageUrl: project.imageUrl || "",
+        projectUrl: project.projectUrl || "",
+        status: newStatus,
+        sortOrder: project.sortOrder,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects-simple"] });
+      toast({ title: "Success", description: "Project moved successfully" });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({ title: "Unauthorized", description: "You are logged out. Logging in again...", variant: "destructive" });
+        setTimeout(() => { window.location.href = "/admin"; }, 500);
+        return;
+      }
+      toast({ title: "Error", description: "Failed to move project", variant: "destructive" });
+    },
+  });
+
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: InsertSiteSettingsData) => {
       const response = await apiRequest("PUT", "/api/site-settings-simple", data);
@@ -247,6 +278,8 @@ export default function AdminDashboard() {
       });
     },
   });
+
+  const watchedStatus = projectForm.watch('status');
 
   // Show loading while checking authentication
   if (isLoading) {
@@ -322,11 +355,17 @@ export default function AdminDashboard() {
     });
   };
 
+  const handleMoveProject = (project: Project) => {
+    const newStatus = project.status === 'finished' ? 'ongoing' : 'finished';
+    moveStatusMutation.mutate({ project, newStatus });
+  };
+
   const handleProjectReorder = (reorderedProjects: Project[]) => {
-    // Optimistically update the UI
-    queryClient.setQueryData(["/api/projects-simple"], reorderedProjects);
-    
-    // Save to backend
+    // Merge reordered filtered projects back with the other-status projects
+    const unchanged = projects.filter(p => (p.status || 'finished') !== adminListStatus);
+    queryClient.setQueryData(["/api/projects-simple"], [...unchanged, ...reorderedProjects]);
+
+    // Save to backend (only the reordered subset)
     updateProjectOrderMutation.mutate(reorderedProjects);
   };
 
@@ -517,24 +556,26 @@ export default function AdminDashboard() {
                       )}
                     />
 
-                    <FormField
-                      control={projectForm.control}
-                      name="fullDescription"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Full Description</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              className="bg-charcoal-800 border-gray-600 text-white"
-                              rows={12}
-                              placeholder="Complete detailed description for project page..."
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {watchedStatus === 'finished' && (
+                      <FormField
+                        control={projectForm.control}
+                        name="fullDescription"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-300">Full Description</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                className="bg-charcoal-800 border-gray-600 text-white"
+                                rows={12}
+                                placeholder="Complete detailed description for project page..."
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -555,43 +596,91 @@ export default function AdminDashboard() {
                           )}
                         />
                       </div>
-                      <div>
-                        <FormField
-                          control={projectForm.control}
-                          name="projectUrl"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-gray-300">Project Report</FormLabel>
-                              <FormControl>
-                                <ReportSelector
-                                  value={field.value || ""}
-                                  onChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                              <p className="text-xs text-gray-500 mt-1">
-                                Search and select from available reports in your /reports/ folder.
-                              </p>
-                              {field.value && (
-                                <div className="mt-2 space-y-1">
-                                  <p className="text-sm text-gray-400">Selected report:</p>
-                                  <div className="text-xs text-gray-500">
-                                    File: <code className="bg-gray-800 px-1 rounded">{field.value.split('/').pop()}</code>
-                                  </div>
-                                  <a 
-                                    href={field.value.replace(/ /g, '%20')} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-royal-400 hover:text-royal-300 text-sm underline inline-block"
+                      {watchedStatus === 'finished' && (
+                        <div>
+                          <FormField
+                            control={projectForm.control}
+                            name="projectUrl"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-gray-300">Project Report</FormLabel>
+                                {/* Upload a new report directly */}
+                                <div className="mb-2">
+                                  <input
+                                    type="file"
+                                    id="report-upload-input"
+                                    accept=".pdf,.doc,.docx"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      const formData = new FormData();
+                                      formData.append('report', file);
+                                      setIsUploadingReport(true);
+                                      try {
+                                        const res = await fetch('/api/upload-report', {
+                                          method: 'POST',
+                                          credentials: 'include',
+                                          body: formData,
+                                        });
+                                        const data = await res.json();
+                                        if (data.reportUrl) {
+                                          field.onChange(data.reportUrl);
+                                          toast({ title: "Success", description: "Report uploaded successfully" });
+                                        } else {
+                                          toast({ title: "Error", description: data.message || "Upload failed", variant: "destructive" });
+                                        }
+                                      } catch {
+                                        toast({ title: "Error", description: "Upload failed", variant: "destructive" });
+                                      } finally {
+                                        setIsUploadingReport(false);
+                                        e.target.value = '';
+                                      }
+                                    }}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => document.getElementById('report-upload-input')?.click()}
+                                    disabled={isUploadingReport}
+                                    className="glass-effect border-gray-600 text-gray-300 hover:text-white"
                                   >
-                                    Test Link →
-                                  </a>
+                                    <Upload size={14} className="mr-2" />
+                                    {isUploadingReport ? "Uploading..." : "Upload New Report"}
+                                  </Button>
                                 </div>
-                              )}
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                                <FormControl>
+                                  <ReportSelector
+                                    value={field.value || ""}
+                                    onChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Upload a new PDF/DOCX or select an existing report from /reports/.
+                                </p>
+                                {field.value && (
+                                  <div className="mt-2 space-y-1">
+                                    <p className="text-sm text-gray-400">Selected report:</p>
+                                    <div className="text-xs text-gray-500">
+                                      File: <code className="bg-gray-800 px-1 rounded">{field.value.split('/').pop()}</code>
+                                    </div>
+                                    <a
+                                      href={field.value.replace(/ /g, '%20')}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-royal-400 hover:text-royal-300 text-sm underline inline-block"
+                                    >
+                                      Test Link →
+                                    </a>
+                                  </div>
+                                )}
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex gap-4">
@@ -620,13 +709,35 @@ export default function AdminDashboard() {
 
             <Card className="glass-effect border-gray-600">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <GripVertical className="w-5 h-5" />
-                  Existing Projects
-                  <span className="text-sm text-gray-400 font-normal">
-                    (Drag to reorder)
-                  </span>
-                </CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <GripVertical className="w-5 h-5" />
+                    Existing Projects
+                    <span className="text-sm text-gray-400 font-normal">(Drag to reorder)</span>
+                  </CardTitle>
+                  {/* Status filter toggle */}
+                  <div className="project-status-toggle" style={{ transform: 'scale(0.82)', transformOrigin: 'left center' }}>
+                    <motion.div
+                      className="project-status-thumb"
+                      animate={{ x: adminListStatus === 'finished' ? 0 : '100%' }}
+                      transition={{ type: 'spring', stiffness: 480, damping: 36 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setAdminListStatus('finished')}
+                      className={`project-status-label${adminListStatus === 'finished' ? ' active' : ''}`}
+                    >
+                      Finished
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAdminListStatus('ongoing')}
+                      className={`project-status-label${adminListStatus === 'ongoing' ? ' active' : ''}`}
+                    >
+                      Ongoing
+                    </button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {projectsLoading ? (
@@ -636,10 +747,11 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <DraggableProjectList
-                    projects={projects}
+                    projects={projects.filter(p => (p.status || 'finished') === adminListStatus)}
                     onReorder={handleProjectReorder}
                     onEdit={startEditing}
                     onDelete={handleDeleteProject}
+                    onMove={handleMoveProject}
                   />
                 )}
               </CardContent>

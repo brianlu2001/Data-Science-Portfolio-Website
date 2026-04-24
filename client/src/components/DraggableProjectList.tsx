@@ -19,18 +19,26 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { GripVertical, Edit2, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { GripVertical, MoreVertical, ArrowLeftRight, Edit2, Trash2 } from 'lucide-react';
 import { type Project } from '@shared/schema';
 
 interface SortableProjectItemProps {
   project: Project;
   onEdit: (project: Project) => void;
   onDelete: (id: string) => void;
+  onMove: (project: Project) => void;
 }
 
-function SortableProjectItem({ project, onEdit, onDelete }: SortableProjectItemProps) {
+function SortableProjectItem({ project, onEdit, onDelete, onMove }: SortableProjectItemProps) {
   const {
     attributes,
     listeners,
@@ -46,12 +54,14 @@ function SortableProjectItem({ project, onEdit, onDelete }: SortableProjectItemP
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const otherStatus = project.status === 'finished' ? 'Ongoing' : 'Finished';
+
   return (
     <div ref={setNodeRef} style={style}>
       <Card className={`glass-effect border-gray-600 ${isDragging ? 'shadow-lg shadow-royal-500/20' : ''}`}>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            {/* Drag Handle - Always Visible */}
+            {/* Drag Handle */}
             <div
               {...attributes}
               {...listeners}
@@ -91,7 +101,7 @@ function SortableProjectItem({ project, onEdit, onDelete }: SortableProjectItemP
                     </p>
                   )}
                 </div>
-                
+
                 {/* Sort Order Badge */}
                 <div className="flex-shrink-0">
                   <Badge variant="outline" className="border-gray-600 text-gray-300">
@@ -101,24 +111,46 @@ function SortableProjectItem({ project, onEdit, onDelete }: SortableProjectItemP
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex-shrink-0 flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onEdit(project)}
-                className="glass-effect border-gray-600 text-gray-300 hover:text-white"
-              >
-                <Edit2 size={14} />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onDelete(project.id.toString())}
-                className="glass-effect border-gray-600 text-red-400 hover:text-red-300"
-              >
-                <Trash2 size={14} />
-              </Button>
+            {/* Three-dot Action Menu */}
+            <div className="flex-shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="glass-effect border-gray-600 text-gray-300 hover:text-white h-8 w-8 p-0"
+                  >
+                    <MoreVertical size={15} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="bg-gray-900 border-gray-700 text-gray-200 min-w-[180px]"
+                >
+                  <DropdownMenuItem
+                    onClick={() => onMove(project)}
+                    className="gap-2 cursor-pointer hover:bg-gray-800 focus:bg-gray-800"
+                  >
+                    <ArrowLeftRight size={14} className="text-blue-400" />
+                    Move to {otherStatus}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-700" />
+                  <DropdownMenuItem
+                    onClick={() => onEdit(project)}
+                    className="gap-2 cursor-pointer hover:bg-gray-800 focus:bg-gray-800"
+                  >
+                    <Edit2 size={14} />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onDelete(project.id.toString())}
+                    className="gap-2 cursor-pointer text-red-400 hover:bg-gray-800 focus:bg-gray-800 focus:text-red-400"
+                  >
+                    <Trash2 size={14} />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardContent>
@@ -132,13 +164,15 @@ interface DraggableProjectListProps {
   onReorder: (projects: Project[]) => void;
   onEdit: (project: Project) => void;
   onDelete: (id: string) => void;
+  onMove: (project: Project) => void;
 }
 
-export default function DraggableProjectList({ 
-  projects, 
-  onReorder, 
-  onEdit, 
-  onDelete 
+export default function DraggableProjectList({
+  projects,
+  onReorder,
+  onEdit,
+  onDelete,
+  onMove,
 }: DraggableProjectListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -159,8 +193,7 @@ export default function DraggableProjectList({
       const newIndex = projects.findIndex((project) => project.id.toString() === over?.id);
 
       const reorderedProjects = arrayMove(projects, oldIndex, newIndex);
-      
-      // Update sort_order values based on new positions
+
       const updatedProjects = reorderedProjects.map((project, index) => ({
         ...project,
         sortOrder: index + 1
@@ -174,7 +207,7 @@ export default function DraggableProjectList({
     return (
       <Card className="glass-effect border-gray-600">
         <CardContent className="p-8 text-center">
-          <p className="text-gray-400">No projects found. Create your first project!</p>
+          <p className="text-gray-400">No projects in this category.</p>
         </CardContent>
       </Card>
     );
@@ -197,10 +230,11 @@ export default function DraggableProjectList({
               project={project}
               onEdit={onEdit}
               onDelete={onDelete}
+              onMove={onMove}
             />
           ))}
         </div>
       </SortableContext>
     </DndContext>
   );
-} 
+}

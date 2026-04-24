@@ -125,6 +125,7 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
   updatedAt: true,
 }).extend({
   projectUrl: z.string().optional(),
+  fullDescription: z.string().optional().default(''),
   status: z.enum(['finished', 'ongoing']).default('finished'),
 });
 

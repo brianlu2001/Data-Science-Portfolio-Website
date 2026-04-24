@@ -13,13 +13,7 @@ interface ExtractedColor {
 }
 
 export class ColorExtractor {
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-
-  constructor() {
-    this.canvas = document.createElement('canvas');
-    this.ctx = this.canvas.getContext('2d')!;
-  }
+  private cache = new Map<string, ColorPalette>();
 
   private isBlackWhiteOrGray(r: number, g: number, b: number): boolean {
     const threshold = 30;
@@ -71,23 +65,31 @@ export class ColorExtractor {
   }
 
   async extractColorsFromImage(imageUrl: string): Promise<ColorPalette> {
+    if (this.cache.has(imageUrl)) {
+      return this.cache.get(imageUrl)!;
+    }
+
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      
-      img.onload = () => {
-        // Set canvas size
-        const maxSize = 100; // Reduce size for performance
-        const scale = Math.min(maxSize / img.width, maxSize / img.height);
-        this.canvas.width = img.width * scale;
-        this.canvas.height = img.height * scale;
 
-        // Draw image
-        this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+      img.onload = () => {
+        // Fresh canvas per call — shared canvas causes race conditions when
+        // multiple cards extract colors concurrently on initial render.
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+
+        const maxSize = 100;
+        const scale = Math.min(maxSize / img.width, maxSize / img.height);
+        canvas.width = Math.max(1, Math.floor(img.width * scale));
+        canvas.height = Math.max(1, Math.floor(img.height * scale));
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         try {
-          const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const colors = this.analyzeColors(imageData);
+          this.cache.set(imageUrl, colors);
           resolve(colors);
         } catch (error) {
           reject(error);
@@ -162,22 +164,18 @@ export class ColorExtractor {
     };
   }
 
-  // Fallback colors for each project based on our previous analysis
+  // Generate a deterministic fallback palette for any project ID using the
+  // golden-angle hue distribution so each project gets a distinct colour.
   static getFallbackColors(projectId: number): ColorPalette {
-    const fallbacks: Record<number, ColorPalette> = {
-      1: { primary: 'rgb(139, 92, 246)', secondary: 'rgb(167, 139, 250)', accent: 'rgb(124, 58, 237)', vibrant: 'rgb(139, 92, 246)' },
-      2: { primary: 'rgb(0, 191, 255)', secondary: 'rgb(135, 206, 235)', accent: 'rgb(30, 144, 255)', vibrant: 'rgb(0, 191, 255)' },
-      3: { primary: 'rgb(159, 182, 214)', secondary: 'rgb(191, 219, 254)', accent: 'rgb(96, 165, 250)', vibrant: 'rgb(159, 182, 214)' },
-      4: { primary: 'rgb(32, 178, 170)', secondary: 'rgb(94, 234, 212)', accent: 'rgb(45, 212, 191)', vibrant: 'rgb(32, 178, 170)' },
-      5: { primary: 'rgb(65, 105, 225)', secondary: 'rgb(147, 197, 253)', accent: 'rgb(59, 130, 246)', vibrant: 'rgb(65, 105, 225)' },
-      6: { primary: 'rgb(255, 140, 0)', secondary: 'rgb(251, 191, 36)', accent: 'rgb(245, 158, 11)', vibrant: 'rgb(255, 140, 0)' },
-      7: { primary: 'rgb(255, 69, 0)', secondary: 'rgb(252, 165, 165)', accent: 'rgb(239, 68, 68)', vibrant: 'rgb(255, 69, 0)' },
-      8: { primary: 'rgb(29, 185, 84)', secondary: 'rgb(134, 239, 172)', accent: 'rgb(34, 197, 94)', vibrant: 'rgb(29, 185, 84)' },
-      9: { primary: 'rgb(255, 215, 0)', secondary: 'rgb(253, 224, 71)', accent: 'rgb(234, 179, 8)', vibrant: 'rgb(255, 215, 0)' },
-      10: { primary: 'rgb(65, 105, 225)', secondary: 'rgb(147, 197, 253)', accent: 'rgb(59, 130, 246)', vibrant: 'rgb(65, 105, 225)' }
+    const hue = Math.round((projectId * 137.508) % 360);
+    const h2 = (hue + 30) % 360;
+    const h3 = (hue + 60) % 360;
+    return {
+      primary:   `hsl(${hue}, 70%, 55%)`,
+      secondary: `hsl(${h2},  60%, 65%)`,
+      accent:    `hsl(${h3},  80%, 50%)`,
+      vibrant:   `hsl(${hue}, 85%, 58%)`,
     };
-
-    return fallbacks[projectId] || fallbacks[1];
   }
 }
 

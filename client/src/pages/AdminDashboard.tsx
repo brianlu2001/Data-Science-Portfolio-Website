@@ -115,7 +115,7 @@ export default function AdminDashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/auth?action=login";
+          window.location.href = "/admin";
         }, 500);
         return;
       }
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/auth?action=login";
+          window.location.href = "/admin";
         }, 500);
         return;
       }
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/auth?action=login";
+          window.location.href = "/admin";
         }, 500);
         return;
       }
@@ -234,7 +234,7 @@ export default function AdminDashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/auth?action=login";
+          window.location.href = "/admin";
         }, 500);
         return;
       }

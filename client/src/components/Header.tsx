@@ -259,7 +259,7 @@ export default function Header({ siteSettings }: HeaderProps) {
 
               {/* Back Face */}
               <div
-                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-end items-center"
+                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col items-center"
                 style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
@@ -270,24 +270,42 @@ export default function Header({ siteSettings }: HeaderProps) {
                   '--highlight-angle': '135deg'
                 }}
               >
-                {/* School logos — uniform height, natural width; brightness(0) recolors to match #242931 background */}
+                {/* Top spacer — pushes logos down from the very top */}
+                <div className="flex-[2]" />
+
+                {/* School logos — hidden img establishes natural width at 80px height;
+                    mask div fills that shape with exact #242931 background color */}
                 {siteSettings?.logoUrls && siteSettings.logoUrls.length > 0 && (
-                  <div className="flex items-center justify-center gap-8 sm:gap-12 w-full mb-8 md:mb-10">
+                  <div className="flex items-center justify-center gap-8 sm:gap-12 w-full">
                     {siteSettings.logoUrls.map((url, i) => (
-                      <img
-                        key={i}
-                        src={url}
-                        alt=""
-                        style={{
-                          height: '80px',
-                          width: 'auto',
-                          display: 'block',
-                          filter: 'brightness(0)',
-                        }}
-                      />
+                      <div key={i} style={{ position: 'relative', height: '80px', flexShrink: 0 }}>
+                        {/* Invisible img to give the container its natural proportional width */}
+                        <img
+                          src={url}
+                          alt=""
+                          style={{ height: '80px', width: 'auto', display: 'block', visibility: 'hidden' }}
+                        />
+                        {/* Colored mask: #242931 clipped to the logo's alpha channel */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundColor: '#242931',
+                            maskImage: `url(${url})`,
+                            maskRepeat: 'no-repeat',
+                            maskSize: '100% 100%',
+                            WebkitMaskImage: `url(${url})`,
+                            WebkitMaskRepeat: 'no-repeat',
+                            WebkitMaskSize: '100% 100%',
+                          }}
+                        />
+                      </div>
                     ))}
                   </div>
                 )}
+
+                {/* Middle spacer — separates logos from text */}
+                <div className="flex-[1]" />
 
                 {/* Scroll down prompt */}
                 <div className="flex flex-col items-center">

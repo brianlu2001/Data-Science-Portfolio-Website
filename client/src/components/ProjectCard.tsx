@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ExternalLink, RotateCcw } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 import { Project } from "@shared/schema";
 import { useRef } from "react";
 import { useMagicalGlow } from "@/hooks/useMagicalGlow";
@@ -143,8 +143,9 @@ export default function ProjectCard({
                 }}
               >
                 <Card
-                  className="glass-effect border-gray-600 h-full flex flex-col overflow-hidden"
+                  className="glass-effect border-gray-600 h-full flex flex-col overflow-hidden cursor-pointer"
                   style={{ borderTop: '2px solid var(--glow-color-4, rgba(99,130,225,0.7))' }}
+                  onClick={onToggleFlipped}
                 >
                   <CardContent className="p-5 flex flex-col h-full">
                     <h3 className="suika-fallback text-base font-bold text-white mb-3 leading-tight">
@@ -173,28 +174,18 @@ export default function ProjectCard({
                       </div>
                     )}
 
-                    <div className="flex items-center gap-2 pt-2 border-t border-white/10 mt-auto">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); onToggleFlipped(); }}
-                        className="text-gray-500 hover:text-gray-300 px-2"
-                      >
-                        <RotateCcw size={13} className="mr-1" />
-                        <span className="text-xs">Flip back</span>
-                      </Button>
-
-                      {showViewButton && (
+                    {showViewButton && (
+                      <div className="pt-2 border-t border-white/10 mt-auto">
                         <Button
                           size="sm"
                           onClick={(e) => { e.stopPropagation(); onViewProject(); }}
-                          className="bg-royal-500 hover:bg-royal-600 text-white ml-auto"
+                          className="bg-royal-500 hover:bg-royal-600 text-white"
                         >
                           <ExternalLink size={13} className="mr-1.5" />
                           View Full Project
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>

@@ -263,6 +263,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                 style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
+                  isolation: 'isolate',
                   '--reflection-x': '30%',
                   '--reflection-y': '30%',
                   '--secondary-reflection-x': '70%',
@@ -270,20 +271,25 @@ export default function Header({ siteSettings }: HeaderProps) {
                   '--highlight-angle': '135deg'
                 }}
               >
-                {/* School logos — left-to-right row in upper area */}
-                <div className="flex items-center justify-center gap-6 sm:gap-10 w-full">
+                {/* School logos — fixed-size boxes so all logos appear uniform; destination-out carves the shape out of the card */}
+                <div className="flex items-center justify-center gap-8 sm:gap-12 w-full">
                   {siteSettings?.logoUrls?.map((url, i) => (
-                    <img
+                    <div
                       key={i}
-                      src={url}
-                      alt={`School logo ${i + 1}`}
-                      className="object-contain"
-                      style={{
-                        mixBlendMode: 'multiply',
-                        maxHeight: '72px',
-                        maxWidth: '140px',
-                      }}
-                    />
+                      style={{ width: '120px', height: '80px', flexShrink: 0 }}
+                    >
+                      <img
+                        src={url}
+                        alt=""
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          mixBlendMode: 'destination-out',
+                          display: 'block',
+                        }}
+                      />
+                    </div>
                   ))}
                 </div>
 

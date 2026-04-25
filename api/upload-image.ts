@@ -42,55 +42,71 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!requireAuth(req, res)) return;
 
+  console.log('[upload-image] Incoming request, parsing multipart form...');
+
   try {
-    // Parse the form data
-    const form = new IncomingForm();
-    
-    const [fields, files] = await new Promise<[any, any]>((resolve, reject) => {
+    const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
+    const form = new IncomingForm({ maxFileSize: MAX_SIZE_BYTES });
+
+    const [, files] = await new Promise<[any, any]>((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
-        if (err) reject(err);
-        else resolve([fields, files]);
+        if (err) {
+          console.error('[upload-image] formidable parse error:', err.message, err);
+          reject(err);
+        } else {
+          resolve([fields, files]);
+        }
       });
     });
 
     const imageFile = Array.isArray(files.image) ? files.image[0] : files.image;
-    
+
     if (!imageFile) {
+      console.error('[upload-image] No "image" field in form data. Fields received:', Object.keys(files));
       return res.status(400).json({ message: 'No image file provided' });
     }
 
-    // Validate file type
+    console.log(`[upload-image] File received: "${imageFile.originalFilename}" | mimetype: ${imageFile.mimetype} | size: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB | tmp: ${imageFile.filepath}`);
+
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(imageFile.mimetype)) {
-      return res.status(400).json({ 
-        message: 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.' 
+      console.error(`[upload-image] Rejected mimetype: ${imageFile.mimetype}`);
+      return res.status(400).json({
+        message: `Invalid file type "${imageFile.mimetype}". Only JPG, PNG, GIF, and WebP are allowed.`
       });
     }
 
-    // Create uploads directory if it doesn't exist
+    if (imageFile.size > MAX_SIZE_BYTES) {
+      console.error(`[upload-image] File too large: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB`);
+      return res.status(413).json({ message: `File too large. Maximum is 20 MB.` });
+    }
+
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    console.log(`[upload-image] Target directory: ${uploadsDir}`);
+
     try {
       await fs.access(uploadsDir);
+      console.log('[upload-image] Uploads directory exists.');
     } catch {
+      console.log('[upload-image] Uploads directory missing, creating...');
       await fs.mkdir(uploadsDir, { recursive: true });
     }
 
-    // Keep original filename (as requested)
     const fileName = imageFile.originalFilename || `image-${Date.now()}`;
     const filePath = path.join(uploadsDir, fileName);
+    console.log(`[upload-image] Copying to: ${filePath}`);
 
-    // Copy file to uploads directory
     await fs.copyFile(imageFile.filepath, filePath);
+    console.log('[upload-image] File saved successfully.');
 
-    // Clean up temporary file
     try {
       await fs.unlink(imageFile.filepath);
     } catch (err) {
-      console.warn('Could not clean up temp file:', err);
+      console.warn('[upload-image] Could not clean up temp file:', err);
     }
 
-    // Return the public URL
     const imageUrl = `/uploads/${fileName}`;
+    console.log(`[upload-image] Done. Returning imageUrl: ${imageUrl}`);
 
     return res.json({
       success: true,
@@ -100,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error('[upload-image] Unhandled error:', error);
     return res.status(500).json({
       message: 'Upload failed',
       error: error instanceof Error ? error.message : 'Unknown error'

@@ -28,8 +28,22 @@ export default function ImageUpload({ value, onChange, label = "Project Image" }
   }, [value]);
 
   // Handle file upload to server
+  const MAX_SIZE_MB = 20;
+  const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
   const uploadFile = async (file: File) => {
+    const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+    console.log(`[ImageUpload] Selected: "${file.name}" | type: ${file.type} | size: ${sizeMB} MB`);
+
+    if (file.size > MAX_SIZE_BYTES) {
+      const msg = `File too large: ${sizeMB} MB. Maximum is ${MAX_SIZE_MB} MB.`;
+      console.error('[ImageUpload]', msg);
+      alert(msg);
+      return;
+    }
+
     setUploading(true);
+    console.log('[ImageUpload] POSTing to /api/upload-image...');
     try {
       const formData = new FormData();
       formData.append('image', file);
@@ -40,13 +54,21 @@ export default function ImageUpload({ value, onChange, label = "Project Image" }
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Upload failed');
-      
-      const data = await response.json();
+      console.log('[ImageUpload] Response:', { status: response.status, ok: response.ok });
+
+      const text = await response.text();
+      console.log('[ImageUpload] Response body:', text);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${text}`);
+      }
+
+      const data = JSON.parse(text);
+      console.log('[ImageUpload] Success:', data);
       onChange(data.imageUrl);
     } catch (error) {
-      console.error('Upload error:', error);
-      alert('Failed to upload image. Please try again.');
+      console.error('[ImageUpload] Upload error:', error);
+      alert(`Image upload failed:\n${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setUploading(false);
     }

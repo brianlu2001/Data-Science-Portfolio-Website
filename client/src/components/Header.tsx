@@ -258,8 +258,8 @@ export default function Header({ siteSettings }: HeaderProps) {
               </div>
 
               {/* Back Face */}
-              <div 
-                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-center sm:justify-end items-center"
+              <div
+                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-between items-center"
                 style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
@@ -270,12 +270,30 @@ export default function Header({ siteSettings }: HeaderProps) {
                   '--highlight-angle': '135deg'
                 }}
               >
-                <div className="flex flex-col items-center mt-auto sm:mt-0">
-                  <motion.p 
+                {/* School logos — left-to-right row in upper area */}
+                <div className="flex items-center justify-center gap-6 sm:gap-10 w-full">
+                  {siteSettings?.logoUrls?.map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt={`School logo ${i + 1}`}
+                      className="object-contain"
+                      style={{
+                        mixBlendMode: 'multiply',
+                        maxHeight: '72px',
+                        maxWidth: '140px',
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Scroll down prompt at bottom */}
+                <div className="flex flex-col items-center">
+                  <motion.p
                     className="suika-title text-lg sm:text-xl md:text-2xl lg:text-3xl text-[#242931] font-light mb-4 text-center leading-relaxed"
-                    animate={{ 
-                      textShadow: isHovered 
-                        ? "0 0 15px rgba(36, 41, 49, 0.4)" 
+                    animate={{
+                      textShadow: isHovered
+                        ? "0 0 15px rgba(36, 41, 49, 0.4)"
                         : "0 0 8px rgba(36, 41, 49, 0.2)"
                     }}
                     transition={{ duration: 0.3 }}
@@ -285,15 +303,15 @@ export default function Header({ siteSettings }: HeaderProps) {
                   </motion.p>
                   <motion.div
                     className="flex justify-center"
-                    animate={{ 
+                    animate={{
                       y: [0, -8, 0],
-                      filter: isHovered 
-                        ? "drop-shadow(0 0 8px rgba(36, 41, 49, 0.6))" 
+                      filter: isHovered
+                        ? "drop-shadow(0 0 8px rgba(36, 41, 49, 0.6))"
                         : "drop-shadow(0 0 4px rgba(36, 41, 49, 0.4))"
                     }}
-                    transition={{ 
-                      y: { 
-                        repeat: Infinity, 
+                    transition={{
+                      y: {
+                        repeat: Infinity,
                         duration: 2,
                         ease: "easeInOut"
                       },

@@ -55,6 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           contact_phone,
           bio,
           linkedin_url,
+          logo_urls,
           updated_at
         FROM site_settings
         WHERE id = 1
@@ -70,6 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           contactPhone: row.contact_phone,
           bio: row.bio,
           linkedinUrl: row.linkedin_url,
+          logoUrls: row.logo_urls || [],
           updatedAt: row.updated_at
         };
 
@@ -89,16 +91,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const body = req.body;
 
       const result = await client.query(`
-        UPDATE site_settings 
-        SET 
+        UPDATE site_settings
+        SET
           contact_email = $1,
           contact_phone = $2,
           bio = $3,
           linkedin_url = $4,
+          logo_urls = $5,
           updated_at = NOW()
         WHERE id = 1
         RETURNING *
-      `, [body.contactEmail, body.contactPhone, body.bio, body.linkedinUrl]);
+      `, [body.contactEmail, body.contactPhone, body.bio, body.linkedinUrl, body.logoUrls || []]);
 
       client.release();
 
@@ -110,6 +113,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           contactPhone: row.contact_phone,
           bio: row.bio,
           linkedinUrl: row.linkedin_url,
+          logoUrls: row.logo_urls || [],
           updatedAt: row.updated_at
         };
 

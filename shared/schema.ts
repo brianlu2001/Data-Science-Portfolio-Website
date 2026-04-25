@@ -59,6 +59,7 @@ export const siteSettings = pgTable("site_settings", {
   contactPhone: varchar("contact_phone"),
   linkedinUrl: varchar("linkedin_url"),
   bio: text("bio"),
+  logoUrls: text("logo_urls").array().default([]),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

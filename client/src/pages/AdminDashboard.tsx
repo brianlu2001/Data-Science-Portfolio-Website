@@ -34,6 +34,7 @@ export default function AdminDashboard() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [adminListStatus, setAdminListStatus] = useState<'finished' | 'ongoing'>('finished');
   const [isUploadingReport, setIsUploadingReport] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   // All hooks must be called before any conditional returns
   const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
@@ -81,6 +82,7 @@ export default function AdminDashboard() {
       contactPhone: siteSettings?.contactPhone || "",
       linkedinUrl: siteSettings?.linkedinUrl || "",
       bio: siteSettings?.bio || "",
+      logoUrls: siteSettings?.logoUrls || [],
     },
   });
 
@@ -92,6 +94,7 @@ export default function AdminDashboard() {
         contactPhone: siteSettings.contactPhone || "",
         linkedinUrl: siteSettings.linkedinUrl || "",
         bio: siteSettings.bio || "",
+        logoUrls: siteSettings.logoUrls || [],
       });
     }
   }, [siteSettings, settingsForm]);
@@ -780,6 +783,7 @@ export default function AdminDashboard() {
                           contactPhone: siteSettings?.contactPhone || "",
                           linkedinUrl: siteSettings?.linkedinUrl || "",
                           bio: siteSettings?.bio || "",
+                          logoUrls: siteSettings?.logoUrls || [],
                         });
                       }}
                       variant="outline"
@@ -827,6 +831,24 @@ export default function AdminDashboard() {
                       <Label className="text-gray-300 text-sm font-medium">Bio/Introduction</Label>
                       <div className="mt-1 p-3 bg-charcoal-800 border border-gray-600 rounded-md text-white whitespace-pre-wrap min-h-[100px]">
                         {siteSettings?.bio || "Not set"}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-gray-300 text-sm font-medium">School Logos (title card back face)</Label>
+                      <div className="mt-2 flex flex-wrap gap-3">
+                        {(siteSettings?.logoUrls?.length ?? 0) === 0 ? (
+                          <span className="text-gray-500 text-sm">No logos uploaded</span>
+                        ) : (
+                          siteSettings?.logoUrls?.map((url, i) => (
+                            <img
+                              key={i}
+                              src={url}
+                              alt={`School logo ${i + 1}`}
+                              className="h-16 w-auto object-contain rounded bg-charcoal-800 p-2 border border-gray-600"
+                            />
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
@@ -914,6 +936,81 @@ export default function AdminDashboard() {
                         )}
                       />
 
+                      {/* School Logos */}
+                      <div>
+                        <Label className="text-gray-300 text-sm font-medium mb-2 block">
+                          School Logos (title card back face)
+                        </Label>
+                        <div className="flex flex-wrap gap-3 mb-3">
+                          {(settingsForm.watch('logoUrls') || []).map((url, i) => (
+                            <div key={i} className="relative group">
+                              <img
+                                src={url}
+                                alt={`School logo ${i + 1}`}
+                                className="h-16 w-auto object-contain rounded bg-charcoal-800 p-2 border border-gray-600"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const current = settingsForm.getValues('logoUrls') || [];
+                                  settingsForm.setValue('logoUrls', current.filter((_, idx) => idx !== i));
+                                }}
+                                className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <input
+                          type="file"
+                          id="logo-upload-input"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const formData = new FormData();
+                            formData.append('image', file);
+                            setIsUploadingLogo(true);
+                            try {
+                              const res = await fetch('/api/upload-image', {
+                                method: 'POST',
+                                credentials: 'include',
+                                body: formData,
+                              });
+                              const data = await res.json();
+                              if (data.imageUrl) {
+                                const current = settingsForm.getValues('logoUrls') || [];
+                                settingsForm.setValue('logoUrls', [...current, data.imageUrl]);
+                                toast({ title: "Success", description: "Logo uploaded" });
+                              } else {
+                                toast({ title: "Error", description: data.message || "Upload failed", variant: "destructive" });
+                              }
+                            } catch {
+                              toast({ title: "Error", description: "Upload failed", variant: "destructive" });
+                            } finally {
+                              setIsUploadingLogo(false);
+                              e.target.value = '';
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => document.getElementById('logo-upload-input')?.click()}
+                          disabled={isUploadingLogo}
+                          className="glass-effect border-gray-600 text-gray-300 hover:text-white"
+                        >
+                          <Upload size={14} className="mr-2" />
+                          {isUploadingLogo ? "Uploading..." : "Upload Logo"}
+                        </Button>
+                        <p className="text-xs text-gray-500 mt-1">
+                          PNG with transparent background recommended. Logos appear left-to-right on the back of the title card.
+                        </p>
+                      </div>
+
                       <div className="flex gap-3">
                         <Button
                           type="submit"
@@ -931,6 +1028,7 @@ export default function AdminDashboard() {
                               contactPhone: siteSettings?.contactPhone || "",
                               linkedinUrl: siteSettings?.linkedinUrl || "",
                               bio: siteSettings?.bio || "",
+                              logoUrls: siteSettings?.logoUrls || [],
                             });
                           }}
                           variant="outline"

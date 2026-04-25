@@ -204,13 +204,10 @@ export default function Header({ siteSettings }: HeaderProps) {
               transformStyle: "preserve-3d",
             }}
           >
-            <div 
-              className="title-flip-container"
-              style={{
-                transformStyle: 'preserve-3d',
-                transform: `rotateY(${isFlipped ? 180 : 0}deg)`,
-                transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
+            <motion.div
+              animate={{ rotateY: isFlipped ? 180 : 0 }}
+              transition={{ type: 'spring', stiffness: 70, damping: 18 }}
+              style={{ transformStyle: 'preserve-3d' }}
             >
               {/* Front Face */}
               <div 
@@ -339,7 +336,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                   </motion.div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </div>

@@ -36,6 +36,7 @@ export default function ImageUpload({ value, onChange, label = "Project Image" }
 
       const response = await fetch('/api/upload-image', {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       });
 

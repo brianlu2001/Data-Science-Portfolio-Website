@@ -122,7 +122,7 @@ export default function ProjectCard({
 
               {/* ── FRONT FACE ── */}
               <div style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', height: '100%' }}>
-                <Card className="glass-effect border-gray-600 overflow-hidden group hover:shadow-2xl hover:shadow-royal-500/20 transition-all duration-300 h-full flex flex-col">
+                <Card className="glass-effect border-gray-600 overflow-hidden group hover:shadow-2xl hover:shadow-royal-500/20 transition-all duration-300 h-full flex flex-col cursor-pointer" onClick={onToggleFlipped}>
                   <div className="aspect-video overflow-hidden flex-shrink-0 relative">
                     <img
                       src={project.imageUrl || '/placeholder-project.svg'}

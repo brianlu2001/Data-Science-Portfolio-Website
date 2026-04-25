@@ -13,9 +13,7 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const isFormData = data instanceof FormData;
-  
-  console.log(`API Request: ${method} ${url}`, { isFormData, data: isFormData ? 'FormData' : data });
-  
+
   const res = await fetch(url, {
     method,
     headers: isFormData ? {} : (data ? { "Content-Type": "application/json" } : {}),
@@ -23,7 +21,6 @@ export async function apiRequest(
     credentials: "include",
   });
 
-  console.log(`API Response: ${res.status} ${res.statusText}`);
   await throwIfResNotOk(res);
   return res;
 }

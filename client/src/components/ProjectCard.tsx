@@ -24,6 +24,13 @@ export default function ProjectCard({ project, isExpanded, onToggleExpanded }: P
     intensity: 1.2,
   });
 
+  const handleImageKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onToggleExpanded();
+    }
+  };
+
   return (
     <div ref={cardRef} data-project-card className="h-full">
       <div
@@ -37,13 +44,27 @@ export default function ProjectCard({ project, isExpanded, onToggleExpanded }: P
           style={magicalGlow.glowStyles}
         >
           <Card className="glass-effect border-gray-600 overflow-hidden group hover:shadow-2xl hover:shadow-royal-500/20 transition-all duration-300 h-full flex flex-col">
-            <div className="aspect-video overflow-hidden flex-shrink-0">
+            <div className="aspect-video overflow-hidden flex-shrink-0 relative">
               <img
-                src={project.imageUrl || 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&h=600'}
+                src={project.imageUrl || '/placeholder-project.svg'}
                 alt={project.title}
                 className="w-full h-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
                 onClick={onToggleExpanded}
+                tabIndex={0}
+                role="button"
+                aria-label={isExpanded ? 'Collapse project details' : 'Expand project details'}
+                onKeyDown={handleImageKeyDown}
               />
+              {/* Hover overlay — signals the image is interactive */}
+              <div
+                className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-all duration-300 flex items-center justify-center pointer-events-none"
+                aria-hidden
+              >
+                {isExpanded
+                  ? <ChevronUp className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" size={36} />
+                  : <ChevronDown className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" size={36} />
+                }
+              </div>
             </div>
 
             <CardContent className="p-6 flex flex-col flex-1">

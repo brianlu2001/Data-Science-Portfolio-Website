@@ -32,8 +32,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  console.log(`Simple Site Settings API: ${req.method} /api/site-settings-simple`);
-
   try {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
@@ -41,13 +39,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ message: "Database URL not configured" });
     }
 
-    console.log('Creating database connection...');
     const pool = new Pool({ connectionString: databaseUrl });
     const client = await pool.connect();
 
     if (req.method === 'GET') {
-      console.log('Fetching site settings with raw SQL...');
-
       const result = await client.query(`
         SELECT
           id,
@@ -60,8 +55,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         FROM site_settings
         WHERE id = 1
       `);
-
-      console.log(`Found ${result.rows.length} site settings`);
 
       if (result.rows.length > 0) {
         const row = result.rows[0];
@@ -76,18 +69,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
 
         client.release();
-        console.log('Site settings found, bio length:', settings.bio ? settings.bio.length : 0);
         return res.json(settings);
       } else {
         client.release();
-        console.log('No site settings found');
         return res.json({});
       }
     }
 
     if (req.method === 'PUT') {
       if (!requireAuth(req, res)) return;
-      console.log('Updating site settings with raw SQL...');
       const body = req.body;
 
       const result = await client.query(`
@@ -117,7 +107,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           updatedAt: row.updated_at
         };
 
-        console.log('Site settings updated successfully');
         return res.json(updatedSettings);
       } else {
         return res.status(404).json({ message: "Site settings not found" });

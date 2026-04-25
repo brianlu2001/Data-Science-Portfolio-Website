@@ -15,9 +15,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  console.log(`Project By ID API: ${req.method} /api/project-by-id`);
-  console.log('Query params:', req.query);
-
   try {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
@@ -33,7 +30,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: "Invalid project ID" });
     }
 
-    console.log(`Fetching project ${projectId}...`);
     const pool = new Pool({ connectionString: databaseUrl });
     const client = await pool.connect();
 
@@ -70,7 +66,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
       
       client.release();
-      console.log(`Found project: ${project.title}`);
       return res.json(project);
     }
     

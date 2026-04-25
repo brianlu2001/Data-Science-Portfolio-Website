@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect, Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Columns2, Columns3 } from "lucide-react";
+import { ExternalLink, Columns2, Columns3, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import ProjectCard from "@/components/ProjectCard";
 import ContactSection from "@/components/ContactSection";
-import WaterRipples from "../components/WaterRipples";
 import { Project, SiteSettings } from "@shared/schema";
 import { useAnalytics } from "@/utils/analytics";
+import ReactMarkdown from "react-markdown";
 
 type GridColumns = 1 | 2 | 3;
 
@@ -25,7 +26,28 @@ const DENSITY_ICONS = [
   { cols: 3 as GridColumns, Icon: Columns3, label: '3 columns' },
 ];
 
+function SkeletonCard() {
+  return (
+    <div className="glass-effect border border-gray-600 rounded-xl overflow-hidden h-full flex flex-col animate-pulse">
+      <div className="aspect-video bg-gray-700/40 flex-shrink-0" />
+      <div className="p-6 flex flex-col flex-1 gap-3">
+        <div className="flex justify-between items-start gap-2">
+          <div className="h-5 bg-gray-700/50 rounded w-2/3" />
+          <div className="h-8 w-8 bg-gray-700/30 rounded" />
+        </div>
+        <div className="h-5 bg-gray-700/30 rounded w-1/3" />
+        <div className="flex gap-2 mt-auto pt-3">
+          <div className="h-6 w-16 bg-gray-700/30 rounded" />
+          <div className="h-6 w-20 bg-gray-700/30 rounded" />
+          <div className="h-6 w-14 bg-gray-700/30 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Portfolio() {
+  const [, navigate] = useLocation();
   const [activeStatus, setActiveStatus] = useState<'finished' | 'ongoing'>('finished');
   const [expandedProject, setExpandedProject] = useState<number | null>(null);
   const [bioBoxTilt, setBioBoxTilt] = useState({ x: 0, y: 0 });
@@ -42,6 +64,13 @@ export default function Portfolio() {
 
   const { trackPageViewDebounced, trackProjectClick } = useAnalytics();
   const bioBoxRef = useRef<HTMLDivElement>(null);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const setGridColumns = (cols: GridColumns) => {
     setGridColumnsState(cols);
@@ -116,12 +145,30 @@ export default function Portfolio() {
   });
 
   if (projectsLoading) {
+    const skeletonCount = gridColumns * 2;
     return (
-      <div className="min-h-screen neural-network-bg flex items-center justify-center">
-        <div className="glass-effect rounded-2xl p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-royal-500 mx-auto"></div>
-          <p className="text-gray-300 mt-4 text-center">Loading portfolio...</p>
-        </div>
+      <div className="min-h-screen neural-network-bg">
+        <Header siteSettings={siteSettings} />
+        <main className={`container mx-auto py-12 ${isLandscapeMobile ? 'px-0' : 'px-4 sm:px-6'}`}>
+          {/* Bio skeleton */}
+          <div className="mb-24 max-w-4xl mx-auto mx-4 sm:mx-0">
+            <div className="blue-glow rounded-2xl p-4 sm:p-6 md:p-8 animate-pulse">
+              <div className="h-5 bg-gray-700/40 rounded w-full mb-3" />
+              <div className="h-5 bg-gray-700/40 rounded w-4/5 mx-auto" />
+            </div>
+          </div>
+          {/* Section header skeleton */}
+          <div className="mb-8 text-center">
+            <div className="h-10 bg-gray-700/30 rounded w-52 mx-auto mb-4 animate-pulse" />
+            <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full mb-8" />
+          </div>
+          {/* Grid skeleton */}
+          <div className={`grid ${GRID_CLASS[gridColumns]} gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto ${isLandscapeMobile ? 'px-2' : 'px-4 sm:px-0'}`}>
+            {Array.from({ length: skeletonCount }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
@@ -281,18 +328,25 @@ export default function Portfolio() {
                           className="overflow-hidden"
                         >
                           <div className="glass-effect border-gray-600 rounded-2xl p-6 shadow-2xl mt-2">
-                            <div
-                              className="text-gray-300 mb-4 leading-relaxed whitespace-pre-wrap"
-                              dangerouslySetInnerHTML={{
-                                __html: expandedInRow.simplifiedDescription
-                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                  .replace(/\*(.*?)\*/g, '<em>$1</em>'),
-                              }}
-                            />
+                            <div className="prose prose-invert prose-sm max-w-none mb-4 prose-p:text-gray-300 prose-p:leading-relaxed prose-p:my-1 prose-strong:text-white prose-em:text-gray-200">
+                              <ReactMarkdown>{expandedInRow.simplifiedDescription}</ReactMarkdown>
+                            </div>
+                            {expandedInRow.technologies && expandedInRow.technologies.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-5">
+                                {expandedInRow.technologies.map((tech, i) => (
+                                  <span
+                                    key={i}
+                                    className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded suika-fallback"
+                                  >
+                                    {tech}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                             <Button
                               onClick={() => {
                                 trackProjectClick(expandedInRow.id, 'view');
-                                window.location.href = `/projects/${expandedInRow.id}`;
+                                navigate(`/projects/${expandedInRow.id}`);
                               }}
                               className="bg-royal-500 hover:bg-royal-600 text-white"
                             >
@@ -312,6 +366,22 @@ export default function Portfolio() {
       </main>
 
       <ContactSection siteSettings={siteSettings} isLandscapeMobile={isLandscapeMobile} />
+
+      <AnimatePresence>
+        {scrollY > 400 && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-royal-500/80 hover:bg-royal-500 text-white shadow-lg backdrop-blur-sm transition-colors duration-200"
+            aria-label="Scroll to top"
+          >
+            <ChevronUp size={20} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

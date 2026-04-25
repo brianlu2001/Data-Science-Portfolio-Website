@@ -1,24 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import { ArrowLeft, ExternalLink, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import NeuralNetworkBackground from "@/components/NeuralNetworkBackground";
-import { Project, ProjectFile } from "@shared/schema";
+import { Project } from "@shared/schema";
 import { useEffect, useState, useRef } from "react";
 import { useAnalytics } from "@/utils/analytics";
+import ReactMarkdown from "react-markdown";
 
 export default function ProjectView() {
   const { id } = useParams<{ id: string }>();
+  const [, navigate] = useLocation();
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { trackPageViewDebounced, trackProjectClick } = useAnalytics();
 
-  // Track page view
   useEffect(() => {
     if (id) {
       trackPageViewDebounced(`/projects/${id}`);
@@ -29,48 +30,23 @@ export default function ProjectView() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-  
-  const { data: project, isLoading: projectLoading, error: projectError } = useQuery<Project>({
+
+  const { data: project, isLoading: projectLoading } = useQuery<Project>({
     queryKey: [`/api/project-by-id?id=${id}`],
     enabled: !!id,
   });
 
-  // Debug logging
-  useEffect(() => {
-    console.log('ProjectView Debug:', {
-      id,
-      project,
-      projectLoading,
-      projectError,
-      queryKey: `/api/project-by-id?id=${id}`
-    });
-  }, [id, project, projectLoading, projectError]);
-
-  // Disable project files query for now since it's causing issues
-  // const { data: projectFiles = [] } = useQuery<ProjectFile[]>({
-  //   queryKey: ["/api/projects", id, "files"],
-  //   enabled: !!id,
-  // });
-  const projectFiles: ProjectFile[] = []; // Empty array for now
-
-  // Use project URL directly from the database, encode spaces only
   useEffect(() => {
     if (project?.projectUrl) {
-      // Only replace spaces with %20, don't over-encode
-      const encodedUrl = project.projectUrl.replace(/ /g, '%20');
-      console.log('Setting report URL:', project.projectUrl, '→', encodedUrl);
-      setReportUrl(encodedUrl);
+      setReportUrl(project.projectUrl.replace(/ /g, '%20'));
     }
   }, [project]);
 
-  const getReportType = (url: string) => {
-    return url.endsWith('.pdf') ? 'pdf' : 'html';
-  };
+  const getReportType = (url: string) => (url.endsWith('.pdf') ? 'pdf' : 'html');
 
   if (projectLoading) {
     return (
@@ -92,7 +68,7 @@ export default function ProjectView() {
           <h1 className="text-2xl font-bold text-white mb-4">Project Not Found</h1>
           <p className="text-gray-300 mb-6">The project you're looking for doesn't exist.</p>
           <Button
-            onClick={() => window.location.href = '/'}
+            onClick={() => navigate('/')}
             className="bg-royal-500 hover:bg-royal-600 text-white"
           >
             <ArrowLeft size={16} className="mr-2" />
@@ -102,8 +78,6 @@ export default function ProjectView() {
       </div>
     );
   }
-
-  const displayDescription = project.fullDescription;
 
   return (
     <div className="min-h-screen neural-network-bg">
@@ -122,18 +96,17 @@ export default function ProjectView() {
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
-              onClick={() => window.location.href = '/'}
+              onClick={() => navigate('/')}
               className="text-gray-300 hover:text-white"
             >
               <ArrowLeft size={20} className="mr-2" />
               Back to Portfolio
             </Button>
-            
+
             <div className="flex gap-3">
               {reportUrl && (
                 <Button
                   onClick={() => {
-                    console.log('Opening report URL:', reportUrl);
                     if (id) trackProjectClick(parseInt(id), 'report');
                     window.open(reportUrl!, '_blank');
                   }}
@@ -143,7 +116,6 @@ export default function ProjectView() {
                   View Full Report
                 </Button>
               )}
-
             </div>
           </div>
         </div>
@@ -160,16 +132,10 @@ export default function ProjectView() {
             <h1 className="text-4xl font-bold text-white mb-4 suika-fallback">
               {project.title}
             </h1>
-            <p 
-              className="text-gray-300 leading-relaxed text-lg md:text-lg text-sm"
-              dangerouslySetInnerHTML={{
-                __html: displayDescription
-                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                  .replace(/\n/g, '<br>')
-              }}
-            />
-            
+            <div className="prose prose-invert max-w-none prose-p:text-gray-300 prose-p:leading-relaxed prose-p:text-base md:prose-p:text-lg prose-strong:text-white prose-em:text-gray-200">
+              <ReactMarkdown>{project.fullDescription}</ReactMarkdown>
+            </div>
+
             <div className="flex flex-wrap gap-2 mt-6">
               {project.technologies.map((tech, index) => (
                 <span
@@ -200,17 +166,17 @@ export default function ProjectView() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-semibold text-white suika-fallback">Full Project Report</h2>
                 </div>
-                
+
                 <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
                   {getReportType(reportUrl) === 'pdf' ? (
-                                          <div className="w-full md:h-[800px] h-[calc(100vh-100px)] relative overflow-hidden">
+                    <div className="w-full md:h-[800px] h-[calc(100vh-100px)] relative overflow-hidden">
                       {!pdfError ? (
                         <iframe
                           ref={iframeRef}
                           src={reportUrl}
                           className="w-full h-full"
                           title={`${project.title} Report`}
-                          style={{ 
+                          style={{
                             border: 'none',
                             transform: isMobile ? 'scale(0.4)' : 'scale(1)',
                             transformOrigin: isMobile ? 'top left' : 'center',
@@ -222,17 +188,14 @@ export default function ProjectView() {
                             WebkitTouchCallout: 'none'
                           }}
                           onLoad={() => {
-                            // Check if PDF loaded successfully
                             if (iframeRef.current) {
                               try {
-                                // Try to access the content to see if it loaded
                                 const doc = iframeRef.current.contentDocument;
                                 if (!doc || doc.body.innerHTML === '') {
                                   setPdfError(true);
                                 }
-                              } catch (e) {
-                                // Cross-origin error means PDF is loading properly
-                                console.log('PDF loading (cross-origin expected)');
+                              } catch {
+                                // Cross-origin — PDF is loading as expected
                               }
                             }
                           }}
@@ -280,7 +243,7 @@ export default function ProjectView() {
                         src={reportUrl}
                         className="w-full h-full"
                         title={`${project.title} Report`}
-                        style={{ 
+                        style={{
                           border: 'none',
                           transform: isMobile ? 'scale(0.4)' : 'scale(1)',
                           transformOrigin: isMobile ? 'top left' : 'center',
@@ -290,20 +253,6 @@ export default function ProjectView() {
                           userSelect: 'none',
                           WebkitUserSelect: 'none',
                           WebkitTouchCallout: 'none'
-                        }}
-                        onError={() => {
-                          // Show fallback for HTML reports that fail to load
-                          const container = document.createElement('div');
-                          container.className = 'w-full h-full flex flex-col items-center justify-center p-8';
-                          container.innerHTML = `
-                            <div class="text-center">
-                              <h3 class="text-xl font-semibold text-white mb-2">Report Preview Unavailable</h3>
-                              <p class="text-gray-400 mb-4">Unable to load the report preview. Click below to open it in a new tab.</p>
-                              <button onclick="window.open('${reportUrl}', '_blank')" class="bg-royal-500 hover:bg-royal-600 text-white px-4 py-2 rounded flex items-center justify-center">
-                                <span>Open in New Tab</span>
-                              </button>
-                            </div>
-                          `;
                         }}
                       />
                       <div className="absolute top-2 right-2 z-10">
@@ -318,32 +267,6 @@ export default function ProjectView() {
                       </div>
                     </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {projectFiles.length > 0 && (
-            <Card className="glass-effect border-gray-600">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-semibold text-white mb-4">Additional Files</h2>
-                <div className="space-y-3">
-                  {projectFiles.map((file) => (
-                    <div
-                      key={file.id}
-                      className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
-                    >
-                      <span className="text-gray-300">{file.fileName}</span>
-                      <Button
-                        onClick={() => window.open(file.fileUrl, '_blank')}
-                        size="sm"
-                        className="bg-royal-500 hover:bg-royal-600 text-white"
-                      >
-                        <ExternalLink size={14} className="mr-2" />
-                        View
-                      </Button>
-                    </div>
-                  ))}
                 </div>
               </CardContent>
             </Card>

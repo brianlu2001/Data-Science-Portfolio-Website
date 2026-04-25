@@ -43,9 +43,7 @@ async function ensureStatusColumn() {
 function sanitizeProjectUrl(url: string): string {
   if (!url) return url;
   
-  // Check if URL is already encoded by looking for % characters
   if (url.includes('%')) {
-    console.log('URL appears already encoded, returning as-is:', url);
     return url;
   }
   
@@ -59,9 +57,7 @@ function sanitizeProjectUrl(url: string): string {
   // Reconstruct the URL
   urlParts[urlParts.length - 1] = encodedFilename;
   
-  const result = urlParts.join('/');
-  console.log('URL sanitization:', url, '→', result);
-  return result;
+  return urlParts.join('/');
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -73,8 +69,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-
-  console.log(`Simple Projects API: ${req.method} /api/projects-simple`);
 
   await ensureStatusColumn();
 
@@ -106,7 +100,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           updatedAt: row.updated_at
         }));
 
-        console.log(`Fetched ${projects.length} projects`);
         return res.json(projects);
       } finally {
         client.release();
@@ -123,10 +116,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     if (!requireAuth(req, res)) return;
     try {
-      console.log('POST request body:', JSON.stringify(req.body, null, 2));
-      console.log('Content-Type:', req.headers['content-type']);
-      
-      // Handle JSON body
       const data = req.body;
       
       if (!data) {
@@ -215,7 +204,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           updatedAt: newProject.updated_at
         };
 
-        console.log('Created new project:', project.title);
         return res.status(201).json(project);
 
       } catch (error) {

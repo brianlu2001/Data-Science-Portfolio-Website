@@ -16,6 +16,49 @@ interface ProjectCardProps {
   showViewButton: boolean;
 }
 
+// Converts rgb() or hsl() color strings to their alpha-channel counterpart
+function withAlpha(color: string | undefined, alpha: number): string {
+  if (!color) return `rgba(99,130,225,${alpha})`;
+  if (color.startsWith('rgb(')) return color.replace('rgb(', 'rgba(').replace(')', `, ${alpha})`);
+  if (color.startsWith('hsl(')) return color.replace('hsl(', 'hsla(').replace(')', `, ${alpha})`);
+  return color;
+}
+
+// Ensures a color has at least `minL`% lightness so it stays legible on dark
+// backgrounds. Parses rgb() and hsl() strings; boosts L if needed.
+function ensureMinLightness(color: string | undefined, minL = 62): string {
+  if (!color) return '#93c5fd';
+
+  const rgbMatch = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]) / 255;
+    const g = parseInt(rgbMatch[2]) / 255;
+    const b = parseInt(rgbMatch[3]) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    if (l * 100 >= minL) return color;
+    const d = max - min;
+    const s = d === 0 ? 0 : l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    let h = 0;
+    if (d !== 0) {
+      if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+      else if (max === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h /= 6;
+    }
+    return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${minL}%)`;
+  }
+
+  const hslMatch = color.match(/hsla?\((\d+(?:\.\d+)?),\s*(\d+(?:\.\d+)?)%,\s*(\d+(?:\.\d+)?)%/);
+  if (hslMatch) {
+    const h = parseFloat(hslMatch[1]), s = parseFloat(hslMatch[2]), l = parseFloat(hslMatch[3]);
+    if (l >= minL) return color;
+    return `hsl(${h}, ${s}%, ${minL}%)`;
+  }
+
+  return color;
+}
+
 export default function ProjectCard({
   project,
   isFlipped,
@@ -29,9 +72,17 @@ export default function ProjectCard({
     imageUrl: project.imageUrl,
     projectId: project.id,
     enableSound: true,
-    enableShimmer: true,
+    enableShimmer: false,
     intensity: 1.2,
   });
+
+  // Glow box-shadows that live on the rotating motion.div so they project
+  // into 3D space — the shadow narrows as the card turns edge-on at 90°.
+  const glowShadowHover = `0 0 28px 5px ${withAlpha(magicalGlow.colors?.primary, 0.55)}, 0 0 60px 12px ${withAlpha(magicalGlow.colors?.vibrant, 0.3)}`;
+  const glowShadowIdle  = `0 0 28px 5px rgba(0,0,0,0), 0 0 60px 12px rgba(0,0,0,0)`;
+
+  // Ensure the tag color is always legible on the dark card background
+  const tagColor = ensureMinLightness(magicalGlow.colors?.primary);
 
   const handleImageKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -47,16 +98,25 @@ export default function ProjectCard({
         onMouseEnter={magicalGlow.handlers.onMouseEnter}
         onMouseLeave={magicalGlow.handlers.onMouseLeave}
       >
+        {/* CSS-var holder — no overflow:hidden so preserve-3d works correctly */}
         <div
           ref={magicalGlow.elementRef}
-          className={`${magicalGlow.glowClasses} h-full`}
+          className="h-full"
           style={magicalGlow.glowStyles}
         >
           {/* Perspective wrapper — owns the 3D context for the flip */}
           <div style={{ perspective: '1200px', height: '100%' }}>
             <motion.div
-              animate={{ rotateY: isFlipped ? 180 : 0 }}
-              transition={{ duration: 0.55, type: 'spring', stiffness: 70, damping: 18 }}
+              animate={{
+                rotateY: isFlipped ? 180 : 0,
+                y: magicalGlow.isHovered && !isFlipped ? -6 : 0,
+                boxShadow: magicalGlow.isHovered ? glowShadowHover : glowShadowIdle,
+              }}
+              transition={{
+                rotateY: { duration: 0.55, type: 'spring', stiffness: 70, damping: 18 },
+                y:        { duration: 0.3, ease: 'easeOut' },
+                boxShadow:{ duration: 0.35, ease: 'easeOut' },
+              }}
               style={{ transformStyle: 'preserve-3d', height: '100%', position: 'relative' }}
             >
 
@@ -144,7 +204,6 @@ export default function ProjectCard({
               >
                 <Card
                   className="glass-effect border-gray-600 h-full flex flex-col overflow-hidden cursor-pointer"
-                  style={{ borderTop: '2px solid var(--glow-color-4, rgba(99,130,225,0.7))' }}
                   onClick={onToggleFlipped}
                 >
                   <CardContent className="p-5 flex flex-col h-full">
@@ -163,8 +222,8 @@ export default function ProjectCard({
                             key={i}
                             className="inline-block text-xs font-semibold px-2 py-0.5 rounded suika-fallback border"
                             style={{
-                              borderColor: 'var(--glow-color-1, rgba(99,130,225,0.5))',
-                              color: 'var(--glow-color-1, #93c5fd)',
+                              borderColor: withAlpha(tagColor, 0.55),
+                              color: tagColor,
                               background: 'rgba(0,0,0,0.3)',
                             }}
                           >

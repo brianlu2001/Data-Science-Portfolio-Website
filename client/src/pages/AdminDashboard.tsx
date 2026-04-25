@@ -21,7 +21,8 @@ import ImageUpload from "@/components/ImageUpload";
 import DraggableProjectList from "@/components/DraggableProjectList";
 import ReportSelector from "@/components/ReportSelector";
 import { type z } from "zod";
-import { BarChart3, Users, Eye, MousePointer, Settings, LogOut, Plus, Upload, Edit2, Trash2, X, GripVertical } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { BarChart3, Users, Eye, MousePointer, Settings, LogOut, Plus, Upload, Edit2, Trash2, X, GripVertical, Wand2 } from "lucide-react";
 import AnalyticsCharts from "@/components/AnalyticsCharts";
 import LoginForm from "@/components/LoginForm";
 
@@ -35,6 +36,9 @@ export default function AdminDashboard() {
   const [adminListStatus, setAdminListStatus] = useState<'finished' | 'ongoing'>('finished');
   const [isUploadingReport, setIsUploadingReport] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [rewriteDialogOpen, setRewriteDialogOpen] = useState(false);
+  const [isRewriting, setIsRewriting] = useState(false);
+  const [pendingDescription, setPendingDescription] = useState("");
 
   // All hooks must be called before any conditional returns
   const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
@@ -543,20 +547,38 @@ export default function AdminDashboard() {
                     <FormField
                       control={projectForm.control}
                       name="simplifiedDescription"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Simplified Description</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              className="bg-charcoal-800 border-gray-600 text-white"
-                              rows={8}
-                              placeholder="Brief description for dropdown preview..."
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const wordCount = field.value ? field.value.trim().split(/\s+/).filter(Boolean).length : 0;
+                        const tooLong = wordCount > 60;
+                        return (
+                          <FormItem>
+                            <div className="flex items-center justify-between">
+                              <FormLabel className="text-gray-300">Simplified Description</FormLabel>
+                              <span className={`text-xs ${tooLong ? 'text-amber-400' : 'text-gray-500'}`}>
+                                {wordCount} words{tooLong ? ' — too long for card' : ''}
+                              </span>
+                            </div>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                className="bg-charcoal-800 border-gray-600 text-white"
+                                rows={8}
+                                placeholder="Brief description for card back face (~50 tokens)..."
+                                onBlur={(e) => {
+                                  field.onBlur();
+                                  const val = e.target.value.trim();
+                                  const wc = val.split(/\s+/).filter(Boolean).length;
+                                  if (wc > 60) {
+                                    setPendingDescription(val);
+                                    setRewriteDialogOpen(true);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
 
                     {watchedStatus === 'finished' && (
@@ -1059,6 +1081,64 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* AI Rewrite consent dialog */}
+      <Dialog open={rewriteDialogOpen} onOpenChange={setRewriteDialogOpen}>
+        <DialogContent className="glass-effect border-gray-600 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-white">
+              <Wand2 size={18} className="text-royal-400" />
+              Description too long for card
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Your simplified description is over 60 words, which may overflow the card back face. Would you like AI to rewrite it to roughly 50 tokens while preserving all key information?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:justify-start">
+            <Button
+              onClick={async () => {
+                setIsRewriting(true);
+                try {
+                  const res = await apiRequest('POST', '/api/rewrite-description', { description: pendingDescription });
+                  const data = await res.json();
+                  if (data.rewritten) {
+                    projectForm.setValue('simplifiedDescription', data.rewritten, { shouldDirty: true });
+                    toast({ title: "Rewritten", description: "Simplified description updated by AI." });
+                  } else {
+                    toast({ title: "Error", description: data.message || "Rewrite failed", variant: "destructive" });
+                  }
+                } catch {
+                  toast({ title: "Error", description: "Failed to reach rewrite service", variant: "destructive" });
+                } finally {
+                  setIsRewriting(false);
+                  setRewriteDialogOpen(false);
+                }
+              }}
+              disabled={isRewriting}
+              className="bg-royal-500 hover:bg-royal-600 text-white"
+            >
+              {isRewriting ? (
+                <>
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-2" />
+                  Rewriting...
+                </>
+              ) : (
+                <>
+                  <Wand2 size={14} className="mr-2" />
+                  Yes, rewrite it
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setRewriteDialogOpen(false)}
+              className="glass-effect border-gray-600 text-gray-300 hover:text-white"
+            >
+              Keep as-is
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

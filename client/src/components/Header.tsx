@@ -259,11 +259,10 @@ export default function Header({ siteSettings }: HeaderProps) {
 
               {/* Back Face */}
               <div
-                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-between items-center"
+                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col justify-end items-center"
                 style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
-                  isolation: 'isolate',
                   '--reflection-x': '30%',
                   '--reflection-y': '30%',
                   '--secondary-reflection-x': '70%',
@@ -271,29 +270,26 @@ export default function Header({ siteSettings }: HeaderProps) {
                   '--highlight-angle': '135deg'
                 }}
               >
-                {/* School logos — fixed-size boxes so all logos appear uniform; destination-out carves the shape out of the card */}
-                <div className="flex items-center justify-center gap-8 sm:gap-12 w-full">
-                  {siteSettings?.logoUrls?.map((url, i) => (
-                    <div
-                      key={i}
-                      style={{ width: '120px', height: '80px', flexShrink: 0 }}
-                    >
+                {/* School logos — uniform height, natural width; brightness(0) recolors to match #242931 background */}
+                {siteSettings?.logoUrls && siteSettings.logoUrls.length > 0 && (
+                  <div className="flex items-center justify-center gap-8 sm:gap-12 w-full mb-8 md:mb-10">
+                    {siteSettings.logoUrls.map((url, i) => (
                       <img
+                        key={i}
                         src={url}
                         alt=""
                         style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'contain',
-                          mixBlendMode: 'destination-out',
+                          height: '80px',
+                          width: 'auto',
                           display: 'block',
+                          filter: 'brightness(0)',
                         }}
                       />
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
 
-                {/* Scroll down prompt at bottom */}
+                {/* Scroll down prompt */}
                 <div className="flex flex-col items-center">
                   <motion.p
                     className="suika-title text-lg sm:text-xl md:text-2xl lg:text-3xl text-[#242931] font-light mb-4 text-center leading-relaxed"

@@ -350,16 +350,18 @@ export default function Portfolio() {
                                   ))}
                                 </div>
                               )}
-                              <Button
-                                onClick={() => {
-                                  trackProjectClick(expandedInRow.id, 'view');
-                                  navigate(`/projects/${expandedInRow.id}`);
-                                }}
-                                className="bg-royal-500 hover:bg-royal-600 text-white"
-                              >
-                                <ExternalLink size={16} className="mr-2" />
-                                View Full Project
-                              </Button>
+                              {activeStatus === 'finished' && (
+                                <Button
+                                  onClick={() => {
+                                    trackProjectClick(expandedInRow.id, 'view');
+                                    navigate(`/projects/${expandedInRow.id}`);
+                                  }}
+                                  className="bg-royal-500 hover:bg-royal-600 text-white"
+                                >
+                                  <ExternalLink size={16} className="mr-2" />
+                                  View Full Project
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </motion.div>

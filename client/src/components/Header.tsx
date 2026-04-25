@@ -304,11 +304,8 @@ export default function Header({ siteSettings }: HeaderProps) {
                   </div>
                 )}
 
-                {/* Middle spacer — separates logos from text */}
-                <div className="flex-[3]" />
-
-                {/* Scroll down prompt */}
-                <div className="flex flex-col items-center">
+                {/* Scroll down prompt — mt-auto pins it to the bottom */}
+                <div className="flex flex-col items-center mt-auto">
                   <motion.p
                     className="suika-title text-lg sm:text-xl md:text-2xl lg:text-3xl text-[#242931] font-light mb-4 text-center leading-relaxed"
                     animate={{

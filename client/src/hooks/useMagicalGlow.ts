@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type React from 'react';
 import { colorExtractor, ColorExtractor } from '@/utils/colorExtractor';
 import { audioManager } from '@/utils/audioManager';
 
@@ -50,17 +51,8 @@ export function useMagicalGlow(options: MagicalGlowOptions = {}) {
     }
   }, [imageUrl, projectId]);
 
-  // Apply glow colors to CSS variables
-  useEffect(() => {
-    if (colors && elementRef.current) {
-      const element = elementRef.current;
-      element.style.setProperty('--glow-color-1', colors.primary);
-      element.style.setProperty('--glow-color-2', colors.secondary);
-      element.style.setProperty('--glow-color-3', colors.accent);
-      element.style.setProperty('--glow-color-4', colors.vibrant);
-      element.style.setProperty('--project-glow-color', colors.vibrant);
-    }
-  }, [colors]);
+  // CSS variables are applied via glowStyles so React owns them fully —
+  // using setProperty() here gets wiped on re-renders with a new style object.
 
   // Event handlers
   const handleMouseEnter = async () => {
@@ -109,14 +101,19 @@ export function useMagicalGlow(options: MagicalGlowOptions = {}) {
     return classes.join(' ');
   };
 
-  // Get inline styles for intensity
-  const getGlowStyles = () => {
-    if (!colors) return {};
-    
-    return {
+  // Get inline styles for intensity + all color CSS variables
+  const getGlowStyles = (): React.CSSProperties => {
+    const base: Record<string, string> = {
       '--glow-intensity': intensity.toString(),
-      // Removed brightness filter to prevent image lighting up
     };
+    if (colors) {
+      base['--glow-color-1'] = colors.primary;
+      base['--glow-color-2'] = colors.secondary;
+      base['--glow-color-3'] = colors.accent;
+      base['--glow-color-4'] = colors.vibrant;
+      base['--project-glow-color'] = colors.vibrant;
+    }
+    return base as React.CSSProperties;
   };
 
   return {

@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
-
+import { useState, useRef, useEffect, Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import { ExternalLink, Rows3, Columns2, Columns3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import ProjectCard from "@/components/ProjectCard";
 import ContactSection from "@/components/ContactSection";
@@ -9,103 +10,110 @@ import WaterRipples from "../components/WaterRipples";
 import { Project, SiteSettings } from "@shared/schema";
 import { useAnalytics } from "@/utils/analytics";
 
+type GridColumns = 1 | 2 | 3;
+
+const GRID_COLS_KEY = 'portfolio-grid-columns';
+
+const GRID_CLASS: Record<GridColumns, string> = {
+  1: 'grid-cols-1',
+  2: 'grid-cols-1 md:grid-cols-2',
+  3: 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3',
+};
+
+const DENSITY_ICONS = [
+  { cols: 1 as GridColumns, Icon: Rows3,    label: '1 column'  },
+  { cols: 2 as GridColumns, Icon: Columns2, label: '2 columns' },
+  { cols: 3 as GridColumns, Icon: Columns3, label: '3 columns' },
+];
+
 export default function Portfolio() {
   const [activeStatus, setActiveStatus] = useState<'finished' | 'ongoing'>('finished');
   const [expandedProject, setExpandedProject] = useState<number | null>(null);
   const [bioBoxTilt, setBioBoxTilt] = useState({ x: 0, y: 0 });
   const [isLandscapeMobile, setIsLandscapeMobile] = useState(false);
-  const { trackPageViewDebounced } = useAnalytics();
+  const [gridColumns, setGridColumnsState] = useState<GridColumns>(() => {
+    try {
+      const stored = localStorage.getItem(GRID_COLS_KEY);
+      return (stored === '1' || stored === '2' || stored === '3') ? Number(stored) as GridColumns : 2;
+    } catch { return 2; }
+  });
+  // effectiveCols mirrors what CSS actually renders at the current viewport
+  const [effectiveCols, setEffectiveCols] = useState<GridColumns>(1);
 
+  const { trackPageViewDebounced, trackProjectClick } = useAnalytics();
   const bioBoxRef = useRef<HTMLDivElement>(null);
+
+  const setGridColumns = (cols: GridColumns) => {
+    setGridColumnsState(cols);
+    try { localStorage.setItem(GRID_COLS_KEY, String(cols)); } catch {}
+  };
 
   useEffect(() => {
     trackPageViewDebounced('/');
   }, [trackPageViewDebounced]);
 
-  // Detect mobile landscape orientation
+  // Keep effectiveCols in sync with CSS breakpoints + user preference
   useEffect(() => {
-    const checkLandscapeMobile = () => {
+    const compute = () => {
+      if (window.matchMedia('(min-width: 1280px)').matches) {
+        setEffectiveCols(gridColumns);
+      } else if (window.matchMedia('(min-width: 768px)').matches) {
+        setEffectiveCols(Math.min(gridColumns, 2) as GridColumns);
+      } else {
+        setEffectiveCols(1);
+      }
+    };
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, [gridColumns]);
+
+  useEffect(() => {
+    const check = () => {
       const isMobile = window.innerWidth < 768;
       const isLandscape = window.innerWidth > window.innerHeight;
       setIsLandscapeMobile(isMobile && isLandscape);
     };
-    
-    checkLandscapeMobile();
-    window.addEventListener('resize', checkLandscapeMobile);
-    window.addEventListener('orientationchange', checkLandscapeMobile);
-    
+    check();
+    window.addEventListener('resize', check);
+    window.addEventListener('orientationchange', check);
     return () => {
-      window.removeEventListener('resize', checkLandscapeMobile);
-      window.removeEventListener('orientationchange', checkLandscapeMobile);
+      window.removeEventListener('resize', check);
+      window.removeEventListener('orientationchange', check);
     };
   }, []);
 
-  // Close expanded project when clicking outside
+  // Close expanded project when clicking outside all cards
   useEffect(() => {
     const handleClickOutside = (event: Event) => {
       const target = event.target as Element;
-      
-      // Check if the click is outside all project cards
-      const isInsideProjectCard = target.closest('[data-project-card]');
-      
-      if (!isInsideProjectCard && expandedProject !== null) {
+      if (!target.closest('[data-project-card]') && !target.closest('[data-expansion-panel]')) {
         setExpandedProject(null);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside);
-    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [expandedProject]);
-
+  }, []);
 
   const handleBioMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!bioBoxRef.current) return;
-    
     const rect = bioBoxRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    const mouseX = e.clientX - centerX;
-    const mouseY = e.clientY - centerY;
-    
-    // Calculate tilt - box tilts away from mouse position
-    const tiltX = -(mouseY / rect.height) * 15; // Gentler tilt for bio box
-    const tiltY = (mouseX / rect.width) * 15;
-    
+    const tiltX = -((e.clientY - rect.top - rect.height / 2) / rect.height) * 15;
+    const tiltY = ((e.clientX - rect.left - rect.width / 2) / rect.width) * 15;
     setBioBoxTilt({ x: tiltX, y: tiltY });
-    
-
   };
 
-  const handleBioMouseLeave = () => {
-    setBioBoxTilt({ x: 0, y: 0 });
-  };
-
-  const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
+  const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects-simple"],
   });
 
-  const { data: siteSettings, error: settingsError } = useQuery<SiteSettings>({
+  const { data: siteSettings } = useQuery<SiteSettings>({
     queryKey: ["/api/site-settings-simple"],
   });
-
-  // Debug logging
-  useEffect(() => {
-    console.log('Portfolio page - Projects data:', { 
-      projects: projects?.length || 0, 
-      isLoading: projectsLoading, 
-      error: projectsError 
-    });
-    console.log('Portfolio page - Site settings:', { 
-      settings: !!siteSettings, 
-      error: settingsError 
-    });
-  }, [projects, projectsLoading, projectsError, siteSettings, settingsError]);
 
   if (projectsLoading) {
     return (
@@ -118,34 +126,34 @@ export default function Portfolio() {
     );
   }
 
+  const filteredProjects = projects.filter(p => (p.status || 'finished') === activeStatus);
+
+  // Group into rows matching effectiveCols so the expansion panel lands after the correct row
+  const rows: Project[][] = [];
+  for (let i = 0; i < filteredProjects.length; i += effectiveCols) {
+    rows.push(filteredProjects.slice(i, i + effectiveCols));
+  }
+
   return (
     <div className="min-h-screen neural-network-bg">
       <Header siteSettings={siteSettings} />
       <main className={`container mx-auto py-12 ${isLandscapeMobile ? 'px-0' : 'px-4 sm:px-6'}`}>
-        {/* Bio Section with Blue Glow */}
+
+        {/* Bio Section */}
         {siteSettings && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-24 max-w-4xl mx-auto"
           >
-            <motion.div 
+            <motion.div
               ref={bioBoxRef}
               className={`blue-glow rounded-2xl p-4 sm:p-6 md:p-8 text-center cursor-pointer ${isLandscapeMobile ? 'mx-2' : 'mx-4 sm:mx-0'}`}
               onMouseMove={handleBioMouseMove}
-              onMouseLeave={handleBioMouseLeave}
-              animate={{
-                rotateX: bioBoxTilt.x,
-                rotateY: bioBoxTilt.y,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-              }}
-              style={{
-                transformStyle: "preserve-3d",
-              }}
+              onMouseLeave={() => setBioBoxTilt({ x: 0, y: 0 })}
+              animate={{ rotateX: bioBoxTilt.x, rotateY: bioBoxTilt.y }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              style={{ transformStyle: "preserve-3d" }}
             >
               <p className="text-gray-300 text-lg sm:text-xl leading-relaxed suika-fallback">
                 {siteSettings.bio}
@@ -154,7 +162,7 @@ export default function Portfolio() {
           </motion.div>
         )}
 
-        {/* My Projects Section Header */}
+        {/* My Projects Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -166,8 +174,9 @@ export default function Portfolio() {
           </h2>
           <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full mb-8"></div>
 
-          {/* Status toggle */}
-          <div className="flex justify-center">
+          {/* Status toggle + density picker row */}
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            {/* Finished / Ongoing pill toggle */}
             <div className="project-status-toggle">
               <motion.div
                 className="project-status-thumb"
@@ -187,9 +196,29 @@ export default function Portfolio() {
                 Ongoing
               </button>
             </div>
+
+            {/* Grid density picker — desktop only */}
+            <div className="hidden md:flex items-center gap-1 glass-effect rounded-full px-2 py-1.5 border border-gray-700">
+              {DENSITY_ICONS.map(({ cols, Icon, label }) => (
+                <button
+                  key={cols}
+                  type="button"
+                  title={label}
+                  onClick={() => { setGridColumns(cols); setExpandedProject(null); }}
+                  className={`p-1.5 rounded-full transition-all duration-200 ${
+                    gridColumns === cols
+                      ? 'bg-royal-500 text-white shadow-[0_0_10px_hsla(225,73%,57%,0.45)]'
+                      : 'text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <Icon size={16} />
+                </button>
+              ))}
+            </div>
           </div>
         </motion.div>
 
+        {/* Project Grid */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeStatus}
@@ -197,34 +226,78 @@ export default function Portfolio() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className={`grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto relative z-10 ${isLandscapeMobile ? 'px-2' : 'px-4 sm:px-0'}`}
+            className={`grid ${GRID_CLASS[gridColumns]} gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto relative z-10 ${isLandscapeMobile ? 'px-2' : 'px-4 sm:px-0'}`}
           >
-            {projects.filter(p => (p.status || 'finished') === activeStatus).length === 0 ? (
-              <div className="col-span-2 text-center py-20">
+            {filteredProjects.length === 0 ? (
+              <div className="col-span-full text-center py-20">
                 <p className="suika-title text-2xl text-gray-500">Coming soon...</p>
               </div>
             ) : (
-              projects
-                .filter(p => (p.status || 'finished') === activeStatus)
-                .map((project, index) => (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.08 }}
-                  >
-                    <ProjectCard
-                      project={project}
-                      isExpanded={expandedProject === project.id}
-                      onToggleExpanded={() => setExpandedProject(expandedProject === project.id ? null : project.id)}
-                      columnIndex={index % 2}
-                    />
-                  </motion.div>
-                ))
+              rows.map((row, rowIdx) => {
+                const expandedInRow = row.find(p => p.id === expandedProject) ?? null;
+                return (
+                  <Fragment key={`row-${rowIdx}`}>
+                    {row.map((project, colIdx) => (
+                      <motion.div
+                        key={project.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: (rowIdx * effectiveCols + colIdx) * 0.08 }}
+                      >
+                        <ProjectCard
+                          project={project}
+                          isExpanded={expandedProject === project.id}
+                          onToggleExpanded={() =>
+                            setExpandedProject(expandedProject === project.id ? null : project.id)
+                          }
+                        />
+                      </motion.div>
+                    ))}
+
+                    {/* Expansion panel — spans all columns, appears below the full row */}
+                    <AnimatePresence>
+                      {expandedInRow && (
+                        <motion.div
+                          key={`expanded-${expandedInRow.id}`}
+                          data-expansion-panel
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          style={{ gridColumn: '1 / -1' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="glass-effect border-gray-600 rounded-2xl p-6 shadow-2xl mt-2">
+                            <div
+                              className="text-gray-300 mb-4 leading-relaxed whitespace-pre-wrap"
+                              dangerouslySetInnerHTML={{
+                                __html: expandedInRow.simplifiedDescription
+                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                  .replace(/\*(.*?)\*/g, '<em>$1</em>'),
+                              }}
+                            />
+                            <Button
+                              onClick={() => {
+                                trackProjectClick(expandedInRow.id, 'view');
+                                window.location.href = `/projects/${expandedInRow.id}`;
+                              }}
+                              className="bg-royal-500 hover:bg-royal-600 text-white"
+                            >
+                              <ExternalLink size={16} className="mr-2" />
+                              View Full Project
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </Fragment>
+                );
+              })
             )}
           </motion.div>
         </AnimatePresence>
       </main>
+
       <ContactSection siteSettings={siteSettings} isLandscapeMobile={isLandscapeMobile} />
     </div>
   );

@@ -264,7 +264,7 @@ export default function Portfolio() {
               filteredProjects.map((project, idx) => (
                 <motion.div
                   key={project.id}
-                  initial={{ opacity: 0, rotateX: 15, y: 40 }}
+                  initial={{ opacity: 0, rotateX: 30, y: 50 }}
                   whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
                   viewport={{ once: true, margin: '-80px' }}
                   transition={{
@@ -274,7 +274,7 @@ export default function Portfolio() {
                     stiffness: 70,
                     damping: 18,
                   }}
-                  style={{ perspective: '1200px' }}
+                  style={{ transformPerspective: 900 }}
                   className="h-full"
                 >
                   <ProjectCard

@@ -59,9 +59,7 @@ export function useMagicalGlow(options: MagicalGlowOptions = {}) {
     setIsHovered(true);
     
     if (enableSound && audioManager.isAudioEnabled()) {
-      // Play hover sound with frequency based on project ID
-      const frequency = projectId ? 400 + (projectId * 100) : 800;
-      await audioManager.playHoverSound(frequency);
+      await audioManager.playHoverSound(projectId ?? 0);
     }
   };
 

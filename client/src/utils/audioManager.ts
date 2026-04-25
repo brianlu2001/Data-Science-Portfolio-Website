@@ -1,3 +1,18 @@
+// C pentatonic major across two octaves — all intervals are consonant,
+// so every card sounds musical regardless of which note it lands on.
+const PENTATONIC: number[] = [
+  261.63, // C4
+  293.66, // D4
+  329.63, // E4
+  392.00, // G4
+  440.00, // A4
+  523.25, // C5
+  587.33, // D5
+  659.25, // E5
+  783.99, // G5
+  880.00, // A5
+];
+
 class AudioManager {
   private audioContext: AudioContext | null = null;
   private isEnabled: boolean = true;
@@ -17,89 +32,99 @@ class AudioManager {
 
   private async ensureAudioContext() {
     if (!this.audioContext || !this.isEnabled) return false;
-    
     if (this.audioContext.state === 'suspended') {
       try {
         await this.audioContext.resume();
-      } catch (error) {
-        console.warn('Failed to resume audio context:', error);
+      } catch {
         return false;
       }
     }
-    
     return true;
   }
 
-  // Create hover sound effect
-  async playHoverSound(frequency: number = 800, duration: number = 0.1) {
+  // Soft marimba chime — three layered oscillators (root, octave, fifth)
+  // with a snappy attack and gentle ~300ms decay.
+  async playHoverSound(projectId: number = 0) {
     if (!await this.ensureAudioContext()) return;
+    const ctx = this.audioContext!;
+    const now = ctx.currentTime;
 
-    const oscillator = this.audioContext!.createOscillator();
-    const gainNode = this.audioContext!.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext!.destination);
-    
-    oscillator.frequency.setValueAtTime(frequency, this.audioContext!.currentTime);
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0, this.audioContext!.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.1, this.audioContext!.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext!.currentTime + duration);
-    
-    oscillator.start(this.audioContext!.currentTime);
-    oscillator.stop(this.audioContext!.currentTime + duration);
+    const root = PENTATONIC[Math.abs(projectId) % PENTATONIC.length];
+    const octave = root * 2;
+    const fifth = root * 1.5;
+
+    const ATTACK  = 0.010; // 10 ms
+    const SUSTAIN = 0.040; // 40 ms
+    const DECAY   = 0.280; // 280 ms tail
+
+    const layers: [number, OscillatorType, number][] = [
+      [root,   'sine',     0.09],
+      [octave, 'triangle', 0.045],
+      [fifth,  'sine',     0.028],
+    ];
+
+    for (const [freq, type, peak] of layers) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+
+      // Envelope: silence → peak → sustain → silence
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(peak, now + ATTACK);
+      gain.gain.setValueAtTime(peak, now + ATTACK + SUSTAIN);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + ATTACK + SUSTAIN + DECAY);
+
+      osc.start(now);
+      osc.stop(now + ATTACK + SUSTAIN + DECAY);
+    }
   }
 
-  // Create click sound effect
   async playClickSound() {
     if (!await this.ensureAudioContext()) return;
+    const ctx = this.audioContext!;
+    const now = ctx.currentTime;
 
-    const oscillator = this.audioContext!.createOscillator();
-    const gainNode = this.audioContext!.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext!.destination);
-    
-    oscillator.frequency.setValueAtTime(1200, this.audioContext!.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(600, this.audioContext!.currentTime + 0.1);
-    oscillator.type = 'square';
-    
-    gainNode.gain.setValueAtTime(0, this.audioContext!.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.15, this.audioContext!.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext!.currentTime + 0.1);
-    
-    oscillator.start(this.audioContext!.currentTime);
-    oscillator.stop(this.audioContext!.currentTime + 0.1);
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+    osc.type = 'square';
+
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+    osc.start(now);
+    osc.stop(now + 0.1);
   }
 
-  // Create magical glow sound effect
   async playGlowSound(baseFrequency: number = 440) {
     if (!await this.ensureAudioContext()) return;
+    const ctx = this.audioContext!;
+    const now = ctx.currentTime;
 
-    const oscillator1 = this.audioContext!.createOscillator();
-    const oscillator2 = this.audioContext!.createOscillator();
-    const gainNode = this.audioContext!.createGain();
-    
-    oscillator1.connect(gainNode);
-    oscillator2.connect(gainNode);
-    gainNode.connect(this.audioContext!.destination);
-    
-    oscillator1.frequency.setValueAtTime(baseFrequency, this.audioContext!.currentTime);
-    oscillator2.frequency.setValueAtTime(baseFrequency * 1.5, this.audioContext!.currentTime);
-    
-    oscillator1.type = 'sine';
-    oscillator2.type = 'triangle';
-    
-    gainNode.gain.setValueAtTime(0, this.audioContext!.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.08, this.audioContext!.currentTime + 0.1);
-    gainNode.gain.linearRampToValueAtTime(0.05, this.audioContext!.currentTime + 0.3);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext!.currentTime + 0.6);
-    
-    oscillator1.start(this.audioContext!.currentTime);
-    oscillator2.start(this.audioContext!.currentTime);
-    oscillator1.stop(this.audioContext!.currentTime + 0.6);
-    oscillator2.stop(this.audioContext!.currentTime + 0.6);
+    for (const [freq, type] of [[baseFrequency, 'sine'], [baseFrequency * 1.5, 'triangle']] as [number, OscillatorType][]) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(freq, now);
+      osc.type = type;
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.08, now + 0.1);
+      gain.gain.linearRampToValueAtTime(0.05, now + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      osc.start(now);
+      osc.stop(now + 0.6);
+    }
   }
 
   setEnabled(enabled: boolean) {

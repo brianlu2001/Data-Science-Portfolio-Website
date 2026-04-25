@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Rows3, Columns2, Columns3 } from "lucide-react";
+import { ExternalLink, Columns2, Columns3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import ProjectCard from "@/components/ProjectCard";
@@ -21,7 +21,6 @@ const GRID_CLASS: Record<GridColumns, string> = {
 };
 
 const DENSITY_ICONS = [
-  { cols: 1 as GridColumns, Icon: Rows3,    label: '1 column'  },
   { cols: 2 as GridColumns, Icon: Columns2, label: '2 columns' },
   { cols: 3 as GridColumns, Icon: Columns3, label: '3 columns' },
 ];
@@ -34,7 +33,8 @@ export default function Portfolio() {
   const [gridColumns, setGridColumnsState] = useState<GridColumns>(() => {
     try {
       const stored = localStorage.getItem(GRID_COLS_KEY);
-      return (stored === '1' || stored === '2' || stored === '3') ? Number(stored) as GridColumns : 2;
+      // Only accept 2 or 3 — 1-col is mobile-only via CSS
+      return stored === '3' ? 3 : 2;
     } catch { return 2; }
   });
   // effectiveCols mirrors what CSS actually renders at the current viewport
@@ -174,8 +174,8 @@ export default function Portfolio() {
           </h2>
           <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full mb-8"></div>
 
-          {/* Status toggle + density picker row */}
-          <div className="flex items-center justify-center gap-4 flex-wrap">
+          {/* Toggles — stacked vertically, status on top (prominent), density below (subtle) */}
+          <div className="flex flex-col items-center gap-3">
             {/* Finished / Ongoing pill toggle */}
             <div className="project-status-toggle">
               <motion.div
@@ -197,8 +197,17 @@ export default function Portfolio() {
               </button>
             </div>
 
-            {/* Grid density picker — desktop only */}
-            <div className="hidden md:flex items-center gap-1 glass-effect rounded-full px-2 py-1.5 border border-gray-700">
+            {/* Grid density picker — desktop only, visually secondary */}
+            <div
+              className="hidden md:flex items-center gap-0.5 rounded-full px-2 py-1.5"
+              style={{
+                background: 'rgba(15, 20, 38, 0.5)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                boxShadow: '4px 4px 10px rgba(0,0,0,0.4), -2px -2px 6px rgba(255,255,255,0.015), inset 2px 2px 5px rgba(0,0,0,0.3)',
+              }}
+            >
               {DENSITY_ICONS.map(({ cols, Icon, label }) => (
                 <button
                   key={cols}
@@ -207,11 +216,14 @@ export default function Portfolio() {
                   onClick={() => { setGridColumns(cols); setExpandedProject(null); }}
                   className={`p-1.5 rounded-full transition-all duration-200 ${
                     gridColumns === cols
-                      ? 'bg-royal-500 text-white shadow-[0_0_10px_hsla(225,73%,57%,0.45)]'
-                      : 'text-gray-400 hover:text-gray-200'
+                      ? 'text-royal-300 shadow-[0_0_8px_hsla(225,73%,70%,0.3)]'
+                      : 'text-gray-600 hover:text-gray-400'
                   }`}
+                  style={gridColumns === cols ? {
+                    background: 'rgba(65,105,225,0.2)',
+                  } : {}}
                 >
-                  <Icon size={16} />
+                  <Icon size={14} />
                 </button>
               ))}
             </div>
@@ -243,6 +255,7 @@ export default function Portfolio() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: (rowIdx * effectiveCols + colIdx) * 0.08 }}
+                        className="h-full"
                       >
                         <ProjectCard
                           project={project}

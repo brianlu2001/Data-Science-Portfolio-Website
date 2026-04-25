@@ -305,7 +305,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                 )}
 
                 {/* Middle spacer — separates logos from text */}
-                <div className="flex-[1]" />
+                <div className="flex-[3]" />
 
                 {/* Scroll down prompt */}
                 <div className="flex flex-col items-center">

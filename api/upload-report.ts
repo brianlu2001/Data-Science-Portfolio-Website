@@ -67,6 +67,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: `Invalid file type "${reportFile.mimetype}". Only PDF, DOC, DOCX allowed.` });
     }
 
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error('[upload-report] BLOB_READ_WRITE_TOKEN is not set');
+      return res.status(500).json({ message: 'Storage not configured: BLOB_READ_WRITE_TOKEN is missing. Add a Vercel Blob store to your project in the Vercel dashboard.' });
+    }
+
     const fileName = reportFile.originalFilename || `report-${Date.now()}`;
 
     console.log(`[upload-report] Reading tmp file: ${reportFile.filepath}`);

@@ -68,6 +68,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(413).json({ message: 'File too large. Maximum is 20 MB.' });
     }
 
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error('[upload-image] BLOB_READ_WRITE_TOKEN is not set');
+      return res.status(500).json({ message: 'Storage not configured: BLOB_READ_WRITE_TOKEN is missing. Add a Vercel Blob store to your project in the Vercel dashboard.' });
+    }
+
     const fileName = imageFile.originalFilename || `image-${Date.now()}`;
 
     // Read temp file written by formidable, then upload to Vercel Blob

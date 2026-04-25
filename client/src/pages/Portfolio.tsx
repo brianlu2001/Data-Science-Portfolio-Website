@@ -294,6 +294,12 @@ export default function Portfolio() {
             ) : (
               rows.map((row, rowIdx) => {
                 const expandedInRow = row.find(p => p.id === expandedProject) ?? null;
+                const expandedColIdx = expandedInRow ? row.findIndex(p => p.id === expandedInRow.id) : 0;
+                const panelWidth = effectiveCols === 1 ? '100%' : effectiveCols === 2 ? '75%' : '50%';
+                const panelJustify = effectiveCols <= 1 ? 'center'
+                  : expandedColIdx === 0 ? 'flex-start'
+                  : expandedColIdx === effectiveCols - 1 ? 'flex-end'
+                  : 'center';
                 return (
                   <Fragment key={`row-${rowIdx}`}>
                     {row.map((project, colIdx) => (
@@ -327,32 +333,34 @@ export default function Portfolio() {
                           style={{ gridColumn: '1 / -1' }}
                           className="overflow-hidden"
                         >
-                          <div className="glass-effect border-gray-600 rounded-2xl p-6 shadow-2xl mt-2">
-                            <div className="prose prose-invert prose-sm max-w-none mb-4 prose-p:text-gray-300 prose-p:leading-relaxed prose-p:my-1 prose-strong:text-white prose-em:text-gray-200">
-                              <ReactMarkdown>{expandedInRow.simplifiedDescription}</ReactMarkdown>
-                            </div>
-                            {expandedInRow.technologies && expandedInRow.technologies.length > 0 && (
-                              <div className="flex flex-wrap gap-2 mb-5">
-                                {expandedInRow.technologies.map((tech, i) => (
-                                  <span
-                                    key={i}
-                                    className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded suika-fallback"
-                                  >
-                                    {tech}
-                                  </span>
-                                ))}
+                          <div className="flex mt-2" style={{ justifyContent: panelJustify }}>
+                            <div className="glass-effect border-gray-600 rounded-2xl p-6 shadow-2xl" style={{ width: panelWidth }}>
+                              <div className="prose prose-invert prose-sm max-w-none mb-4 prose-p:text-gray-300 prose-p:leading-relaxed prose-p:my-1 prose-strong:text-white prose-em:text-gray-200">
+                                <ReactMarkdown>{expandedInRow.simplifiedDescription}</ReactMarkdown>
                               </div>
-                            )}
-                            <Button
-                              onClick={() => {
-                                trackProjectClick(expandedInRow.id, 'view');
-                                navigate(`/projects/${expandedInRow.id}`);
-                              }}
-                              className="bg-royal-500 hover:bg-royal-600 text-white"
-                            >
-                              <ExternalLink size={16} className="mr-2" />
-                              View Full Project
-                            </Button>
+                              {expandedInRow.technologies && expandedInRow.technologies.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-5">
+                                  {expandedInRow.technologies.map((tech, i) => (
+                                    <span
+                                      key={i}
+                                      className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded suika-fallback"
+                                    >
+                                      {tech}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              <Button
+                                onClick={() => {
+                                  trackProjectClick(expandedInRow.id, 'view');
+                                  navigate(`/projects/${expandedInRow.id}`);
+                                }}
+                                className="bg-royal-500 hover:bg-royal-600 text-white"
+                              >
+                                <ExternalLink size={16} className="mr-2" />
+                                View Full Project
+                              </Button>
+                            </div>
                           </div>
                         </motion.div>
                       )}

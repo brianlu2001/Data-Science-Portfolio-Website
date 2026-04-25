@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { put } from '@vercel/blob';
 import { IncomingForm } from 'formidable';
 import { promises as fs } from 'fs';
-import path from 'path';
 import { createHmac, timingSafeEqual } from 'crypto';
 
 function requireAuth(req: VercelRequest, res: VercelResponse): boolean {
@@ -20,7 +20,6 @@ function requireAuth(req: VercelRequest, res: VercelResponse): boolean {
   return true;
 }
 
-// Disable default body parser for file uploads
 export const config = {
   api: {
     bodyParser: false,
@@ -32,17 +31,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Only POST method allowed' });
-  }
-
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ message: 'Only POST method allowed' });
   if (!requireAuth(req, res)) return;
 
-  console.log('[upload-image] Incoming request, parsing multipart form...');
+  console.log('[upload-image] Parsing multipart form...');
 
   try {
     const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -50,76 +43,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const [, files] = await new Promise<[any, any]>((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
-        if (err) {
-          console.error('[upload-image] formidable parse error:', err.message, err);
-          reject(err);
-        } else {
-          resolve([fields, files]);
-        }
+        if (err) { console.error('[upload-image] Parse error:', err.message); reject(err); }
+        else resolve([fields, files]);
       });
     });
 
     const imageFile = Array.isArray(files.image) ? files.image[0] : files.image;
 
     if (!imageFile) {
-      console.error('[upload-image] No "image" field in form data. Fields received:', Object.keys(files));
+      console.error('[upload-image] No "image" field. Keys received:', Object.keys(files));
       return res.status(400).json({ message: 'No image file provided' });
     }
 
-    console.log(`[upload-image] File received: "${imageFile.originalFilename}" | mimetype: ${imageFile.mimetype} | size: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB | tmp: ${imageFile.filepath}`);
+    console.log(`[upload-image] File: "${imageFile.originalFilename}" | ${imageFile.mimetype} | ${(imageFile.size / 1024 / 1024).toFixed(2)} MB`);
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(imageFile.mimetype)) {
       console.error(`[upload-image] Rejected mimetype: ${imageFile.mimetype}`);
-      return res.status(400).json({
-        message: `Invalid file type "${imageFile.mimetype}". Only JPG, PNG, GIF, and WebP are allowed.`
-      });
+      return res.status(400).json({ message: `Invalid file type "${imageFile.mimetype}". Only JPG, PNG, GIF, WebP allowed.` });
     }
 
     if (imageFile.size > MAX_SIZE_BYTES) {
       console.error(`[upload-image] File too large: ${(imageFile.size / 1024 / 1024).toFixed(2)} MB`);
-      return res.status(413).json({ message: `File too large. Maximum is 20 MB.` });
-    }
-
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    console.log(`[upload-image] Target directory: ${uploadsDir}`);
-
-    try {
-      await fs.access(uploadsDir);
-      console.log('[upload-image] Uploads directory exists.');
-    } catch {
-      console.log('[upload-image] Uploads directory missing, creating...');
-      await fs.mkdir(uploadsDir, { recursive: true });
+      return res.status(413).json({ message: 'File too large. Maximum is 20 MB.' });
     }
 
     const fileName = imageFile.originalFilename || `image-${Date.now()}`;
-    const filePath = path.join(uploadsDir, fileName);
-    console.log(`[upload-image] Copying to: ${filePath}`);
 
-    await fs.copyFile(imageFile.filepath, filePath);
-    console.log('[upload-image] File saved successfully.');
+    // Read temp file written by formidable, then upload to Vercel Blob
+    console.log(`[upload-image] Reading tmp file: ${imageFile.filepath}`);
+    const fileBuffer = await fs.readFile(imageFile.filepath);
 
-    try {
-      await fs.unlink(imageFile.filepath);
-    } catch (err) {
-      console.warn('[upload-image] Could not clean up temp file:', err);
-    }
+    console.log(`[upload-image] Uploading to Vercel Blob as "uploads/${fileName}"...`);
+    const blob = await put(`uploads/${fileName}`, fileBuffer, {
+      access: 'public',
+      contentType: imageFile.mimetype,
+    });
 
-    const imageUrl = `/uploads/${fileName}`;
-    console.log(`[upload-image] Done. Returning imageUrl: ${imageUrl}`);
+    console.log(`[upload-image] Blob URL: ${blob.url}`);
+
+    // Clean up formidable temp file
+    try { await fs.unlink(imageFile.filepath); } catch {}
 
     return res.json({
       success: true,
-      imageUrl,
+      imageUrl: blob.url,
       fileName,
-      message: 'Image uploaded successfully'
+      message: 'Image uploaded successfully',
     });
 
   } catch (error) {
     console.error('[upload-image] Unhandled error:', error);
     return res.status(500).json({
       message: 'Upload failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-} 
+}

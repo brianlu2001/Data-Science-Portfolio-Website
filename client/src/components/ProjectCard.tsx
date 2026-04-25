@@ -152,7 +152,7 @@ export default function ProjectCard({
                       {project.title}
                     </h3>
 
-                    <div className="prose prose-invert prose-sm max-w-none flex-1 overflow-y-auto prose-p:text-gray-300 prose-p:leading-relaxed prose-p:my-1 prose-strong:text-white prose-em:text-gray-200">
+                    <div className="prose prose-invert prose-sm max-w-none flex-1 overflow-hidden prose-p:text-gray-300 prose-p:leading-relaxed prose-p:my-1 prose-strong:text-white prose-em:text-gray-200">
                       <ReactMarkdown>{project.simplifiedDescription}</ReactMarkdown>
                     </div>
 

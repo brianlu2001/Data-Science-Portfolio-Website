@@ -1,15 +1,14 @@
-import { useState, useRef, useEffect, Fragment } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Columns2, Columns3, ChevronUp } from "lucide-react";
+import { Columns2, Columns3, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import ProjectCard from "@/components/ProjectCard";
 import ContactSection from "@/components/ContactSection";
 import { Project, SiteSettings } from "@shared/schema";
 import { useAnalytics } from "@/utils/analytics";
-import ReactMarkdown from "react-markdown";
 
 type GridColumns = 1 | 2 | 3;
 
@@ -49,18 +48,15 @@ function SkeletonCard() {
 export default function Portfolio() {
   const [, navigate] = useLocation();
   const [activeStatus, setActiveStatus] = useState<'finished' | 'ongoing'>('finished');
-  const [expandedProject, setExpandedProject] = useState<number | null>(null);
+  const [flippedProject, setFlippedProject] = useState<number | null>(null);
   const [bioBoxTilt, setBioBoxTilt] = useState({ x: 0, y: 0 });
   const [isLandscapeMobile, setIsLandscapeMobile] = useState(false);
   const [gridColumns, setGridColumnsState] = useState<GridColumns>(() => {
     try {
       const stored = localStorage.getItem(GRID_COLS_KEY);
-      // Only accept 2 or 3 — 1-col is mobile-only via CSS
       return stored === '3' ? 3 : 2;
     } catch { return 2; }
   });
-  // effectiveCols mirrors what CSS actually renders at the current viewport
-  const [effectiveCols, setEffectiveCols] = useState<GridColumns>(1);
 
   const { trackPageViewDebounced, trackProjectClick } = useAnalytics();
   const bioBoxRef = useRef<HTMLDivElement>(null);
@@ -81,22 +77,6 @@ export default function Portfolio() {
     trackPageViewDebounced('/');
   }, [trackPageViewDebounced]);
 
-  // Keep effectiveCols in sync with CSS breakpoints + user preference
-  useEffect(() => {
-    const compute = () => {
-      if (window.matchMedia('(min-width: 1280px)').matches) {
-        setEffectiveCols(gridColumns);
-      } else if (window.matchMedia('(min-width: 768px)').matches) {
-        setEffectiveCols(Math.min(gridColumns, 2) as GridColumns);
-      } else {
-        setEffectiveCols(1);
-      }
-    };
-    compute();
-    window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
-  }, [gridColumns]);
-
   useEffect(() => {
     const check = () => {
       const isMobile = window.innerWidth < 768;
@@ -112,12 +92,12 @@ export default function Portfolio() {
     };
   }, []);
 
-  // Close expanded project when clicking outside all cards
+  // Un-flip card when clicking outside any card
   useEffect(() => {
     const handleClickOutside = (event: Event) => {
       const target = event.target as Element;
-      if (!target.closest('[data-project-card]') && !target.closest('[data-expansion-panel]')) {
-        setExpandedProject(null);
+      if (!target.closest('[data-project-card]')) {
+        setFlippedProject(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -150,19 +130,16 @@ export default function Portfolio() {
       <div className="min-h-screen neural-network-bg">
         <Header siteSettings={siteSettings} />
         <main className={`container mx-auto py-12 ${isLandscapeMobile ? 'px-0' : 'px-4 sm:px-6'}`}>
-          {/* Bio skeleton */}
-          <div className="mb-24 max-w-4xl mx-auto mx-4 sm:mx-0">
+          <div className="mb-24 max-w-4xl mx-auto">
             <div className="blue-glow rounded-2xl p-4 sm:p-6 md:p-8 animate-pulse">
               <div className="h-5 bg-gray-700/40 rounded w-full mb-3" />
               <div className="h-5 bg-gray-700/40 rounded w-4/5 mx-auto" />
             </div>
           </div>
-          {/* Section header skeleton */}
           <div className="mb-8 text-center">
             <div className="h-10 bg-gray-700/30 rounded w-52 mx-auto mb-4 animate-pulse" />
             <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full mb-8" />
           </div>
-          {/* Grid skeleton */}
           <div className={`grid ${GRID_CLASS[gridColumns]} gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto ${isLandscapeMobile ? 'px-2' : 'px-4 sm:px-0'}`}>
             {Array.from({ length: skeletonCount }).map((_, i) => (
               <SkeletonCard key={i} />
@@ -174,12 +151,7 @@ export default function Portfolio() {
   }
 
   const filteredProjects = projects.filter(p => (p.status || 'finished') === activeStatus);
-
-  // Group into rows matching effectiveCols so the expansion panel lands after the correct row
-  const rows: Project[][] = [];
-  for (let i = 0; i < filteredProjects.length; i += effectiveCols) {
-    rows.push(filteredProjects.slice(i, i + effectiveCols));
-  }
+  const showViewButton = activeStatus === 'finished';
 
   return (
     <div className="min-h-screen neural-network-bg">
@@ -219,9 +191,8 @@ export default function Portfolio() {
           <h2 className="suika-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
             My Projects
           </h2>
-          <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full mb-8"></div>
+          <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full mb-8" />
 
-          {/* Toggles — stacked vertically, status on top (prominent), density below (subtle) */}
           <div className="flex flex-col items-center gap-3">
             {/* Finished / Ongoing pill toggle */}
             <div className="project-status-toggle">
@@ -231,20 +202,20 @@ export default function Portfolio() {
                 transition={{ type: 'spring', stiffness: 480, damping: 36 }}
               />
               <button
-                onClick={() => { setActiveStatus('finished'); setExpandedProject(null); }}
+                onClick={() => { setActiveStatus('finished'); setFlippedProject(null); }}
                 className={`project-status-label${activeStatus === 'finished' ? ' active' : ''}`}
               >
                 Finished
               </button>
               <button
-                onClick={() => { setActiveStatus('ongoing'); setExpandedProject(null); }}
+                onClick={() => { setActiveStatus('ongoing'); setFlippedProject(null); }}
                 className={`project-status-label${activeStatus === 'ongoing' ? ' active' : ''}`}
               >
                 Ongoing
               </button>
             </div>
 
-            {/* Grid density picker — desktop only, visually secondary */}
+            {/* Grid density picker — desktop only */}
             <div
               className="hidden md:flex items-center gap-0.5 rounded-full px-2 py-1.5"
               style={{
@@ -260,15 +231,13 @@ export default function Portfolio() {
                   key={cols}
                   type="button"
                   title={label}
-                  onClick={() => { setGridColumns(cols); setExpandedProject(null); }}
+                  onClick={() => { setGridColumns(cols); setFlippedProject(null); }}
                   className={`p-1.5 rounded-full transition-all duration-200 ${
                     gridColumns === cols
                       ? 'text-royal-300 shadow-[0_0_8px_hsla(225,73%,70%,0.3)]'
                       : 'text-gray-600 hover:text-gray-400'
                   }`}
-                  style={gridColumns === cols ? {
-                    background: 'rgba(65,105,225,0.2)',
-                  } : {}}
+                  style={gridColumns === cols ? { background: 'rgba(65,105,225,0.2)' } : {}}
                 >
                   <Icon size={14} />
                 </button>
@@ -292,84 +261,36 @@ export default function Portfolio() {
                 <p className="suika-title text-2xl text-gray-500">Coming soon...</p>
               </div>
             ) : (
-              rows.map((row, rowIdx) => {
-                const expandedInRow = row.find(p => p.id === expandedProject) ?? null;
-                const expandedColIdx = expandedInRow ? row.findIndex(p => p.id === expandedInRow.id) : 0;
-                const panelWidth = effectiveCols === 1 ? '100%' : effectiveCols === 2 ? '75%' : '50%';
-                const panelJustify = effectiveCols <= 1 ? 'center'
-                  : expandedColIdx === 0 ? 'flex-start'
-                  : expandedColIdx === effectiveCols - 1 ? 'flex-end'
-                  : 'center';
-                return (
-                  <Fragment key={`row-${rowIdx}`}>
-                    {row.map((project, colIdx) => (
-                      <motion.div
-                        key={project.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: (rowIdx * effectiveCols + colIdx) * 0.08 }}
-                        className="h-full"
-                      >
-                        <ProjectCard
-                          project={project}
-                          isExpanded={expandedProject === project.id}
-                          onToggleExpanded={() =>
-                            setExpandedProject(expandedProject === project.id ? null : project.id)
-                          }
-                        />
-                      </motion.div>
-                    ))}
-
-                    {/* Expansion panel — spans all columns, appears below the full row */}
-                    <AnimatePresence>
-                      {expandedInRow && (
-                        <motion.div
-                          key={`expanded-${expandedInRow.id}`}
-                          data-expansion-panel
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          style={{ gridColumn: '1 / -1' }}
-                          className="overflow-hidden"
-                        >
-                          <div className="flex mt-2" style={{ justifyContent: panelJustify }}>
-                            <div className="glass-effect border-gray-600 rounded-2xl p-6 shadow-2xl" style={{ width: panelWidth }}>
-                              <div className="prose prose-invert prose-sm max-w-none mb-4 prose-p:text-gray-300 prose-p:leading-relaxed prose-p:my-1 prose-strong:text-white prose-em:text-gray-200">
-                                <ReactMarkdown>{expandedInRow.simplifiedDescription}</ReactMarkdown>
-                              </div>
-                              {expandedInRow.technologies && expandedInRow.technologies.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mb-5">
-                                  {expandedInRow.technologies.map((tech, i) => (
-                                    <span
-                                      key={i}
-                                      className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded suika-fallback"
-                                    >
-                                      {tech}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                              {activeStatus === 'finished' && (
-                                <Button
-                                  onClick={() => {
-                                    trackProjectClick(expandedInRow.id, 'view');
-                                    navigate(`/projects/${expandedInRow.id}`);
-                                  }}
-                                  className="bg-royal-500 hover:bg-royal-600 text-white"
-                                >
-                                  <ExternalLink size={16} className="mr-2" />
-                                  View Full Project
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </Fragment>
-                );
-              })
+              filteredProjects.map((project, idx) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, rotateX: 15, y: 40 }}
+                  whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
+                  viewport={{ once: true, margin: '-80px' }}
+                  transition={{
+                    delay: idx * 0.07,
+                    duration: 0.7,
+                    type: 'spring',
+                    stiffness: 70,
+                    damping: 18,
+                  }}
+                  style={{ perspective: '1200px' }}
+                  className="h-full"
+                >
+                  <ProjectCard
+                    project={project}
+                    isFlipped={flippedProject === project.id}
+                    onToggleFlipped={() =>
+                      setFlippedProject(flippedProject === project.id ? null : project.id)
+                    }
+                    onViewProject={() => {
+                      trackProjectClick(project.id, 'view');
+                      navigate(`/projects/${project.id}`);
+                    }}
+                    showViewButton={showViewButton}
+                  />
+                </motion.div>
+              ))
             )}
           </motion.div>
         </AnimatePresence>

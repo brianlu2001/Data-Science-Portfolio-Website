@@ -84,8 +84,8 @@ export default function ProjectCard({
                         size={36}
                       />
                     </div>
-                    {/* Gradient fade — image bleeds into card body */}
-                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+                    {/* Gradient fade — subtle bleed into card body */}
+                    <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
                   </div>
 
                   <CardContent className="p-6 flex flex-col flex-1">

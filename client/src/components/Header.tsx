@@ -202,6 +202,7 @@ export default function Header({ siteSettings }: HeaderProps) {
             }}
             style={{
               transformStyle: "preserve-3d",
+              perspective: "1200px",
             }}
           >
             <motion.div

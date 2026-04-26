@@ -268,8 +268,8 @@ export default function Header({ siteSettings }: HeaderProps) {
                   '--highlight-angle': '135deg'
                 }}
               >
-                {/* Top spacer — pushes logos down from the very top */}
-                <div className="flex-[2]" />
+                {/* Small spacer — keeps logos out of the very top */}
+                <div className="flex-1" />
 
                 {/* School logos — hidden img establishes natural width at 80px height;
                     mask div fills that shape with exact #242931 background color */}
@@ -302,8 +302,11 @@ export default function Header({ siteSettings }: HeaderProps) {
                   </div>
                 )}
 
-                {/* Scroll down prompt — mt-auto pins it to the bottom */}
-                <div className="flex flex-col items-center mt-auto">
+                {/* Large spacer — pushes scroll text to the bottom */}
+                <div className="flex-[3]" />
+
+                {/* Scroll down prompt */}
+                <div className="flex flex-col items-center">
                   <motion.p
                     className="suika-title text-lg sm:text-xl md:text-2xl lg:text-3xl text-[#242931] font-light mb-4 text-center leading-relaxed"
                     animate={{

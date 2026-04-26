@@ -9,6 +9,7 @@ import ProjectCard from "@/components/ProjectCard";
 import ContactSection from "@/components/ContactSection";
 import { Project, SiteSettings } from "@shared/schema";
 import { useAnalytics } from "@/utils/analytics";
+import { useAuth } from "@/hooks/useAuth";
 
 type GridColumns = 1 | 2 | 3;
 
@@ -59,6 +60,7 @@ export default function Portfolio() {
   });
 
   const { trackPageViewDebounced, trackProjectClick } = useAnalytics();
+  const { isAuthenticated } = useAuth();
   const bioBoxRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
 
@@ -74,8 +76,8 @@ export default function Portfolio() {
   };
 
   useEffect(() => {
-    trackPageViewDebounced('/');
-  }, [trackPageViewDebounced]);
+    if (!isAuthenticated) trackPageViewDebounced('/');
+  }, [trackPageViewDebounced, isAuthenticated]);
 
   useEffect(() => {
     const check = () => {
@@ -284,7 +286,7 @@ export default function Portfolio() {
                       setFlippedProject(flippedProject === project.id ? null : project.id)
                     }
                     onViewProject={() => {
-                      trackProjectClick(project.id, 'view');
+                      if (!isAuthenticated) trackProjectClick(project.id, 'view');
                       navigate(`/projects/${project.id}`);
                     }}
                     showViewButton={showViewButton}

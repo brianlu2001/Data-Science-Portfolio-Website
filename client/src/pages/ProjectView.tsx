@@ -9,6 +9,7 @@ import NeuralNetworkBackground from "@/components/NeuralNetworkBackground";
 import { Project } from "@shared/schema";
 import { useEffect, useState, useRef } from "react";
 import { useAnalytics } from "@/utils/analytics";
+import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
 
 export default function ProjectView() {
@@ -19,12 +20,13 @@ export default function ProjectView() {
   const [isMobile, setIsMobile] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { trackPageViewDebounced, trackProjectClick } = useAnalytics();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (id) {
+    if (id && !isAuthenticated) {
       trackPageViewDebounced(`/projects/${id}`);
     }
-  }, [id, trackPageViewDebounced]);
+  }, [id, trackPageViewDebounced, isAuthenticated]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -107,7 +109,7 @@ export default function ProjectView() {
               {reportUrl && (
                 <Button
                   onClick={() => {
-                    if (id) trackProjectClick(parseInt(id), 'report');
+                    if (id && !isAuthenticated) trackProjectClick(parseInt(id), 'report');
                     window.open(reportUrl!, '_blank');
                   }}
                   className="bg-royal-500 hover:bg-royal-600 text-white"

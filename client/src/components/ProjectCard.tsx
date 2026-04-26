@@ -6,6 +6,7 @@ import { ChevronDown, ExternalLink } from "lucide-react";
 import { Project } from "@shared/schema";
 import { useRef } from "react";
 import { useMagicalGlow } from "@/hooks/useMagicalGlow";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ReactMarkdown from "react-markdown";
 
 interface ProjectCardProps {
@@ -67,6 +68,7 @@ export default function ProjectCard({
   showViewButton,
 }: ProjectCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   const magicalGlow = useMagicalGlow({
     imageUrl: project.imageUrl,
@@ -113,34 +115,36 @@ export default function ProjectCard({
                 boxShadow: magicalGlow.isHovered ? glowShadowHover : glowShadowIdle,
               }}
               transition={{
-                rotateY: { duration: 0.55, type: 'spring', stiffness: 70, damping: 18 },
+                rotateY: isMobile
+                  ? { duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] }
+                  : { duration: 0.55, type: 'spring', stiffness: 70, damping: 18 },
                 y:        { duration: 0.3, ease: 'easeOut' },
                 boxShadow:{ duration: 0.35, ease: 'easeOut' },
               }}
-              style={{ transformStyle: 'preserve-3d', height: '100%', position: 'relative' }}
+              style={{ transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d', height: '100%', position: 'relative' }}
             >
 
               {/* ── FRONT FACE ── */}
-              <div style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', height: '100%' }}>
+              <div style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', height: '100%', willChange: 'transform' }}>
                 <Card className="glass-effect border-gray-600 overflow-hidden group hover:shadow-2xl hover:shadow-royal-500/20 transition-all duration-300 h-full flex flex-col cursor-pointer" onClick={onToggleFlipped}>
                   <div className="aspect-video overflow-hidden flex-shrink-0 relative">
                     <img
                       src={project.imageUrl || '/placeholder-project.svg'}
                       alt={project.title}
-                      className="w-full h-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover cursor-pointer transition-transform duration-300 md:group-hover:scale-105"
                       onClick={onToggleFlipped}
                       tabIndex={0}
                       role="button"
                       aria-label="Flip card to see project details"
                       onKeyDown={handleImageKeyDown}
                     />
-                    {/* Hover overlay */}
+                    {/* Hover overlay — desktop only; md:group-hover prevents tap-triggered :hover on iOS */}
                     <div
-                      className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-all duration-300 flex items-center justify-center pointer-events-none"
+                      className="absolute inset-0 bg-black/0 md:group-hover:bg-black/25 transition-all duration-300 flex items-center justify-center pointer-events-none"
                       aria-hidden
                     >
                       <ChevronDown
-                        className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg"
+                        className="hidden md:block text-white opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg"
                         size={36}
                       />
                     </div>
@@ -157,7 +161,7 @@ export default function ProjectCard({
                         variant="ghost"
                         size="sm"
                         onClick={onToggleFlipped}
-                        className="text-gray-400 hover:text-white flex-shrink-0 mt-0.5"
+                        className="text-gray-400 hover:text-white flex-shrink-0 mt-0.5 hidden md:flex"
                       >
                         <ChevronDown size={20} />
                       </Button>
@@ -200,6 +204,7 @@ export default function ProjectCard({
                   transform: 'rotateY(180deg)',
                   position: 'absolute',
                   inset: 0,
+                  willChange: 'transform',
                 }}
               >
                 <Card

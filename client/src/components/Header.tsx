@@ -159,7 +159,7 @@ export default function Header({ siteSettings }: HeaderProps) {
   };
 
   return (
-    <header className="relative z-10 pt-20 pb-16">
+    <header className="relative z-10 pt-10 sm:pt-20 pb-10 sm:pb-16">
       <div className="container mx-auto px-4 sm:px-6">
         {/* Administrative Controls */}
         <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -212,7 +212,7 @@ export default function Header({ siteSettings }: HeaderProps) {
             >
               {/* Front Face */}
               <div 
-                className="title-face-front stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12"
+                className="title-face-front stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 md:py-12"
                 style={{
                   backfaceVisibility: 'hidden',
                   '--reflection-x': '30%',
@@ -233,7 +233,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                     }, 
                     y: { duration: 0.8 } 
                   }}
-                  className="volter-black-title text-4xl sm:text-5xl md:text-7xl lg:text-9xl mb-8 md:mb-12 text-[#242931] leading-tight"
+                  className="volter-black-title text-3xl sm:text-5xl md:text-7xl lg:text-9xl mb-4 sm:mb-8 md:mb-12 text-[#242931] leading-tight"
                 >
                   Kuan-I (Brian) Lu
                 </motion.h1>
@@ -249,7 +249,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                     }, 
                     y: { duration: 0.8, delay: 0.2 } 
                   }}
-                  className="suika-title text-2xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold"
+                  className="suika-title text-xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold"
                 >
                   Data Science Project Portfolio
                 </motion.h2>
@@ -257,7 +257,7 @@ export default function Header({ siteSettings }: HeaderProps) {
 
               {/* Back Face */}
               <div
-                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-6 sm:px-8 md:px-12 lg:px-16 py-8 md:py-12 flex flex-col items-center"
+                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 md:py-12 flex flex-col items-center"
                 style={{
                   backfaceVisibility: 'hidden',
                   transform: 'rotateY(180deg)',
@@ -276,12 +276,12 @@ export default function Header({ siteSettings }: HeaderProps) {
                 {siteSettings?.logoUrls && siteSettings.logoUrls.length > 0 && (
                   <div className="flex items-center justify-center gap-8 sm:gap-12 w-full">
                     {siteSettings.logoUrls.map((url, i) => (
-                      <div key={i} style={{ position: 'relative', height: '80px', flexShrink: 0 }}>
+                      <div key={i} style={{ position: 'relative', height: isMobile ? '50px' : '80px', flexShrink: 0 }}>
                         {/* Invisible img to give the container its natural proportional width */}
                         <img
                           src={url}
                           alt=""
-                          style={{ height: '80px', width: 'auto', display: 'block', visibility: 'hidden' }}
+                          style={{ height: isMobile ? '50px' : '80px', width: 'auto', display: 'block', visibility: 'hidden' }}
                         />
                         {/* Colored mask: #242931 clipped to the logo's alpha channel */}
                         <div

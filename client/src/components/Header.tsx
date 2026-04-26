@@ -202,19 +202,22 @@ export default function Header({ siteSettings }: HeaderProps) {
             }}
             style={{
               transformStyle: "preserve-3d",
+              WebkitTransformStyle: "preserve-3d",
               perspective: "1200px",
             }}
           >
             <motion.div
               animate={{ rotateY: isFlipped ? 180 : 0 }}
               transition={{ type: 'spring', stiffness: 70, damping: 18 }}
-              style={{ transformStyle: 'preserve-3d' }}
+              style={{ transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d' }}
             >
               {/* Front Face */}
               <div 
                 className="title-face-front stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 md:py-12"
                 style={{
                   backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  willChange: 'transform',
                   '--reflection-x': '30%',
                   '--reflection-y': '30%',
                   '--secondary-reflection-x': '70%',
@@ -260,6 +263,8 @@ export default function Header({ siteSettings }: HeaderProps) {
                 className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 md:py-12 flex flex-col items-center"
                 style={{
                   backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  willChange: 'transform',
                   transform: 'rotateY(180deg)',
                   '--reflection-x': '30%',
                   '--reflection-y': '30%',

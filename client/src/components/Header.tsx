@@ -274,20 +274,19 @@ export default function Header({ siteSettings }: HeaderProps) {
                 {/* School logos — hidden img establishes natural width at 80px height;
                     mask div fills that shape with exact #242931 background color */}
                 {siteSettings?.logoUrls && siteSettings.logoUrls.length > 0 && (
-                  <div className="flex items-center justify-center gap-8 sm:gap-12 w-full">
+                  <div className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full">
                     {siteSettings.logoUrls.map((url, i) => (
-                      <div key={i} style={{ position: 'relative', height: isMobile ? '50px' : '80px', flexShrink: 0 }}>
+                      <div key={i} className="relative h-9 sm:h-14 md:h-20 flex-shrink-0">
                         {/* Invisible img to give the container its natural proportional width */}
                         <img
                           src={url}
                           alt=""
-                          style={{ height: isMobile ? '50px' : '80px', width: 'auto', display: 'block', visibility: 'hidden' }}
+                          className="h-full w-auto block invisible"
                         />
                         {/* Colored mask: #242931 clipped to the logo's alpha channel */}
                         <div
+                          className="absolute inset-0"
                           style={{
-                            position: 'absolute',
-                            inset: 0,
                             backgroundColor: '#242931',
                             maskImage: `url(${url})`,
                             maskRepeat: 'no-repeat',
@@ -308,7 +307,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                 {/* Scroll down prompt */}
                 <div className="flex flex-col items-center">
                   <motion.p
-                    className="suika-title text-lg sm:text-xl md:text-2xl lg:text-3xl text-[#242931] font-light mb-4 text-center leading-relaxed"
+                    className="suika-title text-xs sm:text-xl md:text-2xl lg:text-3xl text-[#242931] font-light mb-1 sm:mb-3 md:mb-4 text-center leading-relaxed"
                     animate={{
                       textShadow: isHovered
                         ? "0 0 15px rgba(36, 41, 49, 0.4)"
@@ -336,7 +335,7 @@ export default function Header({ siteSettings }: HeaderProps) {
                       filter: { duration: 0.3 }
                     }}
                   >
-                    <ChevronDown className="w-12 h-12 text-[#242931]" />
+                    <ChevronDown className="w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12 text-[#242931]" />
                   </motion.div>
                 </div>
               </div>

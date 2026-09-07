@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import NeuralNetworkBackground from "@/components/NeuralNetworkBackground";
 import { Project } from "@shared/schema";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useAnalytics } from "@/utils/analytics";
 import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
@@ -18,7 +18,6 @@ export default function ProjectView() {
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const { trackPageViewDebounced, trackProjectClick } = useAnalytics();
   const { isAuthenticated } = useAuth();
 
@@ -43,12 +42,16 @@ export default function ProjectView() {
   });
 
   useEffect(() => {
-    if (project?.projectUrl) {
-      setReportUrl(project.projectUrl.replace(/ /g, '%20'));
-    }
+    setReportUrl(project?.projectUrl ? project.projectUrl.replace(/ /g, '%20') : null);
+    setPdfError(false);
   }, [project]);
 
-  const getReportType = (url: string) => (url.endsWith('.pdf') ? 'pdf' : 'html');
+  const getReportType = (url: string) => {
+    const pathname = new URL(url, 'https://www.luki90.com').pathname.toLowerCase();
+    if (pathname.endsWith('.pdf')) return 'pdf';
+    if (/\.docx?$/.test(pathname)) return 'word';
+    return 'html';
+  };
 
   if (projectLoading) {
     return (
@@ -170,11 +173,15 @@ export default function ProjectView() {
                 </div>
 
                 <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
-                  {getReportType(reportUrl) === 'pdf' ? (
+                  {getReportType(reportUrl) === 'word' ? (
+                    <div className="p-8 text-center">
+                      <p className="text-gray-300 mb-4">Open this Word document in a compatible document viewer.</p>
+                      <Button asChild><a href={reportUrl} target="_blank" rel="noopener noreferrer">Download Word report</a></Button>
+                    </div>
+                  ) : getReportType(reportUrl) === 'pdf' ? (
                     <div className="w-full md:h-[800px] h-[calc(100vh-100px)] relative overflow-hidden">
                       {!pdfError ? (
                         <iframe
-                          ref={iframeRef}
                           src={reportUrl}
                           className="w-full h-full"
                           title={`${project.title} Report`}
@@ -189,18 +196,7 @@ export default function ProjectView() {
                             WebkitUserSelect: 'none',
                             WebkitTouchCallout: 'none'
                           }}
-                          onLoad={() => {
-                            if (iframeRef.current) {
-                              try {
-                                const doc = iframeRef.current.contentDocument;
-                                if (!doc || doc.body.innerHTML === '') {
-                                  setPdfError(true);
-                                }
-                              } catch {
-                                // Cross-origin — PDF is loading as expected
-                              }
-                            }
-                          }}
+                          onError={() => setPdfError(true)}
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center p-8">

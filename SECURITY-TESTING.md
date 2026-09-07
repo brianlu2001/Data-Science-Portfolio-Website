@@ -35,4 +35,16 @@ Ten bad login attempts within 15 minutes trigger throttling. Use the isolated au
 
 ## Before production
 
+## Verify each production release
+
+Confirm the custom domain points to the intended commit, then use the deployed browser UI:
+
+1. Start logged out on the homepage and click Admin. Confirm `/admin` displays the password form. Check the legacy `/api/auth?action=login` link redirects there too.
+2. Sign in, open Analytics and Site Settings, change the analytics window, and refresh. Logout and confirm returning to Admin requires authentication.
+3. Open a project through its card, then test Back to Portfolio. Check an external Blob PDF and a local HTML report, including Open in New Tab. An inaccessible cross-origin document DOM does not mean the PDF failed to load.
+4. Check errors explicitly: throttled/unavailable login must not say the password is wrong; an analytics error must not appear as zero traffic.
+5. Recheck the image/report URLs referenced by the live project data. Keep project edits, deletion, and upload acceptance tests in the isolated environment unless a temporary production test has been deliberately chosen and will be cleaned up.
+
+## Production prerequisites
+
 Follow the outstanding deployment and credential actions in SECURITY-AUDIT.md. The database setup script and production environment requirements are documented there. Do not put local credentials into production.

@@ -64,7 +64,7 @@ export default function ReportSelector({ value, onChange }: ReportSelectorProps)
   }, []);
 
   // Find the current selection
-  const selectedReport = reports.find(report => report.url === value);
+  const selectedReport = reports.find(report => report.url.replace(/ /g, '%20') === value?.replace(/ /g, '%20'));
 
   // Filter reports based on search
   const filteredReports = useMemo(() => {

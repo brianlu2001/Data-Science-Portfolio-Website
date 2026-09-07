@@ -23,9 +23,12 @@ export function useAuth() {
         setIsAuthenticated(true);
         return true;
       }
-      return false;
-    } catch {
-      return false;
+      if (res.status === 401) return false;
+      if (res.status === 429) throw new Error('Too many login attempts. Please wait a few minutes and try again.');
+      throw new Error('Sign-in is temporarily unavailable. Please try again shortly.');
+    } catch (error) {
+      if (error instanceof TypeError) throw new Error('Could not connect. Check your connection and try again.');
+      throw error;
     }
   };
 

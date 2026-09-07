@@ -26,6 +26,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
   const [resolutionMode, setResolutionMode] = useState<ResolutionMode>('daily');
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [refreshCount, setRefreshCount] = useState(0);
 
   useEffect(() => {
     const end = new Date();
@@ -55,9 +56,9 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
     } else {
       setResolutionMode('daily');
     }
-  }, [timeWindow]);
+  }, [timeWindow, refreshCount]);
 
-  const { data: analytics, isLoading, refetch } = useQuery<AnalyticsSummary>({
+  const { data: analytics, isLoading, isError, refetch } = useQuery<AnalyticsSummary>({
     queryKey: ['/api/analytics', 'summary', timeWindow, startDate?.toISOString(), endDate?.toISOString()],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -178,7 +179,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
               </SelectContent>
             </Select>
             <Button 
-              onClick={() => refetch()} 
+              onClick={() => setRefreshCount(value => value + 1)} 
               size="sm"
               className="bg-royal-500 hover:bg-royal-600 text-white w-full sm:w-auto"
             >
@@ -203,6 +204,14 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
       </div>
     );
   }
+
+  if (isError) return (
+    <div className={`space-y-4 ${className}`} role="alert">
+      <h2 className="text-xl text-white">Analytics could not be loaded</h2>
+      <p className="text-gray-400">Retry, or sign in again if your session has expired.</p>
+      <Button onClick={() => refetch()}>Retry analytics</Button>
+    </div>
+  );
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -234,7 +243,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
           )}
           
           <Button 
-            onClick={() => refetch()} 
+            onClick={() => setRefreshCount(value => value + 1)} 
             size="sm"
             className="bg-royal-500 hover:bg-royal-600 text-white w-full sm:w-auto"
           >

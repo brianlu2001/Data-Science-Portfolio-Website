@@ -35,7 +35,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
       }
     } catch (error) {
       console.error('LoginForm: Error during login:', error);
-      setError('Login failed. Please try again.');
+      setError(error instanceof Error ? error.message : 'Login failed. Please try again.');
     }
     
     setIsLoading(false);
@@ -56,6 +56,8 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
             <div>
               <Input
                 type="password"
+                aria-label="Admin password"
+                autoComplete="current-password"
                 placeholder="Enter admin password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

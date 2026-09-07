@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { SiteSettings } from "@shared/schema";
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
@@ -13,7 +12,6 @@ interface HeaderProps {
 }
 
 export default function Header({ siteSettings }: HeaderProps) {
-  const { isAuthenticated } = useAuth();
   const [titleBoxTilt, setTitleBoxTilt] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -164,23 +162,13 @@ export default function Header({ siteSettings }: HeaderProps) {
         {/* Administrative Controls */}
         <div className="absolute top-4 right-4 flex items-center gap-2">
           <AudioToggle />
-          {isAuthenticated ? (
-            <Button
-              variant="outline"
-              onClick={() => window.location.href = "/admin"}
-              className="glass-effect border-gray-600 text-gray-300 hover:text-white"
-            >
-              Admin
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={() => window.location.href = "/api/auth?action=login"}
-              className="glass-effect border-gray-600 text-gray-300 hover:text-white"
-            >
-              Admin
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = "/admin"}
+            className="glass-effect border-gray-600 text-gray-300 hover:text-white"
+          >
+            Admin
+          </Button>
         </div>
         
         {/* Main Title */}

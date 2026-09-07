@@ -3,6 +3,8 @@ import { endpoint, checkOrigin, requireAuth, rateLimit, clientKey, passwordMatch
 import { parse } from '../lib/validation.js';
 export default endpoint(['GET', 'POST'], async (req, res) => {
   const action = req.query.action;
+  // Keep old bookmarks and cached frontend bundles on the current login flow.
+  if (req.method === 'GET' && action === 'login') return res.redirect(302, '/admin');
   if (req.method === 'POST' && action !== 'logout') {
     const { password } = parse(z.object({ password: z.string().min(1).max(256) }), req.body);
     await rateLimit('login:' + clientKey(req), 10, 900, res);

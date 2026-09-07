@@ -75,6 +75,9 @@ test('all admin routes reject anonymous callers before database work', async () 
   } finally { useLocalDatabase(database.pool); }
 });
 test('malformed cookies, login types and unsupported methods are rejected safely', async () => {
+  const legacyLogin = await request('/api/auth?action=login');
+  assert.equal(legacyLogin.status,302);
+  assert.equal(legacyLogin.headers.get('location'),'/admin');
   assert.equal((await request('/api/upload-image','POST',{},'admin_token=%ZZ')).status,401);
   assert.equal((await request('/api/auth','POST',{password:123})).status,400);
   assert.equal((await request('/api/auth','POST',null)).status,400);

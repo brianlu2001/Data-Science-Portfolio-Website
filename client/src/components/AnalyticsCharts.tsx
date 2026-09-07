@@ -31,7 +31,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
   useEffect(() => {
     const end = new Date();
     const start = new Date();
-    
+
     switch (timeWindow) {
       case '7d':
         start.setDate(end.getDate() - 7);
@@ -46,7 +46,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
         start.setFullYear(end.getFullYear() - 1);
         break;
     }
-    
+
     setStartDate(start);
     setEndDate(end);
 
@@ -65,7 +65,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
       params.set('timeWindow', timeWindow);
       if (startDate) params.set('startDate', startDate.toISOString());
       if (endDate) params.set('endDate', endDate.toISOString());
-      
+
       const response = await fetch(`/api/analytics?action=summary&${params.toString()}`);
       if (!response.ok) {
         throw new Error('Failed to fetch analytics data');
@@ -79,21 +79,21 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
   const aggregateToWeekly = (dailyStats: { date: string; pageViews: number; projectClicks: number }[]) => {
     const weeklyStats = [];
     const weeks = Math.ceil(dailyStats.length / 7);
-    
+
     for (let i = 0; i < weeks; i++) {
       const startIdx = i * 7;
       const endIdx = Math.min(startIdx + 7, dailyStats.length);
       const weekData = dailyStats.slice(startIdx, endIdx);
-      
+
       if (weekData.length > 0) {
         const totalPageViews = weekData.reduce((sum, day) => sum + day.pageViews, 0);
         const totalProjectClicks = weekData.reduce((sum, day) => sum + day.projectClicks, 0);
-        
+
         // Use the start date of the week
         const weekStartDate = weekData[0].date;
         const date = new Date(weekStartDate);
         const weekLabel = `Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-        
+
         weeklyStats.push({
           date: weekStartDate,
           weekLabel,
@@ -102,7 +102,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
         });
       }
     }
-    
+
     return weeklyStats;
   };
 
@@ -116,7 +116,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
 
   // Determine if we should use weekly aggregation by default for longer time windows
   const shouldUseWeeklyByDefault = (timeWindow === '90d' || timeWindow === '1y') && resolutionMode === 'weekly';
-  
+
   // Process data based on resolution mode
   const chartData = shouldUseWeeklyByDefault || (resolutionMode === 'weekly' && (timeWindow === '90d' || timeWindow === '1y'))
     ? aggregateToWeekly(rawData.dailyStats)
@@ -178,8 +178,8 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
                 <SelectItem value="1y">Last year</SelectItem>
               </SelectContent>
             </Select>
-            <Button 
-              onClick={() => setRefreshCount(value => value + 1)} 
+            <Button
+              onClick={() => setRefreshCount(value => value + 1)}
               size="sm"
               className="bg-royal-500 hover:bg-royal-600 text-white w-full sm:w-auto"
             >
@@ -188,7 +188,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
             </Button>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <Card key={i} className="glass-effect border-gray-600">
@@ -229,7 +229,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
               <SelectItem value="1y">Last year</SelectItem>
             </SelectContent>
           </Select>
-          
+
           {(timeWindow === '90d' || timeWindow === '1y') && (
             <Select value={resolutionMode} onValueChange={(value: ResolutionMode) => setResolutionMode(value)}>
               <SelectTrigger className="w-full sm:w-40 bg-gray-800 border-gray-600 text-white">
@@ -241,9 +241,9 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
               </SelectContent>
             </Select>
           )}
-          
-          <Button 
-            onClick={() => setRefreshCount(value => value + 1)} 
+
+          <Button
+            onClick={() => setRefreshCount(value => value + 1)}
             size="sm"
             className="bg-royal-500 hover:bg-royal-600 text-white w-full sm:w-auto"
           >
@@ -301,8 +301,8 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
-                {displayData?.totalPageViews ? 
-                  `${((displayData.totalProjectClicks / displayData.totalPageViews) * 100).toFixed(1)}%` : 
+                {displayData?.totalPageViews ?
+                  `${((displayData.totalProjectClicks / displayData.totalPageViews) * 100).toFixed(1)}%` :
                   '0%'
                 }
               </div>
@@ -330,33 +330,33 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={displayData?.dailyStats || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis 
+                  <XAxis
                     dataKey={resolutionMode === 'weekly' ? 'weekLabel' : 'date'}
                     tickFormatter={resolutionMode === 'weekly' ? undefined : formatDate}
                     stroke="#9CA3AF"
                   />
                   <YAxis stroke="#9CA3AF" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1F2937',
                       border: '1px solid #374151',
                       borderRadius: '8px'
                     }}
                     labelStyle={{ color: '#F3F4F6' }}
                   />
                   <Legend />
-                  <Line 
-                    type="linear" 
-                    dataKey="pageViews" 
-                    stroke="#3B82F6" 
+                  <Line
+                    type="linear"
+                    dataKey="pageViews"
+                    stroke="#3B82F6"
                     strokeWidth={2}
                     name="Page Views"
                     dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
                   />
-                  <Line 
-                    type="linear" 
-                    dataKey="projectClicks" 
-                    stroke="#10B981" 
+                  <Line
+                    type="linear"
+                    dataKey="projectClicks"
+                    stroke="#10B981"
                     strokeWidth={2}
                     name="Project Clicks"
                     dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
@@ -379,19 +379,19 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
             </CardHeader>
             <CardContent className="p-2 sm:p-6">
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart 
+                <BarChart
                   data={displayData?.topProjects?.slice(0, 5) || []}
                   layout="vertical"
                   margin={{ left: 0, right: 5, top: 20, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis 
+                  <XAxis
                     type="number"
-                    stroke="#9CA3AF" 
+                    stroke="#9CA3AF"
                     tick={{ fontSize: 12 }}
                   />
-                  <YAxis 
-                    dataKey="projectTitle" 
+                  <YAxis
+                    dataKey="projectTitle"
                     type="category"
                     stroke="#9CA3AF"
                     width={window.innerWidth < 640 ? 80 : 120}
@@ -402,9 +402,9 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
                       return value.length > maxLength ? `${value.substring(0, maxLength)}...` : value;
                     }}
                   />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1F2937',
                       border: '1px solid #374151',
                       borderRadius: '8px',
                       color: '#F3F4F6'
@@ -412,8 +412,8 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
                     formatter={(value, name) => [value, 'Clicks']}
                     labelFormatter={(label) => label}
                   />
-                  <Bar 
-                    dataKey="clicks" 
+                  <Bar
+                    dataKey="clicks"
                     fill="#3B82F6"
                     radius={[0, 4, 4, 0]}
                     stroke="#2563EB"

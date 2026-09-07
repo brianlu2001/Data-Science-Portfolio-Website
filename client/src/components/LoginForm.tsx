@@ -25,7 +25,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
       console.log('LoginForm: Calling login function...');
       const success = await login(password);
       console.log('LoginForm: Login result:', success);
-      
+
       if (success) {
         console.log('LoginForm: Login successful, calling onLoginSuccess');
         onLoginSuccess();
@@ -37,7 +37,7 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
       console.error('LoginForm: Error during login:', error);
       setError(error instanceof Error ? error.message : 'Login failed. Please try again.');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -81,4 +81,4 @@ export default function LoginForm({ onLoginSuccess }: LoginFormProps) {
       </Card>
     </div>
   );
-} 
+}

@@ -33,8 +33,6 @@ The regression suite starts its own temporary PostgreSQL database and HTTP serve
 
 Ten bad login attempts within 15 minutes trigger throttling. Use the isolated automated suite to test this without locking yourself out of the manual test session. Restarting the local server preserves its database, sessions and counters.
 
-## Before production
-
 ## Verify each production release
 
 Confirm the custom domain points to the intended commit, then use the deployed browser UI:

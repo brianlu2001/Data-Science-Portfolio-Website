@@ -138,6 +138,14 @@ test('uploads reject forged MIME and active content; valid images are decoded an
   assert.equal(uploaded.status,200,await uploaded.clone().text());
   assert.match((await uploaded.json()).imageUrl,/^\/local-files\/[a-f0-9-]+\.webp$/);
 });
+test('four-megabyte report uploads allow multipart overhead but reject larger files', async () => {
+  for (const [size,status] of [[4 * 1024 * 1024,200],[4 * 1024 * 1024 + 1,400]]) {
+    const bytes = Buffer.alloc(size,32);bytes.write('%PDF-1.7\n');
+    const form = new FormData();form.append('report',new Blob([bytes],{type:'application/pdf'}),'boundary.pdf');
+    assert.equal((await request('/api/upload-report','POST',form,cookie)).status,status);
+  }
+});
+
 test('logout revokes a copied cookie', async () => {
   assert.equal((await request('/api/auth?action=logout','POST',undefined,cookie)).status,200);
   assert.equal((await request('/api/auth?action=user','GET',undefined,cookie)).status,401);

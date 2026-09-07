@@ -93,7 +93,9 @@ export function endpoint(methods: string[], handler: Handler): Handler {
         throw new HttpError(405, 'Method not allowed');
       }
       if (req.method !== 'GET') checkOrigin(req);
-      if (Number(req.headers['content-length']) > 4 * 1024 * 1024) throw new HttpError(413, 'Request too large');
+      // Multipart boundaries and headers are additional to the 4 MB file limit.
+      // Formidable still enforces the exact file size independently.
+      if (Number(req.headers['content-length']) > 4 * 1024 * 1024 + 64 * 1024) throw new HttpError(413, 'Request too large');
       return await handler(req, res);
     } catch (error) {
       if (error instanceof HttpError) return res.status(error.status).json({ message: error.message });

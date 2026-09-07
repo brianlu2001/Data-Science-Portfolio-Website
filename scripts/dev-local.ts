@@ -40,6 +40,21 @@ if (!(await pool.query('SELECT id FROM projects LIMIT 1')).rows.length) {
   await pool.query(`INSERT INTO site_settings(id,contact_email,contact_phone,bio,linkedin_url,logo_urls)
     VALUES(1,$1,$2,$3,$4,$5) ON CONFLICT(id) DO NOTHING`, [s.contactEmail,s.contactPhone,s.bio,s.linkedinUrl,s.logoUrls||[]]);
 }
+// Import an optional anonymized snapshot. Negative IDs keep imports idempotent and
+// separate from locally generated events without changing either database's sequences.
+let snapshot;
+try { snapshot = JSON.parse(await fs.readFile('.local/analytics-snapshot.json', 'utf8')); }
+catch (error: any) { if (error.code !== 'ENOENT') throw error; }
+if (snapshot) {
+  for (const row of snapshot.views) await pool.query(
+    'INSERT INTO page_views(id,page,timestamp) VALUES($1,$2,$3) ON CONFLICT(id) DO NOTHING',
+    [-row.id, row.page, row.timestamp]);
+  for (const row of snapshot.clicks) await pool.query(
+    `INSERT INTO project_clicks(id,project_id,click_type,timestamp)
+     SELECT $1,id,$3,$4 FROM projects WHERE id=$2 ON CONFLICT(id) DO NOTHING`,
+    [-row.id, row.project_id, row.click_type, row.timestamp]);
+  console.log('Imported anonymized historical analytics snapshot');
+}
 const app = express();
 app.disable('x-powered-by');
 app.use(express.json({ limit: '256kb' }));

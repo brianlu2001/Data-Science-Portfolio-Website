@@ -4,6 +4,8 @@ Run `npm run dev`, then open http://127.0.0.1:5173/admin.
 
 Your random **local-only password** is in `.local/LOGIN.md` (or the password field in `.local/credentials.json`). These files are excluded from Git and deployment. The local server binds to loopback.
 
+Historical analytics can be copied explicitly with `node --env-file=.env.local scripts/snapshot-analytics.mjs`, then restarting the local server. The exporter uses a read-only transaction and excludes IP addresses and user agents. The local server imports the ignored snapshot idempotently; local events remain separate. The default analytics filter shows only the last 30 days; choose a longer window to see older visits. Historical events are preserved by the maintenance script.
+
 The local PostgreSQL database and uploaded files are in `.local/`. Your existing public portfolio data was copied there for this session. Editing or deleting a local project does not modify the live database. A fresh checkout without that copy starts with a sample project.
 
 ## Manual checks

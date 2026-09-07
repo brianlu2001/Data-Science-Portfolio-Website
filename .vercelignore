@@ -1,0 +1,10 @@
+.local
+.env*
+!.env.example
+replit_dump.sql
+scripts/dev-local.ts
+scripts/local-database.ts
+scripts/audit-*
+tests
+SECURITY-AUDIT.md
+security-*

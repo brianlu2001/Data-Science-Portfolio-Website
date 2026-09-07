@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "NodeNext", "moduleResolution": "NodeNext",
+    "strict": true, "esModuleInterop": true, "skipLibCheck": true, "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["api/**/*.ts", "lib/**/*.ts", "server/api-router.ts", "server/index.ts", "server/vercelAuth.ts", "scripts/local-database.ts", "scripts/dev-local.ts", "tests/**/*.ts"]
+}

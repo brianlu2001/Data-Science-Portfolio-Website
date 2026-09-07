@@ -3,18 +3,67 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist/public",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "build": {
-    "env": {
-      "NODE_ENV": "development"
-    }
-  },
+  "installCommand": "npm ci",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/reports/(.*)", "destination": "/reports/$1" },
-    { "source": "/uploads/(.*)", "destination": "/uploads/$1" },
-    { "source": "/projects/:id", "destination": "/index.html" },
-    { "source": "/admin", "destination": "/index.html" },
-    { "source": "/", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/reports/(.*)",
+      "destination": "/reports/$1"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "/uploads/$1"
+    },
+    {
+      "source": "/projects/:id",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'"
+        }
+      ]
+    },
+    {
+      "source": "/reports/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "sandbox allow-scripts allow-downloads; frame-ancestors 'self'"
+        }
+      ]
+    }
   ]
 }

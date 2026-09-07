@@ -387,7 +387,6 @@ COPY public.projects (id, title, image_url, project_url, sort_order, created_at,
 --
 
 COPY public.sessions (sid, sess, expire) FROM stdin;
-3gQbCpd0P2K-bdZwc2D_jbYJL-pps35i	{"cookie": {"path": "/", "secure": true, "expires": "2025-07-28T20:59:17.662Z", "httpOnly": true, "originalMaxAge": 604800000}, "passport": {"user": {"claims": {"aud": "9e222fbe-5935-47ce-8aab-caefb0735d2d", "exp": 1753135157, "iat": 1753131557, "iss": "https://replit.com/oidc", "sub": "44737525", "email": "brian901231@gmail.com", "at_hash": "jVcfbbgzRl2xheVlzxRngw", "username": "brian901231", "auth_time": 1752558975, "last_name": "Lu", "first_name": "Brian"}, "expires_at": 1753135157, "access_token": "b47WuwpGSSrbB31AoEQE49V3oQyop4dHU0N_5RUsETf", "refresh_token": "QO47HgXnWXD4Kky0XgtxdbfElrbIB1KcxLgbQS40XG8"}}}	2025-08-01 06:08:36
 \.
 
 
@@ -405,7 +404,6 @@ COPY public.site_settings (id, contact_email, contact_phone, linkedin_url, bio, 
 --
 
 COPY public.users (id, email, first_name, last_name, profile_image_url, created_at, updated_at) FROM stdin;
-44737525	brian901231@gmail.com	Brian	Lu	\N	2025-07-13 04:28:26.883463	2025-07-15 05:56:15.593
 \.
 
 
@@ -562,4 +560,3 @@ ALTER TABLE ONLY public.project_files
 --
 -- PostgreSQL database dump complete
 --
-

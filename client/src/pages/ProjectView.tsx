@@ -243,6 +243,7 @@ export default function ProjectView() {
                     <div className="w-full md:h-[800px] h-[calc(100vh-100px)] relative overflow-hidden">
                       <iframe
                         src={reportUrl}
+                        sandbox="allow-scripts allow-downloads"
                         className="w-full h-full"
                         title={`${project.title} Report`}
                         style={{

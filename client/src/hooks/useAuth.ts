@@ -29,8 +29,9 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
-    window.location.href = '/api/auth?action=logout';
+  const logout = async () => {
+    const res = await fetch('/api/auth?action=logout', { method: 'POST', credentials: 'include' });
+    if (res.ok) window.location.href = '/';
   };
 
   return { isAuthenticated, isLoading, login, logout };

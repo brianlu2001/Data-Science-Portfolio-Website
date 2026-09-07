@@ -28,7 +28,7 @@ export default function ImageUpload({ value, onChange, label = "Project Image" }
   }, [value]);
 
   // Handle file upload to server
-  const MAX_SIZE_MB = 20;
+  const MAX_SIZE_MB = 4;
   const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
   const uploadFile = async (file: File) => {
@@ -263,4 +263,4 @@ export default function ImageUpload({ value, onChange, label = "Project Image" }
       )}
     </div>
   );
-} 
+}

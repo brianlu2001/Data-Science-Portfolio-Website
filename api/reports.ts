@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../lib/http.js';
 import fs from 'fs';
 import path from 'path';
 import { list } from '@vercel/blob';
@@ -15,6 +15,8 @@ function generateDisplayName(filename: string): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   if (req.method !== 'GET') return res.status(405).json({ message: 'Method not allowed' });
 
   try {
@@ -59,7 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         console.log(`[api/reports] Found ${blobReports.length} blob-stored reports.`);
       } catch (err) {
-        console.warn('[api/reports] Could not list blob reports:', err);
+        console.warn('[api/reports] Could not list blob reports');
       }
     }
 
@@ -76,10 +78,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       count: merged.length,
     });
   } catch (error) {
-    console.error('[api/reports] Error:', error);
+    console.error('[api/reports] Failed to fetch reports');
     return res.status(500).json({
       message: 'Failed to fetch reports',
-      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }

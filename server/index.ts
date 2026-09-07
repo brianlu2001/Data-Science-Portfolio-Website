@@ -1,85 +1,27 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes-vercel";
-import { setupVite, serveStatic, log } from "./vite";
-
+import express from 'express';
+import path from 'node:path';
+import { apiRouter } from './api-router.js';
+process.env.NODE_ENV ??= 'production';
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
+app.disable('x-powered-by');
+app.use(express.json({ limit: '256kb' }));
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Content-Security-Policy', "base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'");
   next();
 });
-
-(async () => {
-  const server = await registerRoutes(app);
-
-  // Serve static files from public directory (including reports)
-  app.use(express.static('public', {
-    setHeaders: (res, path) => {
-      if (path.endsWith('.pdf')) {
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'inline');
-        res.setHeader('X-Frame-Options', 'ALLOWALL');
-        res.setHeader('Access-Control-Allow-Origin', '*');
-      }
-    }
-  }));
-
-  // Serve uploaded files from uploads directory
-  app.use('/uploads', express.static('uploads'));
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+app.use('/api', apiRouter());
+app.use('/reports', (_req,res,next) => {
+  res.setHeader('Content-Security-Policy', "sandbox allow-scripts allow-downloads; frame-ancestors 'self'");
+  next();
+});
+app.use(express.static(path.resolve('dist/public')));
+app.get('*', (_req,res) => res.sendFile(path.resolve('dist/public/index.html')));
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const status = err.type === 'entity.too.large' ? 413 : err.type === 'entity.parse.failed' ? 400 : 500;
+  res.status(status).json({ message: status === 500 ? 'Internal server error' : 'Invalid request' });
+});
+app.listen(Number(process.env.PORT || 5000), process.env.HOST || '127.0.0.1', () => console.log('Portfolio server ready'));

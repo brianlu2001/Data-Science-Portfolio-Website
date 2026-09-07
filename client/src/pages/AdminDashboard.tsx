@@ -395,7 +395,11 @@ export default function AdminDashboard() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => window.location.href = "/api/auth?action=logout"}
+              onClick={async () => {
+                const response = await fetch('/api/auth?action=logout', { method: 'POST', credentials: 'include' });
+                if (response.ok) window.location.href = '/';
+                else toast({ title: 'Logout failed', description: 'Please try again.', variant: 'destructive' });
+              }}
               className="glass-effect border-gray-600 text-gray-300 hover:text-white"
             >
               Logout
@@ -634,7 +638,7 @@ export default function AdminDashboard() {
                                   <input
                                     type="file"
                                     id="report-upload-input"
-                                    accept=".pdf,.doc,.docx"
+                                    accept=".pdf,.docx"
                                     className="hidden"
                                     onChange={async (e) => {
                                       const file = e.target.files?.[0];
@@ -683,7 +687,7 @@ export default function AdminDashboard() {
                                 </FormControl>
                                 <FormMessage />
                                 <p className="text-xs text-gray-500 mt-1">
-                                  Upload a new PDF/DOCX or select an existing report from /reports/.
+                                  Upload a PDF/DOCX up to 4 MB or select an existing report.
                                 </p>
                                 {field.value && (
                                   <div className="mt-2 space-y-1">

@@ -17,9 +17,12 @@ export function useLocalDatabase(pool: DatabasePool) {
 export function getPool(): DatabasePool {
   if (!database) {
     if (!process.env.DATABASE_URL) throw new Error('Database unavailable');
-    database = new Pool({ connectionString: process.env.DATABASE_URL, max: 3,
-      connectionTimeoutMillis: 5000, idleTimeoutMillis: 10000,
-      options: '-c statement_timeout=10000 -c idle_in_transaction_session_timeout=10000' });
+    // Neon pooled connections reject startup `options`; database role defaults
+    // supply server-side timeouts, with a client-side query timeout as a backstop.
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3,
+      connectionTimeoutMillis: 5000, idleTimeoutMillis: 10000, query_timeout: 10000 });
+    pool.on('error', () => console.error('Idle database connection failed'));
+    database = pool;
   }
   return database;
 }

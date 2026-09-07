@@ -12,6 +12,7 @@ import { useLocalUploads } from '../lib/uploads.js';
 import { apiRouter } from '../server/api-router.js';
 import { isAuthenticated } from '../server/vercelAuth.js';
 import { insertProjectSchema } from '../shared/schema.js';
+import { credentialVersion } from '../lib/security.js';
 
 process.env.NODE_ENV = 'test';
 delete process.env.VERCEL;
@@ -170,6 +171,16 @@ test('legacy signed tokens and duplicate cookie names are rejected', async () =>
   const token = await login();
   assert.equal((await request('/api/auth?action=user','GET',undefined,token+'; '+token)).status,401);
 });
+test('administrator password configuration accepts 14 characters and rejects shorter values', () => {
+  const original = process.env.ADMIN_PASSWORD;
+  try {
+    process.env.ADMIN_PASSWORD = 'TestPassword1_';
+    assert.doesNotThrow(() => credentialVersion());
+    process.env.ADMIN_PASSWORD = 'TestPassword1';
+    assert.throws(() => credentialVersion(), /Authentication unavailable/);
+  } finally { process.env.ADMIN_PASSWORD = original; }
+});
+
 test('concurrent login attempts share a durable limit', async () => {
   await database.pool.query("DELETE FROM sessions WHERE sid LIKE 'limit:%'");
   const responses = await Promise.all(Array.from({length:20},() => request('/api/auth','POST',{password:'incorrect'})));

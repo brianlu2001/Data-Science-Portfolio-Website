@@ -13,7 +13,7 @@ export function secret() {
 }
 export function credentialVersion() {
   const password = process.env.ADMIN_PASSWORD;
-  if (!password || password.length < 16) throw new HttpError(503, 'Authentication unavailable');
+  if (!password || password.length < 14) throw new HttpError(503, 'Authentication unavailable');
   return createHmac('sha256', secret()).update(password).digest('hex');
 }
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');

@@ -67,7 +67,7 @@
     "express-session": "^1.18.1",
     "file-type": "^22.0.2",
     "formidable": "^3.5.4",
-    "framer-motion": "^11.13.1",
+    "framer-motion": "^13.2.0",
     "input-otp": "^1.4.2",
     "jquery": "^3.7.1",
     "lucide-react": "^0.453.0",

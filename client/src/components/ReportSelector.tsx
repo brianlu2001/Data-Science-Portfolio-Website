@@ -65,6 +65,12 @@ export default function ReportSelector({ value, onChange }: ReportSelectorProps)
 
   // Find the current selection
   const selectedReport = reports.find(report => report.url.replace(/ /g, '%20') === value?.replace(/ /g, '%20'));
+  // A just-uploaded report may not be in the library yet; keep its selection visible.
+  let selectedName = selectedReport?.displayName;
+  if (!selectedName && value) {
+    try { selectedName = decodeURIComponent(new URL(value, window.location.origin).pathname.split('/').pop() || 'Attached report'); }
+    catch { selectedName = 'Attached report'; }
+  }
 
   // Filter reports based on search
   const filteredReports = useMemo(() => {
@@ -92,6 +98,7 @@ export default function ReportSelector({ value, onChange }: ReportSelectorProps)
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -104,14 +111,14 @@ export default function ReportSelector({ value, onChange }: ReportSelectorProps)
                 <Loader2 className="h-4 w-4 animate-spin text-gray-400 flex-shrink-0" />
                 <span className="text-gray-400">Loading reports...</span>
               </>
-            ) : selectedReport ? (
+            ) : selectedName ? (
               <>
-                {selectedReport.type === 'pdf' ? (
+                {(selectedReport?.type === 'pdf' || /\.pdf(?:[?#]|$)/i.test(value || '')) ? (
                   <File className="h-4 w-4 text-red-400 flex-shrink-0" />
                 ) : (
                   <FileText className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 )}
-                <span className="truncate text-left">{selectedReport.displayName}</span>
+                <span className="truncate text-left">{selectedName}</span>
               </>
             ) : (
               <>
@@ -145,6 +152,7 @@ export default function ReportSelector({ value, onChange }: ReportSelectorProps)
             {value && (
               <div className="px-2 py-1">
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   onClick={handleClear}

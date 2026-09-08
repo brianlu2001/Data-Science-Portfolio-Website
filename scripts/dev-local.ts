@@ -61,7 +61,10 @@ app.use(express.json({ limit: '256kb' }));
 app.use((_req,res,next) => { res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','SAMEORIGIN'); next(); });
 app.use('/api', apiRouter());
 app.use('/local-files', express.static(path.resolve('.local/uploads'), {
-  setHeaders(res, file) { if (!file.endsWith('.webp')) res.setHeader('Content-Disposition','attachment'); },
+  setHeaders(res, file) {
+    if (file.endsWith('.pdf')) res.setHeader('Content-Disposition','inline');
+    else if (!file.endsWith('.webp')) res.setHeader('Content-Disposition','attachment');
+  },
 }));
 app.use('/uploads', express.static('uploads'));
 app.use('/reports', (_req,res,next) => {

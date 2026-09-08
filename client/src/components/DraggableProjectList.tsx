@@ -95,6 +95,9 @@ function SortableProjectItem({ project, onEdit, onDelete, onMove }: SortableProj
                 <div className="flex-1 min-w-0">
                   <h3 className="text-white font-medium truncate">{project.title}</h3>
                   <p className="text-gray-400 text-sm truncate">{project.category}</p>
+                  {project.status === 'finished' && !project.projectUrl && (
+                    <p className="text-amber-300 text-xs mt-1">Report not attached</p>
+                  )}
                   {project.simplifiedDescription && (
                     <p className="text-gray-300 text-sm mt-1 line-clamp-2">
                       {project.simplifiedDescription}

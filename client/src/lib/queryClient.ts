@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import type { Project } from "@shared/schema";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -57,3 +58,9 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+export function updateProjectCache(project: Project) {
+  // Detail queries otherwise remain fresh forever after a visit before editing.
+  queryClient.setQueryData([`/api/project-by-id?id=${project.id}`], project);
+  void queryClient.invalidateQueries({ queryKey: ["/api/projects-simple"] });
+}

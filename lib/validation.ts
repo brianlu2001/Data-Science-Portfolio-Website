@@ -20,6 +20,9 @@ export const projectSchema = z.object({
   status: z.enum(['finished', 'ongoing']).default('finished'),
   sortOrder: z.number().int().min(0).max(100000).optional(),
 });
+// Omitted fields must stay untouched when editing or moving an existing project.
+export const projectUpdateSchema = projectSchema.partial().refine(
+  value => Object.values(value).some(field => field !== undefined), 'No project changes supplied');
 export const settingsSchema = z.object({
   contactEmail: z.union([z.string().email().max(254), z.literal('')]).nullable().optional(),
   contactPhone: z.string().max(80).nullable().optional(), bio: z.string().max(20000).nullable().optional(),

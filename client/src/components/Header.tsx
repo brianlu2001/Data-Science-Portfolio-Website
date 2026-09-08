@@ -1,339 +1,91 @@
-import { motion } from "framer-motion";
+import { usePortfolioMotion } from "@/hooks/usePortfolioMotion";
+import { motion, useAnimationControls } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { SiteSettings } from "@shared/schema";
-import { useState, useRef, useEffect } from "react";
-import { ChevronDown } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { AudioToggle } from "@/components/AudioToggle";
-import { useIsMobile } from "@/hooks/use-mobile";
+import RoleTypewriter from "@/components/RoleTypewriter";
 
-
-interface HeaderProps {
-  siteSettings?: SiteSettings;
-}
-
-export default function Header({ siteSettings }: HeaderProps) {
-  const [titleBoxTilt, setTitleBoxTilt] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
+export default function Header({ siteSettings }: { siteSettings?: SiteSettings }) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const titleBoxRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
-  const animationFrameRef = useRef<number>();
+  const turning = useRef(false);
+  const controls = useAnimationControls();
+  // Normalize the two faces after each turn. Both directions then use the same
+  // visible left edge as the hinge, instead of reversing an accumulated rotation.
+  useLayoutEffect(() => {
+    controls.set({ x: '0%', rotateY: 0 });
+    turning.current = false;
+  }, [isFlipped, controls]);
+  useLayoutEffect(() => () => {
+    turning.current = false;
+    controls.stop();
+  }, [controls]);
+  const { reducedMotion, toggleMotion } = usePortfolioMotion();
 
-  const currentReflectionRef = useRef({
-    x: 30, y: 30, 
-    secondaryX: 70, secondaryY: 70, 
-    angle: 135
-  });
-  const targetReflectionRef = useRef({
-    x: 30, y: 30, 
-    secondaryX: 70, secondaryY: 70, 
-    angle: 135
-  });
-
-  const animateReflections = () => {
-    const current = currentReflectionRef.current;
-    const target = targetReflectionRef.current;
-    
-    // Improved speed based on hover state for better responsiveness
-    const speed = isHovered ? 0.15 : 0.1; // Faster when hovering, slower when leaving
-    
-    // Smoothly interpolate to target values
-    current.x += (target.x - current.x) * speed;
-    current.y += (target.y - current.y) * speed;
-    current.secondaryX += (target.secondaryX - current.secondaryX) * speed;
-    current.secondaryY += (target.secondaryY - current.secondaryY) * speed;
-    current.angle += (target.angle - current.angle) * speed;
-    
-    // Apply to DOM - update both faces of the flip container
-    if (titleBoxRef.current) {
-      const frontFace = titleBoxRef.current.querySelector('.title-face-front');
-      const backFace = titleBoxRef.current.querySelector('.title-face-back');
-      
-      if (frontFace) {
-        frontFace.style.setProperty('--reflection-x', `${current.x}%`);
-        frontFace.style.setProperty('--reflection-y', `${current.y}%`);
-        frontFace.style.setProperty('--secondary-reflection-x', `${current.secondaryX}%`);
-        frontFace.style.setProperty('--secondary-reflection-y', `${current.secondaryY}%`);
-        frontFace.style.setProperty('--highlight-angle', `${current.angle}deg`);
-      }
-      
-      if (backFace) {
-        backFace.style.setProperty('--reflection-x', `${current.x}%`);
-        backFace.style.setProperty('--reflection-y', `${current.y}%`);
-        backFace.style.setProperty('--secondary-reflection-x', `${current.secondaryX}%`);
-        backFace.style.setProperty('--secondary-reflection-y', `${current.secondaryY}%`);
-        backFace.style.setProperty('--highlight-angle', `${current.angle}deg`);
-      }
-    }
-    
-    // Continue animation if values haven't converged
-    const threshold = 0.05; // Reduced threshold for smoother completion
-    if (Math.abs(target.x - current.x) > threshold ||
-        Math.abs(target.y - current.y) > threshold ||
-        Math.abs(target.secondaryX - current.secondaryX) > threshold ||
-        Math.abs(target.secondaryY - current.secondaryY) > threshold ||
-        Math.abs(target.angle - current.angle) > threshold) {
-      animationFrameRef.current = requestAnimationFrame(animateReflections);
-    } else {
-      // Clear animation frame when completed
-      animationFrameRef.current = undefined;
-    }
-  };
-
-  // Cleanup animation on unmount
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
-
-  const handleTitleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!titleBoxRef.current) return;
-    
-    // Set hovered state if not already set
-    if (!isHovered) {
-      setIsHovered(true);
-    }
-    
-    const rect = titleBoxRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    const mouseX = e.clientX - centerX;
-    const mouseY = e.clientY - centerY;
-    
-    // Calculate tilt - box tilts away from mouse position (reduced intensity)
-    const tiltX = -(mouseY / rect.height) * 12; // Reduced from 20 to 12
-    const tiltY = (mouseX / rect.width) * 12;   // Reduced from 20 to 12
-    
-    setTitleBoxTilt({ x: tiltX, y: tiltY });
-    
-
-    
-    // Calculate reflection positions based on tilt with gradual transition
-    // When box tilts, reflections shift opposite to the tilt direction
-    const reflectionX = 50 - (tiltY * 5.5); // Increased responsiveness to compensate for reduced tilt
-    const reflectionY = 50 - (tiltX * 5.5); // Increased responsiveness to compensate for reduced tilt
-    const secondaryReflectionX = 50 + (tiltY * 4.5); // Secondary reflection shifts with tilt
-    const secondaryReflectionY = 50 + (tiltX * 4.5);
-    const highlightAngle = 135 + (tiltY * 10); // Increased angle change for better visual feedback
-    
-    // Set target reflection values for smooth animation
-    targetReflectionRef.current = {
-      x: Math.max(10, Math.min(90, reflectionX)),
-      y: Math.max(10, Math.min(90, reflectionY)),
-      secondaryX: Math.max(10, Math.min(90, secondaryReflectionX)),
-      secondaryY: Math.max(10, Math.min(90, secondaryReflectionY)),
-      angle: highlightAngle
-    };
-    
-    // Start animation if not already running
-    if (!animationFrameRef.current) {
-      animationFrameRef.current = requestAnimationFrame(animateReflections);
-    }
-  };
-
-  const handleTitleMouseLeave = () => {
-    setTitleBoxTilt({ x: 0, y: 0 });
-    setIsHovered(false);
-    
-    // Reset reflections to default positions with smooth animation
-    targetReflectionRef.current = {
-      x: 30, y: 30, 
-      secondaryX: 70, secondaryY: 70, 
-      angle: 135
-    };
-    
-    // Start animation if not already running
-    if (!animationFrameRef.current) {
-      animationFrameRef.current = requestAnimationFrame(animateReflections);
-    }
-  };
-
-  const handleTitleClick = () => {
-    setIsFlipped(!isFlipped);
+  const flip = async () => {
+    if (turning.current) return;
+    turning.current = true;
+    if (reducedMotion) { setIsFlipped(value => !value); return; }
+    // Restore the three distinct stages: slide, turn around the left edge,
+    // then return the landed card to its centered resting position.
+    await controls.start({ x: '50%', transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] } });
+    if (!turning.current) return;
+    await controls.start({
+      rotateY: [0, -32, -72, -93, -117, -151, -180, -177, -180],
+      transition: { duration: 0.94, times: [0, 0.18, 0.38, 0.56, 0.68, 0.8, 0.89, 0.94, 1], ease: 'linear' },
+    });
+    if (!turning.current) return;
+    await controls.start({ x: '100%', transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } });
+    if (turning.current) setIsFlipped(value => !value);
   };
 
   return (
-    <header className="relative z-10 pt-10 sm:pt-20 pb-10 sm:pb-16">
+    <header className="portfolio-header relative z-10">
       <div className="container mx-auto px-4 sm:px-6">
-        {/* Administrative Controls */}
         <div className="absolute top-4 right-4 flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={toggleMotion}
+            aria-label={reducedMotion ? 'Enable animations' : 'Pause animations'}
+            title={reducedMotion ? 'Enable animations' : 'Pause animations'} aria-pressed={!reducedMotion}
+            className="text-gray-400 hover:text-white"><Sparkles size={18} /></Button>
           <AudioToggle />
-          <Button
-            variant="outline"
-            onClick={() => window.location.href = "/admin"}
-            className="glass-effect border-gray-600 text-gray-300 hover:text-white"
-          >
-            Admin
-          </Button>
+          <Button variant="outline" onClick={() => window.location.href = '/admin'}
+            className="glass-effect border-gray-600 text-gray-300 hover:text-white">Admin</Button>
         </div>
-        
-        {/* Main Title */}
-        <div className="text-center mx-auto min-h-[60vh] flex flex-col justify-center">
-          <motion.div 
-            ref={titleBoxRef}
-            className="mx-auto w-fit cursor-pointer relative"
-            onMouseMove={handleTitleMouseMove}
-            onMouseLeave={handleTitleMouseLeave}
-            onClick={handleTitleClick}
-            animate={{
-              rotateX: titleBoxTilt.x,
-              rotateY: titleBoxTilt.y,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30,
-            }}
-            style={{
-              transformStyle: "preserve-3d",
-              WebkitTransformStyle: "preserve-3d",
-              perspective: "1200px",
-            }}
-          >
+        <div className="text-center mx-auto">
+          <div className="title-table mx-auto w-fit max-w-full relative"
+            style={{ perspective: '2600px', transformStyle: 'preserve-3d' }}>
             <motion.div
-              animate={{ rotateY: isFlipped ? 180 : 0 }}
-              transition={{ type: 'spring', stiffness: 70, damping: 18 }}
-              style={{ transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d' }}
+              className="relative cursor-pointer rounded-2xl outline-none focus-visible:outline-2 focus-visible:outline-blue-200 focus-visible:outline-offset-4"
+              role="button" tabIndex={0} aria-label="Flip introduction card" aria-pressed={isFlipped}
+              onClick={flip} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void flip(); } }}
+              animate={controls} initial={false}
+              style={{ transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d', transformOrigin: '0% 50%' }}
             >
-              {/* Front Face */}
-              <div 
-                className="title-face-front stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 md:py-12"
-                style={{
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  willChange: 'transform',
-                  '--reflection-x': '30%',
-                  '--reflection-y': '30%',
-                  '--secondary-reflection-x': '70%',
-                  '--secondary-reflection-y': '70%',
-                  '--highlight-angle': '135deg'
-                }}
-              >
-                <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: isFlipped ? 0 : 1, y: 0 }}
-                  transition={{ 
-                    opacity: { 
-                      duration: isMobile ? (isFlipped ? 0.4 : 0.8) : 0.4, 
-                      ease: "easeInOut",
-                      delay: isMobile && !isFlipped ? 0.2 : 0
-                    }, 
-                    y: { duration: 0.8 } 
-                  }}
-                  className="volter-black-title text-3xl sm:text-5xl md:text-7xl lg:text-9xl mb-4 sm:mb-8 md:mb-12 text-[#242931] leading-tight"
-                >
-                  Kuan-I (Brian) Lu
-                </motion.h1>
-                
-                <motion.h2
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: isFlipped ? 0 : 1, y: 0 }}
-                  transition={{ 
-                    opacity: { 
-                      duration: isMobile ? (isFlipped ? 0.4 : 0.8) : 0.4, 
-                      ease: "easeInOut",
-                      delay: isMobile && !isFlipped ? 0.2 : 0
-                    }, 
-                    y: { duration: 0.8, delay: 0.2 } 
-                  }}
-                  className="suika-title text-xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold"
-                >
-                  Data Science Project Portfolio
-                </motion.h2>
+              <div className="title-face-front stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 md:py-12"
+                aria-hidden={isFlipped} style={{ transform: isFlipped ? 'rotateY(180deg)' : 'none', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+                <h1 className="volter-black-title text-3xl sm:text-5xl md:text-7xl lg:text-9xl mb-4 sm:mb-8 md:mb-12 text-[#242931] leading-tight">Kuan-I (Brian) Lu</h1>
+                <h2 className="portfolio-serif text-xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold">AI/ML/DS Project Portfolio</h2>
               </div>
-
-              {/* Back Face */}
-              <div
-                className="title-face-back absolute inset-0 stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 md:py-12 flex flex-col items-center"
-                style={{
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  willChange: 'transform',
-                  transform: 'rotateY(180deg)',
-                  '--reflection-x': '30%',
-                  '--reflection-y': '30%',
-                  '--secondary-reflection-x': '70%',
-                  '--secondary-reflection-y': '70%',
-                  '--highlight-angle': '135deg'
-                }}
-              >
-                {/* Small spacer — keeps logos out of the very top */}
+              <div className="title-face-back stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col items-center justify-between"
+                aria-hidden={!isFlipped}
+                style={{ position: 'absolute', inset: 0, transform: isFlipped ? 'none' : 'rotateY(180deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
                 <div className="flex-1" />
-
-                {/* School logos — hidden img establishes natural width at 80px height;
-                    mask div fills that shape with exact #242931 background color */}
-                {siteSettings?.logoUrls && siteSettings.logoUrls.length > 0 && (
-                  <div className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full">
-                    {siteSettings.logoUrls.map((url, i) => (
-                      <div key={i} className="relative h-9 sm:h-14 md:h-20 flex-shrink-0">
-                        {/* Invisible img to give the container its natural proportional width */}
-                        <img
-                          src={url}
-                          alt=""
-                          className="h-full w-auto block invisible"
-                        />
-                        {/* Colored mask: #242931 clipped to the logo's alpha channel */}
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            backgroundColor: '#242931',
-                            maskImage: `url(${url})`,
-                            maskRepeat: 'no-repeat',
-                            maskSize: '100% 100%',
-                            WebkitMaskImage: `url(${url})`,
-                            WebkitMaskRepeat: 'no-repeat',
-                            WebkitMaskSize: '100% 100%',
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Large spacer — pushes scroll text to the bottom */}
-                <div className="flex-[3]" />
-
-                {/* Scroll down prompt */}
-                <div className="flex flex-col items-center">
-                  <motion.p
-                    className="suika-title text-xs sm:text-xl md:text-2xl lg:text-3xl text-[#242931] font-light mb-1 sm:mb-3 md:mb-4 text-center leading-relaxed"
-                    animate={{
-                      textShadow: isHovered
-                        ? "0 0 15px rgba(36, 41, 49, 0.4)"
-                        : "0 0 8px rgba(36, 41, 49, 0.2)"
-                    }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <span className="block sm:inline">Scroll Down to See</span>{" "}
-                    <span className="block sm:inline">My Data Science Journey</span>
-                  </motion.p>
-                  <motion.div
-                    className="flex justify-center"
-                    animate={{
-                      y: [0, -8, 0],
-                      filter: isHovered
-                        ? "drop-shadow(0 0 8px rgba(36, 41, 49, 0.6))"
-                        : "drop-shadow(0 0 4px rgba(36, 41, 49, 0.4))"
-                    }}
-                    transition={{
-                      y: {
-                        repeat: Infinity,
-                        duration: 2,
-                        ease: "easeInOut"
-                      },
-                      filter: { duration: 0.3 }
-                    }}
-                  >
-                    <ChevronDown className="w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12 text-[#242931]" />
-                  </motion.div>
+                <div className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full">
+                  {siteSettings?.logoUrls?.map((url, i) => (
+                    <div key={url + i} className="relative h-9 sm:h-14 md:h-20 max-w-[40%]">
+                      <img src={url} alt="" className="h-full w-auto max-w-full invisible" />
+                      <div className="absolute inset-0" style={{ backgroundColor: '#242931', mask: `url("${url}") center / contain no-repeat`, WebkitMask: `url("${url}") center / contain no-repeat` }} />
+                    </div>
+                  ))}
                 </div>
+                <div className="flex-[2]" />
+                <p className="portfolio-serif font-bold text-xs sm:text-xl md:text-2xl lg:text-3xl text-[#242931] text-center">Scroll Down to See My Data Science Journey</p>
+                <ChevronDown className="w-6 h-6 sm:w-10 sm:h-10 text-[#242931] mt-2" />
               </div>
             </motion.div>
-          </motion.div>
+          </div>
+          <RoleTypewriter />
         </div>
       </div>
     </header>

@@ -1,139 +1,156 @@
-// C pentatonic major across two octaves — all intervals are consonant,
-// so every card sounds musical regardless of which note it lands on.
-const PENTATONIC: number[] = [
-  261.63, // C4
-  293.66, // D4
-  329.63, // E4
-  392.00, // G4
-  440.00, // A4
-  523.25, // C5
-  587.33, // D5
-  659.25, // E5
-  783.99, // G5
-  880.00, // A5
+// Main-theme refrain, starting at the two E pickups requested for the grid.
+// Reference: https://pianoletternotes.blogspot.com/2017/10/the-avengers-main-theme.html
+// E E B A G F# E | E E B C# A B E | E E B ...
+// Approved phrase, now in E4-C#5 so the violin melody speaks clearly.
+export const MELODY = [64, 64, 71, 69, 67, 66, 64, 64, 64, 71, 73, 69, 71, 64, 64, 64, 71];
+// Independent bass + inner-string voicings for each melodic position.
+export const HARMONIES = [
+  [40, 55, 59], [48, 55, 60], [40, 55, 64], [50, 57, 62],
+  [48, 55, 60], [50, 57, 62], [40, 55, 59], [45, 57, 60],
+  [40, 55, 59], [43, 59, 62], [45, 61, 64], [45, 61, 64],
+  [47, 62, 66], [40, 55, 59], [48, 55, 60], [45, 57, 60], [40, 55, 64],
 ];
+export function snakePosition(index: number, columns: number, count: number): number {
+  const row = Math.floor(index / columns);
+  const start = row * columns;
+  const rowLength = Math.min(columns, count - start);
+  return start + (row % 2 ? rowLength - 1 - (index % columns) : index % columns);
+}
+type Instrument = 'violin' | 'cello';
+const SAMPLE_NOTES = { violin: [[64, 'E4'], [69, 'A4'], [72, 'C5']], cello: [[40, 'E2'], [47, 'B2'], [52, 'E3']] } as const;
+type Sample = { buffer: AudioBuffer; offset: number; level: number };
+type Voice = { source: AudioScheduledSourceNode; nodes: AudioNode[] };
 
 class AudioManager {
-  private audioContext: AudioContext | null = null;
-  private isEnabled: boolean = true;
+  private context: AudioContext | null = null;
+  private enabled = true;
+  private active: { gain: GainNode; voices: Voice[] } | null = null;
+  private samples = new Map<string, Promise<Sample | null>>();
+  private request = 0;
+  private lastPosition = 0;
+  private lastHover = -Infinity;
 
-  constructor() {
-    this.initializeAudioContext();
-  }
-
-  private initializeAudioContext() {
+  private async ready() {
+    if (!this.enabled) return null;
     try {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    } catch (error) {
-      console.warn('Audio context not supported:', error);
-      this.isEnabled = false;
-    }
+      this.context ??= new AudioContext();
+      if (this.context.state === 'suspended') await this.context.resume();
+      return this.enabled && this.context.state === 'running' ? this.context : null;
+    } catch { return null; }
   }
 
-  private async ensureAudioContext() {
-    if (!this.audioContext || !this.isEnabled) return false;
-    if (this.audioContext.state === 'suspended') {
+  private sample(ctx: AudioContext, instrument: Instrument, name: string) {
+    const key = `${instrument}/${name}`;
+    if (!this.samples.has(key)) this.samples.set(key, (async () => {
       try {
-        await this.audioContext.resume();
-      } catch {
-        return false;
-      }
-    }
-    return true;
+        const response = await fetch(`/audio/strings/${key}.mp3`, { signal: AbortSignal.timeout(5000) });
+        if (!response.ok) throw new Error('Sample unavailable');
+        const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+        const channel = buffer.getChannelData(0);
+        let peak = 0;
+        for (let i = 0; i < channel.length; i++) peak = Math.max(peak, Math.abs(channel[i]));
+        let onset = 0;
+        while (onset < channel.length && Math.abs(channel[onset]) < peak * 0.07) onset++;
+        const offset = Math.min(onset / buffer.sampleRate + 0.035, buffer.duration * 0.1);
+        const first = Math.floor(offset * buffer.sampleRate);
+        const end = Math.min(channel.length, first + buffer.sampleRate * 0.6);
+        let sum = 0;
+        for (let i = first; i < end; i++) sum += channel[i] * channel[i];
+        const rms = Math.sqrt(sum / Math.max(1, end - first));
+        return { buffer, offset, level: Math.min(6, 0.15 / Math.max(0.01, rms)) };
+      } catch { return null; }
+    })());
+    return this.samples.get(key)!;
   }
 
-  // Soft marimba chime — three layered oscillators (root, octave, fifth)
-  // with a snappy attack and gentle ~300ms decay.
-  async playHoverSound(projectId: number = 0) {
-    if (!await this.ensureAudioContext()) return;
-    const ctx = this.audioContext!;
-    const now = ctx.currentTime;
-
-    const root = PENTATONIC[Math.abs(projectId) % PENTATONIC.length];
-    const octave = root * 2;
-    const fifth = root * 1.5;
-
-    const ATTACK  = 0.010; // 10 ms
-    const SUSTAIN = 0.040; // 40 ms
-    const DECAY   = 0.280; // 280 ms tail
-
-    const layers: [number, OscillatorType, number][] = [
-      [root,   'sine',     0.09],
-      [octave, 'triangle', 0.045],
-      [fifth,  'sine',     0.028],
-    ];
-
-    for (const [freq, type, peak] of layers) {
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, now);
-
-      // Envelope: silence → peak → sustain → silence
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(peak, now + ATTACK);
-      gain.gain.setValueAtTime(peak, now + ATTACK + SUSTAIN);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + ATTACK + SUSTAIN + DECAY);
-
-      osc.start(now);
-      osc.stop(now + ATTACK + SUSTAIN + DECAY);
-    }
+  async preload() {
+    const ctx = await this.ready();
+    if (!ctx) return;
+    await Promise.all((['violin', 'cello'] as const).flatMap(instrument =>
+      SAMPLE_NOTES[instrument].map(([, name]) => this.sample(ctx, instrument, name))));
   }
 
-  async playClickSound() {
-    if (!await this.ensureAudioContext()) return;
-    const ctx = this.audioContext!;
-    const now = ctx.currentTime;
+  private fadeActive() {
+    if (!this.active || !this.context) return;
+    const now = this.context.currentTime;
+    this.active.gain.gain.cancelAndHoldAtTime(now);
+    this.active.gain.gain.linearRampToValueAtTime(0, now + 0.035);
+    for (const { source } of this.active.voices) { try { source.stop(now + 0.04); } catch {} }
+    this.active = null;
+  }
 
-    const osc  = ctx.createOscillator();
+  private async chord(position: number, emphasis = 1) {
+    const request = ++this.request;
+    const ctx = await this.ready();
+    if (!ctx || request !== this.request) return;
+    const index = Math.abs(position) % MELODY.length;
+    // Two quiet inner strings support the melody without a sustained bass layer.
+    const notes = [...HARMONIES[index].slice(1), MELODY[index]];
+    const prepared = await Promise.all(notes.map(async (note, i) => {
+      const instrument: Instrument = i === 2 || note >= 60 ? 'violin' : 'cello';
+      const [root, name] = [...SAMPLE_NOTES[instrument]].sort((a, b) => Math.abs(a[0] - note) - Math.abs(b[0] - note))[0];
+      return { note, root, sample: await this.sample(ctx, instrument, name) };
+    }));
+    if (!this.enabled || request !== this.request) return;
+    this.fadeActive();
+    const now = ctx.currentTime;
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.frequency.setValueAtTime(1200, now);
-    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
-    osc.type = 'square';
-
+    const filter = ctx.createBiquadFilter();
+    const compressor = ctx.createDynamicsCompressor();
+    filter.type = 'lowpass'; filter.frequency.value = 4200; filter.Q.value = 0.35;
+    compressor.threshold.value = -12; compressor.knee.value = 12; compressor.ratio.value = 3;
+    gain.connect(filter); filter.connect(compressor); compressor.connect(ctx.destination);
     gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.15, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-
-    osc.start(now);
-    osc.stop(now + 0.1);
+    gain.gain.linearRampToValueAtTime(0.8 * emphasis, now + 0.025);
+    gain.gain.setValueAtTime(0.8 * emphasis, now + 0.065);
+    gain.gain.linearRampToValueAtTime(0.45 * emphasis, now + 0.15);
+    gain.gain.linearRampToValueAtTime(0, now + 0.34);
+    const voices = prepared.map(({ note, root, sample }, i): Voice => {
+      const volume = ctx.createGain();
+      const pan = ctx.createStereoPanner();
+      volume.gain.value = [0.12, 0.16, 0.8][i] * (sample?.level ?? 0.22);
+      pan.pan.value = [-0.2, 0.2, 0.04][i];
+      volume.connect(pan); pan.connect(gain);
+      let source: AudioBufferSourceNode | OscillatorNode;
+      if (sample) {
+        source = ctx.createBufferSource(); source.buffer = sample.buffer;
+        source.playbackRate.value = 2 ** ((note - root) / 12);
+        source.connect(volume); source.start(now, sample.offset);
+      } else {
+        // A bowed-harmonic fallback keeps cues audible if an asset fails to load.
+        const oscillator = ctx.createOscillator();
+        const partials = Float32Array.from([0, 1, 0.42, 0.26, 0.16, 0.09, 0.05]);
+        oscillator.setPeriodicWave(ctx.createPeriodicWave(new Float32Array(partials.length), partials));
+        oscillator.frequency.value = 440 * 2 ** ((note - 69) / 12);
+        oscillator.connect(volume); oscillator.start(now); source = oscillator;
+      }
+      source.stop(now + 0.36);
+      return { source, nodes: [volume, pan] };
+    });
+    let ended = 0;
+    voices.forEach(({ source, nodes }) => source.addEventListener('ended', () => {
+      source.disconnect(); nodes.forEach(node => node.disconnect());
+      if (++ended === voices.length) {
+        gain.disconnect(); filter.disconnect(); compressor.disconnect();
+        if (this.active?.gain === gain) this.active = null;
+      }
+    }));
+    this.active = { gain, voices };
   }
 
-  async playGlowSound(baseFrequency: number = 440) {
-    if (!await this.ensureAudioContext()) return;
-    const ctx = this.audioContext!;
-    const now = ctx.currentTime;
-
-    for (const [freq, type] of [[baseFrequency, 'sine'], [baseFrequency * 1.5, 'triangle']] as [number, OscillatorType][]) {
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(freq, now);
-      osc.type = type;
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.08, now + 0.1);
-      gain.gain.linearRampToValueAtTime(0.05, now + 0.3);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-      osc.start(now);
-      osc.stop(now + 0.6);
-    }
+  async playHoverSound(position = 0) {
+    const now = performance.now();
+    if (now - this.lastHover < 125) return;
+    this.lastHover = now; this.lastPosition = position;
+    await this.chord(position);
   }
-
+  async playClickSound() { await this.chord(this.lastPosition, 0.8); }
+  async playGlowSound() { await this.chord(this.lastPosition, 0.65); }
   setEnabled(enabled: boolean) {
-    this.isEnabled = enabled;
+    this.enabled = enabled;
+    if (!enabled) { ++this.request; this.fadeActive(); }
+    else void this.preload();
   }
-
-  isAudioEnabled(): boolean {
-    return this.isEnabled && this.audioContext !== null;
-  }
+  isAudioEnabled() { return this.enabled; }
 }
-
 export const audioManager = new AudioManager();

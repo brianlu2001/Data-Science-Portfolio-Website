@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, updateProjectCache } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { insertProjectSchema, insertSiteSettingsSchema, type Project, type SiteSettings } from "@shared/schema";
@@ -109,8 +109,8 @@ export default function AdminDashboard() {
       const response = await apiRequest("POST", "/api/projects-simple", data);
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects-simple"] });
+    onSuccess: (createdProject: Project) => {
+      updateProjectCache(createdProject);
       projectForm.reset();
       toast({
         title: "Success",
@@ -142,8 +142,8 @@ export default function AdminDashboard() {
       const response = await apiRequest("PUT", `/api/projects/${id}`, data);
       return response.json();
     },
-    onSuccess: (updatedProject) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects-simple"] });
+    onSuccess: (updatedProject: Project) => {
+      updateProjectCache(updatedProject);
       // Update the form with the latest data instead of clearing it
       projectForm.reset({
         title: updatedProject.title,
@@ -226,22 +226,19 @@ export default function AdminDashboard() {
 
   const moveStatusMutation = useMutation({
     mutationFn: async ({ project, newStatus }: { project: Project; newStatus: 'finished' | 'ongoing' }) => {
-      const response = await apiRequest("PUT", `/api/projects/${project.id}`, {
-        title: project.title,
-        simplifiedDescription: project.simplifiedDescription || "",
-        fullDescription: project.fullDescription || "",
-        technologies: project.technologies || [],
-        category: project.category || "",
-        imageUrl: project.imageUrl || "",
-        projectUrl: project.projectUrl || "",
-        status: newStatus,
-        sortOrder: project.sortOrder,
-      });
+      const response = await apiRequest("PATCH", `/api/projects/${project.id}`, { status: newStatus });
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects-simple"] });
-      toast({ title: "Success", description: "Project moved successfully" });
+    onSuccess: (updatedProject: Project) => {
+      updateProjectCache(updatedProject);
+      if (editingProject?.id === updatedProject.id) {
+        // Preserve draft report/content edits while keeping the editor's status current.
+        projectForm.setValue('status', updatedProject.status as 'finished' | 'ongoing');
+      }
+      toast({ title: "Project moved", description:
+        updatedProject.status === 'finished' && !updatedProject.projectUrl
+          ? "Moved to Finished. Attach a report and save the project to enable its report button and preview."
+          : "Project moved successfully. Its saved content and report have been preserved." });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -384,7 +381,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen concrete-bg">
       <div className="container mx-auto px-4 sm:px-6 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="suika-fallback text-2xl sm:text-3xl md:text-4xl font-bold text-white">Admin Dashboard</h1>
+          <h1 className="font-sans text-2xl sm:text-3xl md:text-4xl font-bold text-white">Admin Dashboard</h1>
           <div className="flex gap-4">
             <Button
               variant="outline"
@@ -653,9 +650,9 @@ export default function AdminDashboard() {
                                           body: formData,
                                         });
                                         const data = await res.json();
-                                        if (data.reportUrl) {
+                                        if (res.ok && data.reportUrl) {
                                           field.onChange(data.reportUrl);
-                                          toast({ title: "Success", description: "Report uploaded successfully" });
+                                          toast({ title: "Report uploaded", description: `Click ${editingProject ? 'Update Project' : 'Add Project'} to save the report to this project.` });
                                         } else {
                                           toast({ title: "Error", description: data.message || "Upload failed", variant: "destructive" });
                                         }
@@ -689,6 +686,11 @@ export default function AdminDashboard() {
                                 <p className="text-xs text-gray-500 mt-1">
                                   Upload a PDF/DOCX up to 4 MB or select an existing report.
                                 </p>
+                                {!field.value && (
+                                  <p className="text-sm text-amber-300 mt-2">
+                                    No report attached. The report button and preview appear after you select a report and save this project.
+                                  </p>
+                                )}
                                 {field.value && (
                                   <div className="mt-2 space-y-1">
                                     <p className="text-sm text-gray-400">Selected report:</p>
@@ -716,7 +718,7 @@ export default function AdminDashboard() {
                       <Button
                         type="submit"
                         className="bg-royal-500 hover:bg-royal-600 text-white"
-                        disabled={createProjectMutation.isPending || updateProjectMutation.isPending}
+                        disabled={isUploadingReport || createProjectMutation.isPending || updateProjectMutation.isPending}
                       >
                         {editingProject ? "Update Project" : "Add Project"}
                       </Button>

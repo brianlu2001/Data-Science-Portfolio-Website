@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Columns2, Columns3, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import AmbientBackground from "@/components/AmbientBackground";
 import Header from "@/components/Header";
 import ProjectCard from "@/components/ProjectCard";
 import ContactSection from "@/components/ContactSection";
@@ -130,8 +131,9 @@ export default function Portfolio() {
     const skeletonCount = gridColumns * 2;
     return (
       <div className="min-h-screen neural-network-bg">
-        <Header siteSettings={siteSettings} />
-        <main className={`container mx-auto py-12 ${isLandscapeMobile ? 'px-0' : 'px-4 sm:px-6'}`}>
+        <AmbientBackground />
+      <Header siteSettings={siteSettings} />
+        <main className={`container mx-auto pt-0 pb-12 ${isLandscapeMobile ? 'px-0' : 'px-4 sm:px-6'}`}>
           <div className="mb-24 max-w-4xl mx-auto">
             <div className="blue-glow rounded-2xl p-4 sm:p-6 md:p-8 animate-pulse">
               <div className="h-5 bg-gray-700/40 rounded w-full mb-3" />
@@ -157,8 +159,9 @@ export default function Portfolio() {
 
   return (
     <div className="min-h-screen neural-network-bg">
+      <AmbientBackground />
       <Header siteSettings={siteSettings} />
-      <main className={`container mx-auto py-12 ${isLandscapeMobile ? 'px-0' : 'px-4 sm:px-6'}`}>
+      <main className={`container mx-auto pt-0 pb-12 ${isLandscapeMobile ? 'px-0' : 'px-4 sm:px-6'}`}>
 
         {/* Bio Section */}
         {siteSettings && (
@@ -176,7 +179,7 @@ export default function Portfolio() {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               style={{ transformStyle: "preserve-3d" }}
             >
-              <p className="text-gray-300 text-lg sm:text-xl leading-relaxed suika-fallback">
+              <p className="portfolio-serif font-bold tracking-wide text-gray-300 text-lg sm:text-xl leading-relaxed">
                 {siteSettings.bio}
               </p>
             </motion.div>
@@ -190,7 +193,7 @@ export default function Portfolio() {
           transition={{ delay: 0.3 }}
           className="mb-8 text-center"
         >
-          <h2 className="suika-title text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+          <h2 className="portfolio-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
             My Projects
           </h2>
           <div className="w-24 h-1 bg-royal-500 mx-auto rounded-full mb-8" />
@@ -252,6 +255,7 @@ export default function Portfolio() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeStatus}
+            data-project-grid
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
@@ -260,7 +264,7 @@ export default function Portfolio() {
           >
             {filteredProjects.length === 0 ? (
               <div className="col-span-full text-center py-20">
-                <p className="suika-title text-2xl text-gray-500">Coming soon...</p>
+                <p className="portfolio-serif text-2xl text-gray-500">Coming soon...</p>
               </div>
             ) : (
               filteredProjects.map((project, idx) => (

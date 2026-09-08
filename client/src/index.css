@@ -2,9 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Suika font is loaded in Suika.css */
-
 :root {
+  --font-portfolio-serif: 'Minion Pro', Georgia, serif;
   --background: hsl(240, 10%, 2.5%);
   --foreground: hsl(0, 0%, 98%);
   --muted: hsl(240, 3.7%, 15.9%);
@@ -44,17 +43,8 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 
-  .suika-fallback {
-    font-family: 'Suika' !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.02em;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
   .volter-black-title {
-    font-family: 'Minion Pro', 'Georgia', serif !important;
+    font-family: var(--font-portfolio-serif);
     font-weight: 900 !important;
     letter-spacing: 0.02em;
     text-rendering: optimizeLegibility;
@@ -295,7 +285,8 @@
     justify-content: center;
     padding: 12px 32px 8px;
     border-radius: 9999px;
-    font-family: "Suika DEMO" !important;
+    font-family: var(--font-portfolio-serif);
+    font-weight: 700;
     font-size: 1.05rem;
     line-height: 1;
     letter-spacing: 0.02em;
@@ -441,3 +432,45 @@
     font-family: 'Roboto Mono', monospace;
   }
 }
+
+/* Three oversized planes expose different contours as the document moves. */
+.neural-network-bg > .ambient-background {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.parallax-layer { position: absolute; inset: -70px; will-change: transform, background-position; }
+.parallax-wash {
+  background-image:
+    radial-gradient(ellipse at 12% 26%, rgba(67, 105, 164, .24), transparent 49%),
+    radial-gradient(ellipse at 85% 77%, rgba(89, 114, 167, .17), transparent 47%),
+    linear-gradient(135deg, transparent 35%, rgba(93, 124, 181, .045) 49%, transparent 63%);
+  background-size: 100% 1400px;
+}
+.parallax-contours { background-repeat: repeat-y; background-size: max(120%, 950px) 1300px; }
+.parallax-contours-far { opacity: .31; }
+.parallax-contours-near { opacity: .19; background-size: max(155%, 1200px) 1800px; }
+.parallax-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 20%, rgba(26,31,40,.27) 100%); }
+.portfolio-header { padding-top: clamp(7rem, 15vh, 11rem); }
+.portfolio-serif { font-family: var(--font-portfolio-serif); font-feature-settings: normal; }
+.role-typewriter {
+  /* Equal space above and below makes this the midpoint to the bio panel. */
+  height: clamp(10rem, 24vh, 15rem);
+  padding: 0 1rem;
+}
+.typing-caret {
+  display: inline-block;
+  width: .58em;
+  height: .88em;
+  margin-left: .14em;
+  vertical-align: -.04em;
+  background: #a9bfe9;
+  animation: typing-blink 1s steps(2, start) infinite;
+}
+.typing-caret.is-paused { animation: none; }
+.title-table .stained-glass-box { box-shadow: none; }
+@keyframes typing-blink { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .parallax-layer { will-change: auto; } }

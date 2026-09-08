@@ -165,7 +165,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
     return (
       <div className={`space-y-6 ${className}`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-white suika-fallback">Analytics Dashboard</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white font-sans">Analytics Dashboard</h2>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <Select value={timeWindow} onValueChange={(value: TimeWindow) => setTimeWindow(value)}>
               <SelectTrigger className="w-full sm:w-48 bg-gray-800 border-gray-600 text-white">
@@ -216,7 +216,7 @@ export default function AnalyticsCharts({ className }: AnalyticsChartsProps) {
   return (
     <div className={`space-y-6 ${className}`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-white suika-fallback">Analytics Dashboard</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-white font-sans">Analytics Dashboard</h2>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           <Select value={timeWindow} onValueChange={(value: TimeWindow) => setTimeWindow(value)}>
             <SelectTrigger className="w-full sm:w-48 bg-gray-800 border-gray-600 text-white">

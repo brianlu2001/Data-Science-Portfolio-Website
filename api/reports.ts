@@ -24,11 +24,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const staticReports: any[] = [];
     const manifestPath = path.join(process.cwd(), 'public', 'reports-manifest.json');
 
-    if (fs.existsSync(manifestPath)) {
+    const reportsDir = path.join(process.cwd(), 'public', 'reports');
+    if (!fs.existsSync(reportsDir) && fs.existsSync(manifestPath)) {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
       staticReports.push(...(manifest.reports || []));
     } else {
-      const reportsDir = path.join(process.cwd(), 'public', 'reports');
       if (fs.existsSync(reportsDir)) {
         for (const filename of fs.readdirSync(reportsDir)) {
           const ext = path.extname(filename).toLowerCase();

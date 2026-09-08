@@ -1,0 +1,14 @@
+Violin and cello samples from tonejs-instruments by Nicholaus P. Brosowsky.
+https://github.com/nbrosowsky/tonejs-instruments
+Revision: 622c2f1c32c8cfce4158ddc3eb26e518ddef37e5
+Sample license: Creative Commons Attribution 3.0 Unported
+https://creativecommons.org/licenses/by/3.0/
+
+Upstream sources identified by the library:
+Violin: Versilian Studios Chamber Orchestra Community Edition (VSCO 2).
+http://vis.versilstudios.net/vsco-community.html
+Cello: flcellogrl, "real cello notes", Freesound #12408.
+https://freesound.org/people/flcellogrl/sounds/12408/
+
+Bundled MP3 files are unmodified. Playback adjusts pitch, gain, stereo position,
+and envelopes to create the site's short harmonized string cues.

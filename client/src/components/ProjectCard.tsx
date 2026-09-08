@@ -154,7 +154,7 @@ export default function ProjectCard({
 
                   <CardContent className="p-6 flex flex-col flex-1">
                     <div className="flex justify-between items-start gap-2 mb-3">
-                      <h3 className="suika-fallback text-lg xl:text-xl font-bold text-white leading-tight">
+                      <h3 className="portfolio-serif text-lg xl:text-xl font-bold text-white leading-tight">
                         {project.title}
                       </h3>
                       <Button
@@ -169,7 +169,7 @@ export default function ProjectCard({
 
                     {project.category && (
                       <div className="mb-2">
-                        <span className="inline-block bg-blue-900 text-blue-200 text-xs font-semibold px-3 py-1 rounded-full suika-fallback">
+                        <span className="inline-block bg-blue-900 text-blue-200 text-xs font-semibold px-3 py-1 rounded-full font-sans">
                           {project.category}
                         </span>
                       </div>
@@ -180,13 +180,13 @@ export default function ProjectCard({
                         {project.technologies.slice(0, 4).map((tech, index) => (
                           <span
                             key={index}
-                            className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded suika-fallback"
+                            className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded font-sans"
                           >
                             {tech}
                           </span>
                         ))}
                         {project.technologies.length > 4 && (
-                          <span className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded suika-fallback">
+                          <span className="inline-block bg-green-900 text-green-200 text-xs font-semibold px-2 py-1 rounded font-sans">
                             +{project.technologies.length - 4} more
                           </span>
                         )}
@@ -212,7 +212,7 @@ export default function ProjectCard({
                   onClick={onToggleFlipped}
                 >
                   <CardContent className="p-5 flex flex-col h-full">
-                    <h3 className="suika-fallback text-base font-bold text-white mb-3 leading-tight">
+                    <h3 className="portfolio-serif text-base font-bold text-white mb-3 leading-tight">
                       {project.title}
                     </h3>
 
@@ -225,7 +225,7 @@ export default function ProjectCard({
                         {project.technologies.map((tech, i) => (
                           <span
                             key={i}
-                            className="inline-block text-xs font-semibold px-2 py-0.5 rounded suika-fallback border"
+                            className="inline-block text-xs font-semibold px-2 py-0.5 rounded font-sans border"
                             style={{
                               borderColor: withAlpha(tagColor, 0.55),
                               color: tagColor,

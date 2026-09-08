@@ -134,7 +134,7 @@ export default function ProjectView() {
           className="max-w-6xl mx-auto"
         >
           <div className="glass-effect rounded-2xl p-8 mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4 suika-fallback">
+            <h1 className="text-4xl font-bold text-white mb-4 portfolio-serif">
               {project.title}
             </h1>
             <div className="prose prose-invert max-w-none prose-p:text-gray-300 prose-p:leading-relaxed prose-p:text-base md:prose-p:text-lg prose-strong:text-white prose-em:text-gray-200">
@@ -169,7 +169,7 @@ export default function ProjectView() {
             <Card className="glass-effect border-gray-600 mb-8">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-semibold text-white suika-fallback">Full Project Report</h2>
+                  <h2 className="text-2xl font-semibold text-white portfolio-serif">Full Project Report</h2>
                 </div>
 
                 <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">

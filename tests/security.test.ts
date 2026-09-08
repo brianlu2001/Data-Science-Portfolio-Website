@@ -68,7 +68,7 @@ test('all admin routes reject anonymous callers before database work', async () 
   useLocalDatabase({connect:async () => { connections++; throw new Error('Unexpected database access'); },query:async () => {throw new Error('Unexpected query');}});
   try {
     for (const [url,method] of [
-      ['/api/auth?action=user','GET'],['/api/projects-simple','POST'],['/api/projects/1','PUT'],['/api/projects/1','DELETE'],
+      ['/api/auth?action=user','GET'],['/api/projects-simple','POST'],['/api/projects/1','PUT'],['/api/projects/1','PATCH'],['/api/projects/1','DELETE'],
       ['/api/site-settings-simple','PUT'],['/api/update-project-order','PUT'],['/api/upload-image','POST'],
       ['/api/upload-report','POST'],['/api/rewrite-description','POST'],['/api/analytics?action=summary','GET'],['/legacy-guard','GET'],
     ]) assert.equal((await request(url,method,method === 'GET' ? undefined : {})).status,401,url);
@@ -118,6 +118,57 @@ test('the client form schema remains compatible with the secured API', async () 
   const project = await result.json();
   assert.equal(project.projectUrl,'/reports/test%20report.pdf');
   assert.equal((await request('/api/projects/'+project.id,'DELETE',undefined,cookie)).status,200);
+});
+
+test('status moves preserve an uploaded report and the latest saved project content', async () => {
+  const upload = new FormData();
+  upload.append('report', new Blob(['%PDF-1.7\nLocal workflow test'], { type:'application/pdf' }), 'workflow.pdf');
+  const uploaded = await request('/api/upload-report', 'POST', upload, cookie);
+  assert.equal(uploaded.status, 200);
+  const { reportUrl } = await uploaded.json();
+  const created = await request('/api/projects-simple', 'POST', {
+    ...payload, status:'ongoing', projectUrl:reportUrl, githubUrl:'https://github.com/example/workflow',
+  }, cookie);
+  assert.equal(created.status, 201);
+  const project = await created.json();
+  try {
+    // A normal form save omits the GitHub field, which the editor does not expose.
+    const saved = await request('/api/projects/'+project.id, 'PUT', {
+      ...payload, status:'ongoing', projectUrl:reportUrl, fullDescription:'Latest saved content',
+    }, cookie);
+    assert.equal(saved.status, 200);
+    assert.equal((await saved.json()).githubUrl, 'https://github.com/example/workflow');
+    for (const status of ['finished','ongoing','finished']) {
+      const moved = await request('/api/projects/'+project.id, 'PATCH', { status }, cookie);
+      assert.equal(moved.status, 200, await moved.clone().text());
+      const detail = await (await request('/api/project-by-id?id='+project.id)).json();
+      assert.equal(detail.status, status);
+      assert.equal(detail.projectUrl, reportUrl);
+      assert.equal(detail.fullDescription, 'Latest saved content');
+      assert.equal(detail.githubUrl, 'https://github.com/example/workflow');
+      assert.deepEqual(detail.technologies, payload.technologies);
+    }
+  } finally { await request('/api/projects/'+project.id, 'DELETE', undefined, cookie); }
+});
+
+test('partial project edits validate fields and only clear a report explicitly', async () => {
+  const created = await request('/api/projects-simple', 'POST', {
+    ...payload, projectUrl:'/reports/with spaces.pdf', status:'ongoing',
+  }, cookie);
+  const project = await created.json();
+  try {
+    for (const body of [{}, {notAProjectField:'x'}, {status:'completed'}, {projectUrl:'javascript:alert(1)'}, {id:99}]) {
+      assert.equal((await request('/api/projects/'+project.id,'PATCH',body,cookie)).status, 400);
+    }
+    assert.equal((await request('/api/projects/'+project.id,'PATCH',{status:'finished'},cookie,{Origin:'https://untrusted.example'})).status,403);
+    const edited = await request('/api/projects/'+project.id,'PUT',{title:'Updated title'},cookie);
+    assert.equal(edited.status,200);
+    const preserved = await edited.json();
+    assert.equal(preserved.projectUrl,'/reports/with%20spaces.pdf');
+    assert.equal(preserved.status,'ongoing');
+    assert.equal((await request('/api/projects/'+project.id,'PATCH',{projectUrl:''},cookie)).status,200);
+    assert.equal((await (await request('/api/project-by-id?id='+project.id)).json()).projectUrl,'');
+  } finally { await request('/api/projects/'+project.id,'DELETE',undefined,cookie); }
 });
 test('analytics validates and bounds requests without storing visitor identifiers', async () => {
   assert.equal((await request('/api/analytics?action=pageview','POST',{page:'/'})).status,201);

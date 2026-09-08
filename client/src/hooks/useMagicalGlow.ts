@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type React from 'react';
 import { colorExtractor, ColorExtractor } from '@/utils/colorExtractor';
-import { audioManager } from '@/utils/audioManager';
+import { audioManager, snakePosition } from '@/utils/audioManager';
 
 interface GlowColors {
   primary: string;
@@ -11,7 +11,7 @@ interface GlowColors {
 }
 
 interface MagicalGlowOptions {
-  imageUrl?: string;
+  imageUrl?: string | null;
   projectId?: number;
   enableSound?: boolean;
   enableShimmer?: boolean;
@@ -59,7 +59,13 @@ export function useMagicalGlow(options: MagicalGlowOptions = {}) {
     setIsHovered(true);
     
     if (enableSound && audioManager.isAudioEnabled()) {
-      await audioManager.playHoverSound(projectId ?? 0);
+      const card = elementRef.current?.closest('[data-project-card]');
+      const grid = card?.closest('[data-project-grid]');
+      if (card && grid) {
+        const cards = Array.from(grid.querySelectorAll('[data-project-card]'));
+        const columns = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length;
+        await audioManager.playHoverSound(snakePosition(cards.indexOf(card), columns, cards.length));
+      }
     }
   };
 
@@ -75,8 +81,7 @@ export function useMagicalGlow(options: MagicalGlowOptions = {}) {
 
   const handleGlowActivate = async () => {
     if (enableSound && audioManager.isAudioEnabled()) {
-      const baseFrequency = projectId ? 220 + (projectId * 50) : 440;
-      await audioManager.playGlowSound(baseFrequency);
+      await audioManager.playGlowSound();
     }
   };
 
@@ -132,6 +137,15 @@ export function useMagicalGlow(options: MagicalGlowOptions = {}) {
 
 // Hook for managing audio settings
 export function useAudioSettings() {
+  useEffect(() => {
+    const warmup = () => { void audioManager.preload(); };
+    window.addEventListener('pointerdown', warmup, { once: true });
+    window.addEventListener('keydown', warmup, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', warmup);
+      window.removeEventListener('keydown', warmup);
+    };
+  }, []);
   const [isEnabled, setIsEnabled] = useState(() => 
     audioManager.isAudioEnabled()
   );

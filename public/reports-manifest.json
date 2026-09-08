@@ -13,10 +13,22 @@
       "displayName": "Evolution of machine learning in financial risk management A survey"
     },
     {
+      "filename": "HODL Project_ Tackling Food Waste with Image-based Object Detection and Recipe Recommendation.pdf",
+      "url": "/reports/HODL Project_ Tackling Food Waste with Image-based Object Detection and Recipe Recommendation.pdf",
+      "type": "pdf",
+      "displayName": "HODL Project Tackling Food Waste with Image-based Object Detection and Recipe Recommendation"
+    },
+    {
       "filename": "Opti Final Project Report - Hospital Bed Allocation.pdf",
       "url": "/reports/Opti Final Project Report - Hospital Bed Allocation.pdf",
       "type": "pdf",
       "displayName": "Hospital Bed Allocation"
+    },
+    {
+      "filename": "Alab Final Report - JABY.pdf",
+      "url": "/reports/Alab Final Report - JABY.pdf",
+      "type": "pdf",
+      "displayName": "JABY"
     },
     {
       "filename": "NBA_salary_linear_regression - Linear Regression NBA Salary Inference.html",
@@ -55,6 +67,18 @@
       "displayName": "Natural Language Processing Book Review Analysis with BERT"
     },
     {
+      "filename": "MLOpt Project - Predicting Spotify Hits_ Multimodal Deep Learning.pdf",
+      "url": "/reports/MLOpt Project - Predicting Spotify Hits_ Multimodal Deep Learning.pdf",
+      "type": "pdf",
+      "displayName": "Predicting Spotify Hits Multimodal Deep Learning"
+    },
+    {
+      "filename": "CCSWB - Promotion Lift Prediction for Coca-Cola Suggested Order.pdf",
+      "url": "/reports/CCSWB - Promotion Lift Prediction for Coca-Cola Suggested Order.pdf",
+      "type": "pdf",
+      "displayName": "Promotion Lift Prediction for Coca-Cola Suggested Order"
+    },
+    {
       "filename": "PSTAT-134-final-project-Group-1 - Recommender Systems with Collaborative Filtering Recommending Movies.html",
       "url": "/reports/PSTAT-134-final-project-Group-1 - Recommender Systems with Collaborative Filtering Recommending Movies.html",
       "type": "html",
@@ -67,6 +91,6 @@
       "displayName": "Time Series SPX Stock Price"
     }
   ],
-  "generatedAt": "2026-01-09T02:29:22.314Z",
-  "count": 11
+  "generatedAt": "2026-09-08T01:31:51.843Z",
+  "count": 15
 }

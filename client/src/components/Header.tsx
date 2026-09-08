@@ -86,11 +86,11 @@ export default function Header({ siteSettings }: { siteSettings?: SiteSettings }
                 <h1 className="volter-black-title text-3xl sm:text-5xl md:text-7xl lg:text-9xl mb-4 sm:mb-8 md:mb-12 text-[#242931] leading-tight">Kuan-I (Brian) Lu</h1>
                 <h2 className="portfolio-serif text-xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold">AI/ML/DS Project Portfolio</h2>
               </div>
-              <div className="title-face-back stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col items-center justify-between"
+              <div className="title-face-back stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 pt-4 sm:pt-6 md:pt-8 pb-3 sm:pb-4 md:pb-5 flex flex-col items-center justify-between"
                 aria-hidden={!isFlipped}
                 style={{ position: 'absolute', inset: 0, transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(180deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
                 <div className="flex-1" />
-                <div className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full">
+                <div className="flex shrink-0 items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full">
                   {siteSettings?.logoUrls?.map((url, i) => (
                     <div key={url + i} className="relative h-9 sm:h-14 md:h-20 max-w-[40%]">
                       <img src={url} alt="" className="h-full w-auto max-w-full invisible" />
@@ -99,8 +99,10 @@ export default function Header({ siteSettings }: { siteSettings?: SiteSettings }
                   ))}
                 </div>
                 <div className="flex-[2]" />
-                <p className="portfolio-serif font-bold text-xs sm:text-xl md:text-2xl lg:text-3xl text-[#242931] text-center">Scroll Down to See My Data Science Journey</p>
-                <ChevronDown className="w-6 h-6 sm:w-10 sm:h-10 text-[#242931] mt-2" />
+                <div className="title-card-prompt flex shrink-0 flex-col items-center pt-3 sm:pt-4">
+                  <p className="portfolio-serif font-bold text-xs sm:text-xl md:text-2xl lg:text-3xl text-[#242931] text-center">Scroll Down to See My Data Science Journey</p>
+                  <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6 md:w-10 md:h-10 text-[#242931] mt-1 md:mt-2 shrink-0" />
+                </div>
               </div>
             </div>
           </div>

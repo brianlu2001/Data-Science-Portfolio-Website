@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type React from 'react';
 import { colorExtractor, ColorExtractor } from '@/utils/colorExtractor';
 import { audioManager, snakePosition } from '@/utils/audioManager';
@@ -138,22 +138,27 @@ export function useMagicalGlow(options: MagicalGlowOptions = {}) {
 // Hook for managing audio settings
 export function useAudioSettings() {
   useEffect(() => {
-    const warmup = () => { void audioManager.preload(); };
-    window.addEventListener('pointerdown', warmup, { once: true });
-    window.addEventListener('keydown', warmup, { once: true });
+    const warmup = (event: Event) => {
+      // The sound button handles its own gesture. Otherwise pointerdown could
+      // enable audio before its click handler runs and immediately mute it again.
+      if (event.target instanceof Element && event.target.closest('[data-audio-toggle]')) return;
+      if (audioManager.getSnapshot() === 'pending') void audioManager.preload();
+    };
+    window.addEventListener('pointerdown', warmup, { passive: true });
+    window.addEventListener('click', warmup);
+    window.addEventListener('keydown', warmup);
     return () => {
       window.removeEventListener('pointerdown', warmup);
+      window.removeEventListener('click', warmup);
       window.removeEventListener('keydown', warmup);
     };
   }, []);
-  const [isEnabled, setIsEnabled] = useState(() => 
-    audioManager.isAudioEnabled()
-  );
+  const state = useSyncExternalStore(audioManager.subscribe, audioManager.getSnapshot, () => 'pending');
+  const isEnabled = state === 'ready';
 
   const toggle = () => {
-    const newState = !isEnabled;
-    setIsEnabled(newState);
-    audioManager.setEnabled(newState);
+    audioManager.setEnabled(!isEnabled);
+    if (!isEnabled) void audioManager.playClickSound();
   };
 
   return { isEnabled, toggle };

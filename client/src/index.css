@@ -434,7 +434,7 @@
   }
 }
 
-/* Three oversized planes expose different contours as the document moves. */
+/* One viewport-sized canvas composites the cached parallax artwork. */
 .neural-network-bg > .ambient-background {
   position: fixed;
   inset: 0;
@@ -443,17 +443,7 @@
   overflow: hidden;
   pointer-events: none;
 }
-.parallax-layer { position: absolute; inset: -70px; will-change: transform, background-position; }
-.parallax-wash {
-  background-image:
-    radial-gradient(ellipse at 12% 26%, rgba(67, 105, 164, .24), transparent 49%),
-    radial-gradient(ellipse at 85% 77%, rgba(89, 114, 167, .17), transparent 47%),
-    linear-gradient(135deg, transparent 35%, rgba(93, 124, 181, .045) 49%, transparent 63%);
-  background-size: 100% 1400px;
-}
-.parallax-contours { background-repeat: repeat-y; background-size: max(120%, 950px) 1300px; }
-.parallax-contours-far { opacity: .31; }
-.parallax-contours-near { opacity: .19; background-size: max(155%, 1200px) 1800px; }
+.ambient-canvas { display: block; width: 100%; height: 100%; }
 .parallax-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 20%, rgba(26,31,40,.27) 100%); }
 .portfolio-header { padding-top: clamp(7rem, 15vh, 11rem); }
 .portfolio-serif { font-family: var(--font-portfolio-serif); font-feature-settings: normal; }
@@ -485,4 +475,3 @@
 .title-table .stained-glass-box::after { z-index: 0; }
 .title-table .stained-glass-box > * { position: relative; z-index: 1; }
 @keyframes typing-blink { to { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .parallax-layer { will-change: auto; } }

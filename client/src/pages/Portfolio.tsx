@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
-import { Columns2, Columns3, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence, useSpring } from "framer-motion";
+import { Columns2, Columns3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AmbientBackground from "@/components/AmbientBackground";
 import Header from "@/components/Header";
 import ProjectCard from "@/components/ProjectCard";
 import ContactSection from "@/components/ContactSection";
+import ScrollToTop from "@/components/ScrollToTop";
 import { Project, SiteSettings } from "@shared/schema";
 import { useAnalytics } from "@/utils/analytics";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,7 +52,8 @@ export default function Portfolio() {
   const [, navigate] = useLocation();
   const [activeStatus, setActiveStatus] = useState<'finished' | 'ongoing'>('finished');
   const [flippedProject, setFlippedProject] = useState<number | null>(null);
-  const [bioBoxTilt, setBioBoxTilt] = useState({ x: 0, y: 0 });
+  const bioRotateX = useSpring(0, { stiffness: 300, damping: 30 });
+  const bioRotateY = useSpring(0, { stiffness: 300, damping: 30 });
   const [isLandscapeMobile, setIsLandscapeMobile] = useState(false);
   const [gridColumns, setGridColumnsState] = useState<GridColumns>(() => {
     try {
@@ -63,13 +65,6 @@ export default function Portfolio() {
   const { trackPageViewDebounced, trackProjectClick } = useAnalytics();
   const { isAuthenticated } = useAuth();
   const bioBoxRef = useRef<HTMLDivElement>(null);
-  const [scrollY, setScrollY] = useState(0);
-
-  useEffect(() => {
-    const onScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   const setGridColumns = (cols: GridColumns) => {
     setGridColumnsState(cols);
@@ -116,7 +111,8 @@ export default function Portfolio() {
     const rect = bioBoxRef.current.getBoundingClientRect();
     const tiltX = -((e.clientY - rect.top - rect.height / 2) / rect.height) * 15;
     const tiltY = ((e.clientX - rect.left - rect.width / 2) / rect.width) * 15;
-    setBioBoxTilt({ x: tiltX, y: tiltY });
+    bioRotateX.set(tiltX);
+    bioRotateY.set(tiltY);
   };
 
   const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
@@ -174,10 +170,8 @@ export default function Portfolio() {
               ref={bioBoxRef}
               className={`blue-glow rounded-2xl p-4 sm:p-6 md:p-8 text-center cursor-pointer ${isLandscapeMobile ? 'mx-2' : 'mx-4 sm:mx-0'}`}
               onMouseMove={handleBioMouseMove}
-              onMouseLeave={() => setBioBoxTilt({ x: 0, y: 0 })}
-              animate={{ rotateX: bioBoxTilt.x, rotateY: bioBoxTilt.y }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{ transformStyle: "preserve-3d" }}
+              onMouseLeave={() => { bioRotateX.set(0); bioRotateY.set(0); }}
+              style={{ transformStyle: "preserve-3d", rotateX: bioRotateX, rotateY: bioRotateY }}
             >
               <p className="portfolio-serif font-bold tracking-wide text-gray-300 text-base sm:text-lg lg:text-xl leading-relaxed">
                 {siteSettings.bio}
@@ -270,8 +264,8 @@ export default function Portfolio() {
               filteredProjects.map((project, idx) => (
                 <motion.div
                   key={project.id}
-                  initial={{ opacity: 0, rotateX: 30, y: 50 }}
-                  whileInView={{ opacity: 1, rotateX: 0, y: 0 }}
+                  initial={{ opacity: 0, transform: 'perspective(900px) translateY(50px) rotateX(30deg)' }}
+                  whileInView={{ opacity: 1, transform: 'perspective(900px) translateY(0px) rotateX(0deg)' }}
                   viewport={{ once: true, margin: '-80px' }}
                   transition={{
                     delay: idx * 0.07,
@@ -280,7 +274,6 @@ export default function Portfolio() {
                     stiffness: 70,
                     damping: 18,
                   }}
-                  style={{ transformPerspective: 900 }}
                   className="h-full"
                 >
                   <ProjectCard
@@ -304,21 +297,7 @@ export default function Portfolio() {
 
       <ContactSection siteSettings={siteSettings} isLandscapeMobile={isLandscapeMobile} />
 
-      <AnimatePresence>
-        {scrollY > 400 && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-royal-500/80 hover:bg-royal-500 text-white shadow-lg backdrop-blur-sm transition-colors duration-200"
-            aria-label="Scroll to top"
-          >
-            <ChevronUp size={20} />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      <ScrollToTop />
     </div>
   );
 }

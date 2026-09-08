@@ -29,12 +29,28 @@ class AudioManager {
   private request = 0;
   private lastPosition = 0;
   private lastHover = -Infinity;
+  private listeners = new Set<() => void>();
 
-  private async ready() {
+  subscribe = (listener: () => void) => {
+    this.listeners.add(listener);
+    return () => { this.listeners.delete(listener); };
+  };
+  getSnapshot = (): 'muted' | 'pending' | 'ready' =>
+    !this.enabled ? 'muted' : this.context?.state === 'running' ? 'ready' : 'pending';
+  private notify = () => { this.listeners.forEach(listener => listener()); };
+
+  private async ready(activate = false) {
     if (!this.enabled) return null;
     try {
-      this.context ??= new AudioContext();
-      if (this.context.state === 'suspended') await this.context.resume();
+      if (!this.context || this.context.state === 'closed') {
+        this.context?.removeEventListener('statechange', this.notify);
+        this.context = new AudioContext();
+        this.context.addEventListener('statechange', this.notify);
+        this.notify();
+      }
+      // Hover cannot unlock browser autoplay. Only gesture-driven calls resume
+      // audio, so silent hovers never queue stale chords for a later click.
+      if (activate && this.context.state !== 'running') await this.context.resume();
       return this.enabled && this.context.state === 'running' ? this.context : null;
     } catch { return null; }
   }
@@ -64,7 +80,7 @@ class AudioManager {
   }
 
   async preload() {
-    const ctx = await this.ready();
+    const ctx = await this.ready(true);
     if (!ctx) return;
     await Promise.all((['violin', 'cello'] as const).flatMap(instrument =>
       SAMPLE_NOTES[instrument].map(([, name]) => this.sample(ctx, instrument, name))));
@@ -79,9 +95,9 @@ class AudioManager {
     this.active = null;
   }
 
-  private async chord(position: number, emphasis = 1) {
+  private async chord(position: number, emphasis = 1, activate = false) {
     const request = ++this.request;
-    const ctx = await this.ready();
+    const ctx = await this.ready(activate);
     if (!ctx || request !== this.request) return;
     const index = Math.abs(position) % MELODY.length;
     // Two quiet inner strings support the melody without a sustained bass layer.
@@ -144,12 +160,13 @@ class AudioManager {
     this.lastHover = now; this.lastPosition = position;
     await this.chord(position);
   }
-  async playClickSound() { await this.chord(this.lastPosition, 0.8); }
+  async playClickSound() { await this.chord(this.lastPosition, 0.8, true); }
   async playGlowSound() { await this.chord(this.lastPosition, 0.65); }
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
     if (!enabled) { ++this.request; this.fadeActive(); }
     else void this.preload();
+    this.notify();
   }
   isAudioEnabled() { return this.enabled; }
 }

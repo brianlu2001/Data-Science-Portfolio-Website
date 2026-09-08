@@ -10,9 +10,12 @@ export function AudioToggle() {
     <Button
       variant="ghost"
       size="sm"
+      data-audio-toggle
       onClick={toggle}
       className="text-gray-400 hover:text-white transition-colors"
       title={isEnabled ? "Disable sound effects" : "Enable sound effects"}
+      aria-label={isEnabled ? "Disable sound effects" : "Enable sound effects"}
+      aria-pressed={isEnabled}
     >
       {isEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
     </Button>

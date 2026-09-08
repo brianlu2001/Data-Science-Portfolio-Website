@@ -1,5 +1,4 @@
 import { usePortfolioMotion } from "@/hooks/usePortfolioMotion";
-import { motion, useAnimationControls } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { SiteSettings } from "@shared/schema";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -7,37 +6,59 @@ import { ChevronDown, Sparkles } from "lucide-react";
 import { AudioToggle } from "@/components/AudioToggle";
 import RoleTypewriter from "@/components/RoleTypewriter";
 
+const SLIDE_OUT_MS = 380;
+const TURN_MS = 940;
+const SLIDE_HOME_MS = 320;
+const FLIP_MS = SLIDE_OUT_MS + TURN_MS + SLIDE_HOME_MS;
+const SLIDE_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
+// Keep the approved slide / left-edge turn / return path on one native
+// transform timeline, so phone frames don't depend on JavaScript updates.
+const FLIP_KEYFRAMES: Keyframe[] = [
+  { transform: 'translate3d(0%, 0, 0) rotateY(0deg)', offset: 0, easing: SLIDE_EASING },
+  ...[0, -32, -72, -93, -117, -151, -180, -177, -180].map((angle, index) => ({
+    transform: `translate3d(50%, 0, 0) rotateY(${angle}deg)`,
+    offset: (SLIDE_OUT_MS + TURN_MS * [0, 0.18, 0.38, 0.56, 0.68, 0.8, 0.89, 0.94, 1][index]) / FLIP_MS,
+    easing: index === 8 ? SLIDE_EASING : 'linear',
+  })),
+  { transform: 'translate3d(100%, 0, 0) rotateY(-180deg)', offset: 1 },
+];
+
 export default function Header({ siteSettings }: { siteSettings?: SiteSettings }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const turning = useRef(false);
-  const controls = useAnimationControls();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const flipAnimation = useRef<Animation | null>(null);
   // Normalize the two faces after each turn. Both directions then use the same
   // visible left edge as the hinge, instead of reversing an accumulated rotation.
   useLayoutEffect(() => {
-    controls.set({ x: '0%', rotateY: 0 });
+    // Swap faces and release the filled final transform before the same paint.
+    flipAnimation.current?.cancel();
+    flipAnimation.current = null;
     turning.current = false;
-  }, [isFlipped, controls]);
+  }, [isFlipped]);
   useLayoutEffect(() => () => {
     turning.current = false;
-    controls.stop();
-  }, [controls]);
+    flipAnimation.current?.cancel();
+    flipAnimation.current = null;
+  }, []);
   const { reducedMotion, toggleMotion } = usePortfolioMotion();
 
-  const flip = async () => {
-    if (turning.current) return;
+  const flip = () => {
+    const card = cardRef.current;
+    if (turning.current || !card) return;
     turning.current = true;
-    if (reducedMotion) { setIsFlipped(value => !value); return; }
-    // Restore the three distinct stages: slide, turn around the left edge,
-    // then return the landed card to its centered resting position.
-    await controls.start({ x: '50%', transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] } });
-    if (!turning.current) return;
-    await controls.start({
-      rotateY: [0, -32, -72, -93, -117, -151, -180, -177, -180],
-      transition: { duration: 0.94, times: [0, 0.18, 0.38, 0.56, 0.68, 0.8, 0.89, 0.94, 1], ease: 'linear' },
+    if (reducedMotion || typeof card.animate !== 'function') {
+      setIsFlipped(value => !value);
+      return;
+    }
+    const animation = card.animate(FLIP_KEYFRAMES, {
+      duration: FLIP_MS,
+      fill: 'both',
     });
-    if (!turning.current) return;
-    await controls.start({ x: '100%', transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } });
-    if (turning.current) setIsFlipped(value => !value);
+    flipAnimation.current = animation;
+    animation.onfinish = () => {
+      if (flipAnimation.current === animation) setIsFlipped(value => !value);
+    };
   };
 
   return (
@@ -55,21 +76,19 @@ export default function Header({ siteSettings }: { siteSettings?: SiteSettings }
         <div className="text-center mx-auto">
           <div className="title-table mx-auto w-fit max-w-full relative"
             style={{ perspective: '2600px', transformStyle: 'preserve-3d' }}>
-            <motion.div
-              className="relative cursor-pointer rounded-2xl outline-none focus-visible:outline-2 focus-visible:outline-blue-200 focus-visible:outline-offset-4"
+            <div ref={cardRef}
+              className="title-card relative cursor-pointer rounded-2xl outline-none focus-visible:outline-2 focus-visible:outline-blue-200 focus-visible:outline-offset-4"
               role="button" tabIndex={0} aria-label="Flip introduction card" aria-pressed={isFlipped}
               onClick={flip} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void flip(); } }}
-              animate={controls} initial={false}
-              style={{ transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d', transformOrigin: '0% 50%' }}
             >
               <div className="title-face-front stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-8 md:py-12"
-                aria-hidden={isFlipped} style={{ transform: isFlipped ? 'rotateY(180deg)' : 'none', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+                aria-hidden={isFlipped} style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
                 <h1 className="volter-black-title text-3xl sm:text-5xl md:text-7xl lg:text-9xl mb-4 sm:mb-8 md:mb-12 text-[#242931] leading-tight">Kuan-I (Brian) Lu</h1>
                 <h2 className="portfolio-serif text-xl sm:text-3xl md:text-4xl lg:text-6xl text-[#242931] leading-tight font-bold">AI/ML/DS Project Portfolio</h2>
               </div>
               <div className="title-face-back stained-glass-box rounded-2xl px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col items-center justify-between"
                 aria-hidden={!isFlipped}
-                style={{ position: 'absolute', inset: 0, transform: isFlipped ? 'none' : 'rotateY(180deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+                style={{ position: 'absolute', inset: 0, transform: isFlipped ? 'rotateY(0deg)' : 'rotateY(180deg)', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
                 <div className="flex-1" />
                 <div className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full">
                   {siteSettings?.logoUrls?.map((url, i) => (
@@ -83,7 +102,7 @@ export default function Header({ siteSettings }: { siteSettings?: SiteSettings }
                 <p className="portfolio-serif font-bold text-xs sm:text-xl md:text-2xl lg:text-3xl text-[#242931] text-center">Scroll Down to See My Data Science Journey</p>
                 <ChevronDown className="w-6 h-6 sm:w-10 sm:h-10 text-[#242931] mt-2" />
               </div>
-            </motion.div>
+            </div>
           </div>
           <RoleTypewriter />
         </div>

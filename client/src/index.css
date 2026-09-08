@@ -176,7 +176,8 @@
   .stained-glass-box h2 {
     position: relative;
     z-index: 2;
-    mix-blend-mode: multiply;
+    /* Solid ink: blending changed its shade when the 3D face was composited. */
+    mix-blend-mode: normal;
   }
 
   .bg-charcoal-700 {
@@ -471,6 +472,17 @@
   animation: typing-blink 1s steps(2, start) infinite;
 }
 .typing-caret.is-paused { animation: none; }
-.title-table .stained-glass-box { box-shadow: none; }
+.title-card {
+  transform: translate3d(0%, 0, 0) rotateY(0deg);
+  transform-origin: 0% 50%;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  /* Keep this single card's compositing stable through the landing and reset. */
+  will-change: transform;
+  touch-action: manipulation;
+}
+.title-table .stained-glass-box { box-shadow: none; isolation: isolate; }
+.title-table .stained-glass-box::after { z-index: 0; }
+.title-table .stained-glass-box > * { position: relative; z-index: 1; }
 @keyframes typing-blink { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .parallax-layer { will-change: auto; } }

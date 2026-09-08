@@ -179,7 +179,7 @@ export default function Portfolio() {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               style={{ transformStyle: "preserve-3d" }}
             >
-              <p className="portfolio-serif font-bold tracking-wide text-gray-300 text-lg sm:text-xl leading-relaxed">
+              <p className="portfolio-serif font-bold tracking-wide text-gray-300 text-base sm:text-lg lg:text-xl leading-relaxed">
                 {siteSettings.bio}
               </p>
             </motion.div>
